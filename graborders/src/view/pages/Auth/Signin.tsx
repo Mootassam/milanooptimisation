@@ -86,11 +86,11 @@ function Signin() {
             </button>
           </form>
         </FormProvider>
-    
+
         <div className="signup-link">
           Don't have an account?<Link to="/auth/signup"> <a>      Sign up now</a>    </Link>
         </div>
-    
+
       </div>
       <div className="footer">
         <p>
@@ -100,7 +100,6 @@ function Signin() {
       </div>
 
       <style>{` 
-
 
  * {
             margin: 0;

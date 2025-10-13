@@ -4,7 +4,7 @@ services:
     build: ./server
     image : wakanda-backend 
     ports:
-      - 8080:8080
+      - 8082:8082
     restart: unless-stopped
     volumes:
       - upload:/upload
@@ -13,7 +13,7 @@ services:
   db:
     image: mongo:4.0-xenial
     ports:
-      - 2717:27017
+      - 2727:27017
     restart: unless-stopped
     volumes:
       - phone:/data/db
@@ -30,17 +30,17 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
 
-  # web1:
-  #   build: ./graborders
-  #   ports:
-  #     - 3015:80
-  #   restart: unless-stopped
-  #   volumes:
-  #     - "./graborders:/app"
-  #     - "/app/node_modules"
-  #   stdin_open: true
-  #   environment:
-  #     - CHOKIDAR_USEPOLLING=true
+  web1:
+    build: ./graborders
+    ports:
+      - 3015:80
+    restart: unless-stopped
+    volumes:
+      - "./graborders:/app"
+      - "/app/node_modules"
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
 
 volumes:
   phone:

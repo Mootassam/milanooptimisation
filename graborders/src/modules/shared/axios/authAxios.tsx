@@ -3,7 +3,7 @@ import authToken from "src/modules/auth/authToken";
 
 const authAxios = axios.create({
   // baseURL: "https://www.disruptiveadvertisng.com/api",
-  baseURL: "http://localhost:8080/api",
+  baseURL: "http://localhost:8082/api",
 });
 
 
