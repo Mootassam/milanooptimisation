@@ -43,7 +43,7 @@ const en = {
   },
 
   app: {
-    title: "Disruptive Advertising",
+    title: "ManoMano",
   },
 
   api: {

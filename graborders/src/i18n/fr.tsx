@@ -43,7 +43,7 @@ const fr = {
   },
 
   app: {
-    title: 'Disruptive Advertising',
+    title: 'ManoMano',
   },
 
   api: {
