@@ -4,7 +4,7 @@ services:
     build: ./server
     image : wakanda-backend 
     ports:
-      - 8082:8082
+      - 8082:8080
     restart: unless-stopped
     volumes:
       - upload:/upload
