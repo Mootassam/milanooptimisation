@@ -9,7 +9,7 @@ services:
     volumes:
       - upload:/upload
     environment:
-      DATABASE_CONNECTION: mongodb://db/grap
+      DATABASE_CONNECTION: mongodb://db/milano
   db:
     image: mongo:4.0-xenial
     ports:
