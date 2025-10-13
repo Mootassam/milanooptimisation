@@ -1,0 +1,123 @@
+ * {
+
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f9ff 0%, #f0f4ff 100%);
+            color: #333;
+            padding-bottom: 80px;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(15, 33, 97, 0.2);
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        
+        .logo span {
+            color: #ffde59;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .header-icons i {
+            font-size: 20px;
+        }
+        
+        /* Page Title */
+        .page-title {
+            padding: 15px 20px 10px;
+            color: #0f2161;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+.remove__ligne {
+  color: inherit;          /* keep parent text color */
+  text-decoration: none;   /* remove underline */
+}
+
+.remove__ligne:visited {
+  color: inherit;          /* prevent visited link from turning purple */
+}
+
+.remove__ligne:hover,
+.remove__ligne:active,
+.remove__ligne:focus {
+  color: inherit;          /* keep same color on hover/active/focus */
+  text-decoration: none;   /* still no underline */
+}
+           /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #7b8796;
+            font-size: 11px;
+            width: 20%;
+        }
+        
+        .nav-btn.active {
+            color: #0f2161;
+        }
+        
+        .nav-btn i {
+            font-size: 18px;
+            margin-bottom: 3px;
+        }
+        
+        .nav-btn.active i {
+            color: #0f2161;
+        }
+
+        .invalid-feedback{ 
+            color: red;
+    font-size: 13px;
+    padding-left: 10px;
+    padding-top: 3px;
+}
+     
