@@ -2,7 +2,7 @@ import Withdraw from "src/view/pages/withdraw/Withdraw"
 
 const en = {
   app: {
-    title: "The Light Cinema"
+    title: "ManoMano"
   },
   inputs: {
     username: `Username`,

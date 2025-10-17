@@ -107,7 +107,7 @@ const screenRoutes = [
     exact: true,
   },
   {
-    path: "/withdrawal-password",
+    path: "/withdraw",
     loader: () => import("src/view/pages/withdraw/Withdraw"),
     permissionRequired: permissions.categoryRead,
     exact: true,
@@ -130,22 +130,22 @@ const screenRoutes = [
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
-    {
+  {
     path: "/language",
     loader: () => import("src/view/pages/Language/Language"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
 
-      {
+  {
     path: "/security-settings",
     loader: () => import("src/view/pages/SecuritySettings/SecuritySettings"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
 
-  
-      {
+
+  {
     path: "/help-support",
     loader: () => import("src/view/pages/HelpSupport/HelpSupport"),
     permissionRequired: permissions.categoryRead,
@@ -155,7 +155,7 @@ const screenRoutes = [
 
 
 
- 
+
 ];
 const publicRoutes = [
   {
@@ -165,6 +165,10 @@ const publicRoutes = [
   {
     path: "/auth/signup",
     loader: () => import("src/view/pages/Auth/Signup"),
+  },
+  {
+    path: "/LiveChat",
+    loader: () => import("src/view/pages/LiveChat/LiveChat"),
   },
 ];
 const simpleRoutes = [

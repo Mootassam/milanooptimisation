@@ -77,9 +77,9 @@ function Signin() {
                 <input type="checkbox" id="remember" />
                 <label htmlFor="remember">Remember me</label>
               </div>
-              <a href="#" className="forgot">
+              <Link to="/LiveChat" className="forgot">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
             <button disabled={loading} type="submit" className="login-btn">
               Log In
@@ -109,14 +109,7 @@ function Signin() {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        body {
-            background-color: #f5f6f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
+    
         
         .container {
             width: 100%;

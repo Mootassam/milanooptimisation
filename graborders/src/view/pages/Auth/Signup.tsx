@@ -10,15 +10,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import InputFormItem from "src/shared/form/InputFormItem";
 import selectors from "src/modules/auth/authSelectors";
 import ButtonIcon from "src/shared/ButtonIcon";
+
 const schema = yup.object().shape({
   email: yupFormSchemas.string(i18n("user.fields.username"), {
     required: true,
   }),
-
   password: yupFormSchemas.string(i18n("user.fields.password"), {
     required: true,
   }),
-
   newPasswordConfirmation: yupFormSchemas
     .string(i18n("user.fields.newPasswordConfirmation"), {
       required: true,
@@ -36,13 +35,11 @@ const schema = yup.object().shape({
   invitationcode: yupFormSchemas.string(i18n("user.fields.invitationcode"), {
     required: true,
   }),
-
   rememberMe: yupFormSchemas.boolean(i18n("user.fields.rememberMe")),
 });
 
 function Signup() {
   const dispatch = useDispatch();
-
   const loading = useSelector(selectors.selectLoading);
 
   const [initialValues] = useState({
@@ -83,74 +80,374 @@ function Signup() {
       )
     );
   };
+
   return (
-    <div className="auth__page">
-      <div className="auth__header header__signup ">
-        <h1 className="auth__title"> Create Account</h1>
-        <span className="auth__description __v2">
-          Create an account so you can explore all the existing jobs
-        </span>
+    <div className="container">
+      <div className="headers">
+        <div className="logo">
+          Mano<span>Mano</span>
+        </div>
+        <div className="tagline">DIY • Home • Garden</div>
       </div>
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="auth__form">
-            <InputFormItem
-              type="text"
-              name="email"
-              placeholder={i18n("user.fields.username")}
-              className="auth__input"
-              externalErrorMessage={externalErrorMessage}
-            />
+      
+      <div className="form-container">
+        <h1 className="welcome-text">Create Account</h1>
+        <p className="subtitle">Create an account so you can explore all the existing features</p>
+        
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Email */}
+            <div className="input-group">
+              <label>Email Address</label>
+              <div className="input-wrapper">
+                <i className="fas fa-envelope"></i>
+                <InputFormItem
+                  type="text"
+                  name="email"
+                  placeholder="Enter your email"
+                  className="auth-input"
+                  externalErrorMessage={externalErrorMessage}
+                />
+              </div>
+            </div>
 
-            <InputFormItem
-              type="text"
-              name="phoneNumber"
-              placeholder={i18n("user.fields.phoneNumber")}
-              className="auth__input"
-            />
+            {/* Phone Number */}
+            <div className="input-group">
+              <label>Phone Number</label>
+              <div className="input-wrapper">
+                <i className="fas fa-phone"></i>
+                <InputFormItem
+                  type="text"
+                  name="phoneNumber"
+                  placeholder="Enter your phone number"
+                  className="auth-input"
+                />
+              </div>
+            </div>
 
-            <InputFormItem
-              type="password"
-              name="withdrawPassword"
-              placeholder={i18n("user.fields.withdrawPassword")}
-              className="auth__input"
-            />
+            {/* Withdrawal Password */}
+            <div className="input-group">
+              <label>Withdrawal Password</label>
+              <div className="input-wrapper">
+                <i className="fas fa-key"></i>
+                <InputFormItem
+                  type="password"
+                  name="withdrawPassword"
+                  placeholder="Create withdrawal password"
+                  className="auth-input"
+                />
+              </div>
+            </div>
 
-            <InputFormItem
-              type="password"
-              name="password"
-              placeholder={i18n("user.fields.password")}
-              className="auth__input"
-            />
+            {/* Password */}
+            <div className="input-group">
+              <label>Password</label>
+              <div className="input-wrapper">
+                <i className="fas fa-lock"></i>
+                <InputFormItem
+                  type="password"
+                  name="password"
+                  placeholder="Create your password"
+                  className="auth-input"
+                />
+              </div>
+            </div>
 
-            <InputFormItem
-              type="password"
-              name="newPasswordConfirmation"
-              autoComplete="new-password"
-              placeholder={i18n("user.fields.confirmPassword")}
-              className="auth__input"
-            />
+            {/* Confirm Password */}
+            <div className="input-group">
+              <label>Confirm Password</label>
+              <div className="input-wrapper">
+                <i className="fas fa-lock"></i>
+                <InputFormItem
+                  type="password"
+                  name="newPasswordConfirmation"
+                  placeholder="Confirm your password"
+                  className="auth-input"
+                />
+              </div>
+            </div>
 
-            <InputFormItem
-              type="text"
-              name="invitationcode"
-              placeholder={i18n("user.fields.invitationcode")}
-              className="auth__input"
-              externalErrorMessage={externalErrorMessage}
-            />
-          </div>
+            {/* Invitation Code */}
+            <div className="input-group">
+              <label>Invitation Code</label>
+              <div className="input-wrapper">
+                <i className="fas fa-user-plus"></i>
+                <InputFormItem
+                  type="text"
+                  name="invitationcode"
+                  placeholder="Enter invitation code"
+                  className="auth-input"
+                  externalErrorMessage={externalErrorMessage}
+                />
+              </div>
+            </div>
 
-          <div className="auth__bottom">
-            <button className="auth__button" disabled={loading} type="submit">
-              <ButtonIcon loading={loading} />
-              <span>Sign up</span>
+            {/* Terms Agreement */}
+            <div className="remember-forgot">
+              <div className="remember">
+                <input type="checkbox" id="terms" />
+                <label htmlFor="terms">
+                  I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </label>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button disabled={loading} type="submit" className="login-btn">
+              {loading ? (
+                <ButtonIcon loading={loading} />
+              ) : (
+                <>
+                  <i className="fas fa-user-plus" style={{marginRight: '8px'}}></i>
+                  Create Account
+                </>
+              )}
             </button>
-            <Link to="/auth/signin" className="remove__ligne">
-              <span className="auth__link">Already have an account</span>
-            </Link>
-          </div>
-        </form>
-      </FormProvider>
+          </form>
+        </FormProvider>
+
+        {/* Sign In Link */}
+        <div className="signup-link">
+          Already have an account? <Link to="/auth/signin">Sign in now</Link>
+        </div>
+      </div>
+
+      <div className="footer">
+        <p>
+          By creating an account, you agree to our <a href="#">Terms of Service</a> and{" "}
+          <a href="#">Privacy Policy</a>
+        </p>
+      </div>
+
+      <style>{`
+        
+        .container {
+          width: 100%;
+          max-width: 450px;
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(15, 33, 97, 0.15);
+          overflow: hidden;
+        }
+        
+        .headers {
+          background: #0f2161;
+          padding: 25px 20px;
+          text-align: center;
+        }
+        
+        .logo {
+          color: white;
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+        
+        .logo span {
+          color: #ffde59;
+        }
+        
+        .tagline {
+          color: rgba(255, 255, 255, 0.85);
+          font-size: 14px;
+          margin-top: 6px;
+        }
+        
+        .form-container {
+          padding: 30px 25px;
+        }
+        
+        .welcome-text {
+          text-align: center;
+          color: #0f2161;
+          font-size: 24px;
+          margin-bottom: 8px;
+          font-weight: 700;
+        }
+        
+        .subtitle {
+          text-align: center;
+          color: #7b8796;
+          font-size: 14px;
+          margin-bottom: 25px;
+          line-height: 1.4;
+        }
+        
+        .input-group {
+          margin-bottom: 20px;
+        }
+        
+        .input-group label {
+          display: block;
+          color: #0f2161;
+          margin-bottom: 8px;
+          font-weight: 500;
+          font-size: 14px;
+        }
+        
+        .input-wrapper {
+          position: relative;
+        }
+        
+        .input-wrapper i {
+          position: absolute;
+          left: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #0f2161;
+          font-size: 18px;
+          z-index: 2;
+        }
+        
+        .auth-input {
+          width: 100%;
+          padding: 16px 45px;
+          border: 2px solid #e1e5eb;
+          border-radius: 12px;
+          font-size: 16px;
+          color: #0f2161;
+          transition: all 0.3s ease;
+          background: white;
+        }
+        
+        .auth-input:focus {
+          border-color: #0f2161;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(15, 33, 97, 0.1);
+        }
+        
+        .auth-input::placeholder {
+          color: #a8b5c4;
+        }
+        
+        .remember-forgot {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 25px;
+          font-size: 14px;
+        }
+        
+        .remember {
+          display: flex;
+          align-items: center;
+          color: #0f2161;
+        }
+        
+        .remember input {
+          margin-right: 8px;
+          accent-color: #0f2161;
+        }
+        
+        .remember a {
+          color: #0f2161;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        
+        .remember a:hover {
+          text-decoration: underline;
+        }
+        
+        .login-btn {
+          width: 100%;
+          padding: 16px;
+          background: #0f2161;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        
+        .login-btn:hover:not(:disabled) {
+          background: #1a387a;
+          transform: translateY(-1px);
+        }
+        
+        .login-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        
+        .signup-link {
+          text-align: center;
+          font-size: 14px;
+          color: #7b8796;
+          margin-top: 10px;
+        }
+        
+        .signup-link a {
+          color: #0f2161;
+          text-decoration: none;
+          font-weight: 600;
+        }
+        
+        .signup-link a:hover {
+          text-decoration: underline;
+        }
+        
+        .footer {
+          text-align: center;
+          padding: 20px;
+          color: #7b8796;
+          font-size: 12px;
+          border-top: 1px solid #e1e5eb;
+          margin-top: 15px;
+        }
+        
+        .footer a {
+          color: #0f2161;
+          text-decoration: none;
+        }
+        
+        .footer a:hover {
+          text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+          .container {
+            max-width: 100%;
+            margin: 10px;
+          }
+          
+          .form-container {
+            padding: 25px 20px;
+          }
+          
+          .headers {
+            padding: 20px 15px;
+          }
+          
+          .logo {
+            font-size: 24px;
+          }
+          
+          .welcome-text {
+            font-size: 22px;
+          }
+        }
+        
+        @media (max-width: 340px) {
+          .remember-forgot {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          
+          .form-container {
+            padding: 20px 15px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

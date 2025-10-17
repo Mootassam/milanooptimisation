@@ -1,7 +1,7 @@
 
 const it = {
     app: {
-        title: "The Light Cinema"
+        title: "ManoMano"
     },
     inputs: {
         username: "Nome utente",
