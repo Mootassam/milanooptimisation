@@ -137,6 +137,22 @@ const screenRoutes = [
     exact: true,
   },
 
+      {
+    path: "/security-settings",
+    loader: () => import("src/view/pages/SecuritySettings/SecuritySettings"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+  
+      {
+    path: "/help-support",
+    loader: () => import("src/view/pages/HelpSupport/HelpSupport"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+
 
 
  

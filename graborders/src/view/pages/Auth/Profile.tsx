@@ -81,7 +81,7 @@ function Profile() {
       className: "btn-history"
     },
     {
-      path: "/invite",
+      path: "/invitation",
       name: "Invite",
       icon: "fas fa-user-plus",
       className: "btn-invite"
