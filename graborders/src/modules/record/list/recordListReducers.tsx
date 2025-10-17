@@ -1,3 +1,4 @@
+
 import actions from 'src/modules/record/list/recordListActions';
 
 const INITIAL_PAGE_SIZE = 10;

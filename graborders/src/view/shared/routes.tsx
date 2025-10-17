@@ -1,3 +1,4 @@
+
 import Permissions from "src/security/permissions";
 const permissions = Permissions.values;
 
@@ -72,14 +73,14 @@ const screenRoutes = [
     exact: true,
   },
 
-    {
+  {
     path: "/notification",
     loader: () => import("src/view/pages/notification/notification"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
 
-    {
+  {
     path: "/about",
     loader: () => import("src/view/pages/about/about"),
     permissionRequired: permissions.categoryRead,
@@ -100,19 +101,19 @@ const screenRoutes = [
     exact: true,
   },
   {
-    path: "/myprofile",
+    path: "/personal-information",
     loader: () => import("src/view/pages/Team/Team"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
   {
-    path: "/withdraw",
+    path: "/withdrawal-password",
     loader: () => import("src/view/pages/withdraw/Withdraw"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
   {
-    path: "/security",
+    path: "/change-password",
     loader: () => import("src/view/pages/Auth/ChangePassword"),
     permissionRequired: permissions.categoryRead,
     exact: true,
@@ -124,11 +125,21 @@ const screenRoutes = [
     exact: true,
   },
   {
-    path: "/wallet",
+    path: "/wallet-address",
     loader: () => import("src/view/pages/wallet/Wallet"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
+    {
+    path: "/language",
+    loader: () => import("src/view/pages/Language/Language"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+
+
+ 
 ];
 const publicRoutes = [
   {

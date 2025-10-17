@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
-import "../styles/styles.css";
 import { Link } from "react-router-dom";
+import "../styles/styles.css";
 import authActions from "src/modules/auth/authActions";
 import authSelectors from "src/modules/auth/authSelectors";
 import Amount from "src/shared/Amount";
-import { useHistory } from "react-router-dom"; // Assuming you're using React Router
+import { useHistory } from "react-router-dom";
 import actions from "src/modules/record/list/recordListActions";
 import selectors from "src/modules/record/list/recordListSelectors";
 import { log } from "console";
@@ -35,45 +34,22 @@ function Profile() {
     history.push(param);
   };
   const currentUser = useSelector(authSelectors.selectCurrentUser);
-  const data = [
-    {
-      icon: "fa-solid fa-clock-rotate-left",
-      name: "Tasks History",
-      url: "/order",
-    },
-    { icon: "fa-solid fa-wallet", name: "Bind Wallet", url: "/wallet" },
-    {
-      icon: "fa-solid fa-arrow-right-arrow-left",
-      name: "Transactions",
-      url: "/transacation",
-    },
-    {
-      icon: "fa-solid fa-money-bill-transfer",
-      name: "Withdraw",
-      url: "/withdraw",
-    },
-    { icon: "fa-solid fa-user", name: "Profile", url: "/myprofile" },
-    { icon: "fa-solid fa-lock", name: "Security", url: "/security" },
-  ];
+  
   const referenceCodeRef = useRef<any>(null);
 
   const copyToClipboardCoupon = () => {
     const referenceCode = referenceCodeRef.current.innerText;
 
-    // Check if the browser supports the modern clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(referenceCode)
         .then(() => {
           Message.success("Copied");
-          // You can add any additional logic here, such as showing a success message
         })
         .catch((error) => {
           console.error("Error copying to clipboard:", error);
-          // You can handle errors here, such as displaying an error message to the user
         });
     } else {
-      // Fallback for browsers that do not support the modern clipboard API
       const textArea = document.createElement("textarea");
       textArea.value = referenceCode;
       document.body.appendChild(textArea);
@@ -81,10 +57,122 @@ function Profile() {
       document.execCommand("copy");
       document.body.removeChild(textArea);
       Message.success("Copied");
-
-      // You can add any additional logic here for the fallback mechanism
     }
   };
+
+  // Balance Button Actions
+  const balanceActions = [
+    {
+      path: "/deposit",
+      name: "Deposit",
+      icon: "fas fa-plus-circle",
+      className: "btn-deposit"
+    },
+    {
+      path: "/withdraw",
+      name: "Withdraw",
+      icon: "fas fa-money-bill-wave",
+      className: "btn-withdraw"
+    },
+    {
+      path: "/history",
+      name: "History",
+      icon: "fas fa-history",
+      className: "btn-history"
+    },
+    {
+      path: "/invite",
+      name: "Invite",
+      icon: "fas fa-user-plus",
+      className: "btn-invite"
+    }
+  ];
+
+  // Account Settings Options
+  const accountSettings = [
+    {
+      path: "/personal-information",
+      name: "Personal Information",
+      icon: "fas fa-user-circle",
+      description: "Update your profile details"
+    },
+    {
+      path: "/change-password",
+      name: "Change Password",
+      icon: "fas fa-lock",
+      description: "Update your login password"
+    },
+    {
+      path: "/withdrawal-password",
+      name: "Withdrawal Password",
+      icon: "fas fa-key",
+      description: "Change your withdrawal password"
+    },
+    {
+      path: "/wallet-address",
+      name: "Wallet Address",
+      icon: "fas fa-wallet",
+      description: "Add or update your wallet"
+    }
+  ];
+
+  // Preferences Options
+  const preferences = [
+    {
+      path: "/security-settings",
+      name: "Security Settings",
+      icon: "fas fa-shield-alt",
+      description: "Manage security preferences"
+    },
+    {
+      path: "/notification",
+      name: "Notifications",
+      icon: "fas fa-bell",
+      description: "Manage your alerts"
+    },
+    {
+      path: "/language",
+      name: "Language",
+      icon: "fas fa-language",
+      description: "Change app language"
+    },
+    {
+      path: "/help-support",
+      name: "Help & Support",
+      icon: "fas fa-question-circle",
+      description: "Get assistance"
+    }
+  ];
+
+  // Bottom Navigation Items
+  const navItems = [
+    {
+      path: "/",
+      name: "Home",
+      icon: "fas fa-home"
+    },
+    {
+      path: "/recharge",
+      name: "Recharge",
+      icon: "fas fa-wallet"
+    },
+    {
+      path: "/grap",
+      name: "Grap",
+      icon: "fas fa-hand-holding-usd"
+    },
+    {
+      path: "/order",
+      name: "Order",
+      icon: "fas fa-shopping-cart"
+    },
+    {
+      path: "/account",
+      name: "Account",
+      icon: "fas fa-user",
+      active: true
+    }
+  ];
 
   return (
     <>
@@ -110,6 +198,7 @@ function Profile() {
           </div>
         </div>
       </div>
+
       {/* Balance Section */}
       <div className="balance-section">
         <div className="balance-header">
@@ -118,155 +207,85 @@ function Profile() {
         </div>
         <div className="balance-amount">$1,250.75</div>
         <div className="balance-buttons">
-          <button className="balance-btn btn-deposit">
-            <i className="fas fa-plus-circle" />
-            Deposit
-          </button>
-          <button className="balance-btn btn-withdraw">
-            <i className="fas fa-money-bill-wave" />
-            Withdraw
-          </button>
-          <button className="balance-btn btn-history">
-            <i className="fas fa-history" />
-            History
-          </button>
-          <button className="balance-btn btn-invite">
-            <i className="fas fa-user-plus" />
-            Invite
-          </button>
+          {balanceActions.map((action, index) => (
+            <Link key={index} to={action.path}>
+              <button className={`balance-btn ${action.className}`}>
+                <i className={action.icon} />
+                {action.name}
+              </button>
+            </Link>
+          ))}
         </div>
       </div>
-      {/* Account Options */}
+
+      {/* Account Settings */}
       <div className="options-section">
         <div className="section-title">
           <i className="fas fa-cog" />
           Account Settings
         </div>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-user-circle" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Personal Information</div>
-            <div className="option-desc">Update your profile details</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-lock" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Change Password</div>
-            <div className="option-desc">Update your login password</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-key" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Withdrawal Password</div>
-            <div className="option-desc">Change your withdrawal password</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-wallet" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Wallet Address</div>
-            <div className="option-desc">Add or update your wallet</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
+        {accountSettings.map((item, index) => (
+          <Link key={index} to={item.path} className="option-item">
+            <div className="option-icon">
+              <i className={item.icon} />
+            </div>
+            <div className="option-content">
+              <div className="option-title">{item.name}</div>
+              <div className="option-desc">{item.description}</div>
+            </div>
+            <div className="option-arrow">
+              <i className="fas fa-chevron-right" />
+            </div>
+          </Link>
+        ))}
       </div>
-      {/* More Options */}
+
+      {/* Preferences */}
       <div className="options-section">
         <div className="section-title">
           <i className="fas fa-sliders-h" />
           Preferences
         </div>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-shield-alt" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Security Settings</div>
-            <div className="option-desc">Manage security preferences</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
-     
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-language" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Language</div>
-            <div className="option-desc">Change app language</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
-        <a href="#" className="option-item">
-          <div className="option-icon">
-            <i className="fas fa-question-circle" />
-          </div>
-          <div className="option-content">
-            <div className="option-title">Help &amp; Support</div>
-            <div className="option-desc">Get assistance</div>
-          </div>
-          <div className="option-arrow">
-            <i className="fas fa-chevron-right" />
-          </div>
-        </a>
+        {preferences.map((item, index) => (
+          <Link key={index} to={item.path} className="option-item">
+            <div className="option-icon">
+              <i className={item.icon} />
+            </div>
+            <div className="option-content">
+              <div className="option-title">{item.name}</div>
+              <div className="option-desc">{item.description}</div>
+            </div>
+            <div className="option-arrow">
+              <i className="fas fa-chevron-right" />
+            </div>
+          </Link>
+        ))}
       </div>
+
       {/* Logout Button */}
-      <div className="logout-section" onClick={()=> doSignout()}>
+      <div className="logout-section" onClick={() => doSignout()}>
         <button className="logout-btn">
           <i className="fas fa-sign-out-alt" />
           Logout
         </button>
       </div>
+
       {/* Bottom Navigation */}
       <div className="bottom-nav">
-        <a href="#" className="nav-item">
-          <i className="fas fa-home" />
-          <span>Home</span>
-        </a>
-        <a href="#" className="nav-item">
-          <i className="fas fa-wallet" />
-          <span>Recharge</span>
-        </a>
-        <a href="#" className="nav-item">
-          <i className="fas fa-hand-holding-usd" />
-          <span>Grap</span>
-        </a>
-        <a href="#" className="nav-item">
-          <i className="fas fa-shopping-cart" />
-          <span>Order</span>
-        </a>
-        <a href="#" className="nav-item active">
-          <i className="fas fa-user" />
-          <span>Account</span>
-        </a>
+        {navItems.map((item, index) => (
+          <Link 
+            key={index} 
+            to={item.path} 
+            className={`nav-item ${item.active ? 'active' : ''}`}
+          >
+            <i className={item.icon} />
+            <span>{item.name}</span>
+          </Link>
+        ))}
       </div>
 
-      <style>{`  /* Profile Section */
+      <style>{`
+        /* Profile Section */
         .profile-section {
             background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
             border-radius: 20px;
@@ -408,6 +427,10 @@ function Profile() {
             gap: 10px;
         }
         
+        .balance-buttons a {
+          text-decoration: none;
+        }
+        
         .balance-btn {
             padding: 12px 5px;
             border-radius: 12px;
@@ -420,6 +443,7 @@ function Profile() {
             cursor: pointer;
             transition: all 0.2s ease;
             font-size: 12px;
+            width: 100%;
         }
         
         .balance-btn:active {
@@ -448,45 +472,6 @@ function Profile() {
         .btn-invite {
             background: #e8f5e9;
             color: #2e7d32;
-        }
-        
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            padding: 0 15px;
-            margin-bottom: 25px;
-        }
-        
-        .action-btn {
-            background: white;
-            border-radius: 15px;
-            padding: 15px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .action-btn:active {
-            transform: scale(0.97);
-        }
-        
-        .action-btn i {
-            font-size: 22px;
-            color: #0f2161;
-        }
-        
-        .action-btn span {
-            font-size: 12px;
-            font-weight: 600;
-            color: #0f2161;
         }
         
         /* Account Options */
@@ -591,7 +576,23 @@ function Profile() {
             transform: scale(0.98);
             background: #fff8e1;
         }
-    
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+            z-index: 1000;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 20px 20px 0 0;
+        }
         
         .nav-item {
             display: flex;
@@ -626,14 +627,11 @@ function Profile() {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .quick-actions {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
             .profile-details {
                 grid-template-columns: 1fr;
             }
-        }`}</style>
+        }
+      `}</style>
     </>
   );
 }

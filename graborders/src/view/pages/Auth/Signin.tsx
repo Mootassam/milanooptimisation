@@ -94,7 +94,8 @@ function Signin() {
       </div>
       <div className="footer">
         <p>
-          By logging in, you agree to our <a href="#">Terms of Service</a> and{" "}
+          By logging in, you agree to our <a href="#">Terms of Servic
+            e</a> and{" "}
           <a href="#">Privacy Policy</a>
         </p>
       </div>
