@@ -10,24 +10,21 @@ function about() {
   <div className="page-title"></div>
  
   {/* Our Story Section */}
-  <div className="content-section">
+<div className="content-section">
     <h2 className="section-title">
       <i className="fas fa-book-open" />
       Our Story
     </h2>
     <div className="section-content">
       <p>
-        Founded in 2013 by Christian Raisson and Philippe de Chanville, ManoMano
-        was created with a simple vision: to make home improvement accessible to
-        everyone.
+        Founded in 2013 by Christian Raisson and Philippe de Chanville, ManoMano was created with a powerful vision: to revolutionize the home improvement and gardening market by making it accessible to all.
       </p>
       <p>
-        What started as a small French startup has grown into Europe's largest
-        online platform for DIY and gardening, serving millions of customers
-        across 6 countries.
+        From a small French startup, we have grown into Europe's leading online platform for DIY, gardening, and home improvement, serving millions of customers with a seamless mix of European convenience and key services for Africa, like cash-on-delivery.
       </p>
     </div>
   </div>
+
   {/* Stats Section */}
   <div className="content-section">
     <h2 className="section-title">
@@ -40,19 +37,20 @@ function about() {
         <div className="stat-label">Products</div>
       </div>
       <div className="stat-item">
-        <div className="stat-value">6</div>
+        <div className="stat-value">8+</div>
         <div className="stat-label">Countries</div>
       </div>
       <div className="stat-item">
         <div className="stat-value">3.6K+</div>
-        <div className="stat-label">Sellers</div>
+        <div className="stat-label">Partner Sellers</div>
       </div>
       <div className="stat-item">
-        <div className="stat-value">700+</div>
-        <div className="stat-label">Employees</div>
+        <div className="stat-value">1,200+</div>
+        <div className="stat-label">Manas & Manos</div>
       </div>
     </div>
   </div>
+
   {/* Timeline Section */}
   <div className="content-section">
     <h2 className="section-title">
@@ -64,36 +62,43 @@ function about() {
         <div className="timeline-dot" />
         <div className="timeline-year">2013</div>
         <div className="timeline-content">
-          ManoMano founded in France by Christian Raisson and Philippe de
-          Chanville
+          ManoMano founded in France by Christian Raisson and Philippe de Chanville
         </div>
       </div>
       <div className="timeline-item">
         <div className="timeline-dot" />
         <div className="timeline-year">2015</div>
-        <div className="timeline-content">Expanded to Spain and Italy</div>
+        <div className="timeline-content">Expanded into Spain and Italy</div>
       </div>
       <div className="timeline-item">
         <div className="timeline-dot" />
         <div className="timeline-year">2017</div>
-        <div className="timeline-content">Launched in Germany and the UK</div>
+        <div className="timeline-content">Launched in Belgium and Germany</div>
       </div>
       <div className="timeline-item">
         <div className="timeline-dot" />
         <div className="timeline-year">2019</div>
         <div className="timeline-content">
-          Introduced ManoManoPro for professionals
+          Introduced ManoMano Pro for professional clients
         </div>
       </div>
       <div className="timeline-item">
         <div className="timeline-dot" />
         <div className="timeline-year">2021</div>
         <div className="timeline-content">
-          Reached unicorn status with $355 million Series F funding
+          Achieved unicorn status with $355 million in Series F funding
+        </div>
+      </div>
+      <div className="timeline-item">
+        <div className="timeline-dot" />
+        <div className="timeline-year">2023</div>
+        <div className="timeline-content">
+          Strengthened our growth and presence across Europe and Africa
         </div>
       </div>
     </div>
   </div>
+
   {/* Values Section */}
   <div className="content-section">
     <h2 className="section-title">
@@ -106,10 +111,9 @@ function about() {
           <i className="fas fa-lightbulb" />
         </div>
         <div className="value-content">
-          <h4>Innovation</h4>
+          <h4>Customer Centricity</h4>
           <p>
-            We constantly seek new ways to improve the customer experience and
-            revolutionize the DIY market.
+            We put our customers first, constantly innovating our platform and services, from advice to delivery, to meet their unique needs.
           </p>
         </div>
       </div>
@@ -118,10 +122,9 @@ function about() {
           <i className="fas fa-hands-helping" />
         </div>
         <div className="value-content">
-          <h4>Customer Focus</h4>
+          <h4>Boldness</h4>
           <p>
-            Our customers are at the heart of everything we do. We strive to
-            make DIY accessible to everyone.
+            We are entrepreneurs at heart, daring to challenge the status quo and expand into new markets to make DIY accessible for everyone.
           </p>
         </div>
       </div>
@@ -130,15 +133,15 @@ function about() {
           <i className="fas fa-seedling" />
         </div>
         <div className="value-content">
-          <h4>Sustainability</h4>
+          <h4>Commitment</h4>
           <p>
-            We're committed to promoting eco-friendly products and sustainable
-            practices in home improvement.
+            We are committed to our community and the planet, promoting sustainable products and responsible practices in home improvement.
           </p>
         </div>
       </div>
     </div>
   </div>
+
   {/* Team Section */}
   <div className="content-section">
     <h2 className="section-title">
@@ -151,26 +154,26 @@ function about() {
           <i className="fas fa-user" />
         </div>
         <div className="member-name">Christian Raisson</div>
-        <div className="member-role">Co-Founder &amp; CEO</div>
+        <div className="member-role">Co-Founder & CEO</div>
       </div>
       <div className="team-member">
         <div className="member-photo">
           <i className="fas fa-user" />
         </div>
         <div className="member-name">Philippe de Chanville</div>
-        <div className="member-role">Co-Founder &amp; COO</div>
+        <div className="member-role">Co-Founder & Chief Operating Officer</div>
       </div>
     </div>
   </div>
+
   {/* CTA Section */}
   <div className="cta-section">
     <h3 className="cta-title">Join the ManoMano Community</h3>
     <p className="cta-text">
-      Discover why millions of DIY enthusiasts across Europe trust ManoMano for
-      their home improvement projects.
+      Discover why millions of DIY enthusiasts and professionals trust ManoMano for all their home improvement and gardening projects.
     </p>
     <a href="#" className="cta-button">
-      Start Shopping
+      Start Your Project
     </a>
   </div>
   {/* Bottom Navigation */}

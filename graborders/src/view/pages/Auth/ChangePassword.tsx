@@ -146,7 +146,6 @@ function ChangePassword() {
 
         /* Change Password Section */
         .change-password-section {
-          padding: 20px 15px;
         }
 
         .change-password-card {
@@ -321,7 +320,7 @@ function ChangePassword() {
         /* Responsive Design */
         @media (max-width: 480px) {
           .change-password-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
             margin: 0 10px;
           }
 
@@ -343,7 +342,7 @@ function ChangePassword() {
 
         @media (min-width: 768px) {
           .change-password-section {
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
       `}</style>

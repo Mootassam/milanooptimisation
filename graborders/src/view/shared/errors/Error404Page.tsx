@@ -277,7 +277,7 @@ function Error403Page() {
 
         @media (max-width: 340px) {
           .error-403-content {
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
 
           .error-403-title {

@@ -24,7 +24,7 @@ function Language() {
 
         /* Main Section */
         .language-settings-section {
-          padding: 20px 15px;
+          padding: 20px 0px;
           max-width: 500px;
           margin: 0 auto;
         }
@@ -261,7 +261,7 @@ function Language() {
           }
 
           .language-settings-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
 
           .language-main-title {
@@ -306,7 +306,7 @@ function Language() {
         @media (min-width: 768px) {
           .language-settings-section {
             max-width: 500px;
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
 

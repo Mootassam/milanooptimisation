@@ -361,7 +361,7 @@ function Order() {
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 30px 20px;
+            padding: 30px 0px;
             color: #7b8796;
         }
         

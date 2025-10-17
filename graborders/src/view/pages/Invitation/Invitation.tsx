@@ -57,7 +57,8 @@ function Invitation() {
   {/* Header Section */}
 <SubHeader title="Invitation" detail="Invite Friends &amp; Earn" />
   {/* Page Title */}
- 
+   <div className="page-title"></div>
+
   {/* Invite Card */}
   <div className="invite-card">
     <h2 className="invite-title">Your Referral Code</h2>

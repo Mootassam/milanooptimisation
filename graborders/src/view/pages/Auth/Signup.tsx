@@ -424,7 +424,7 @@ function Signup() {
           }
           
           .headers {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
           
           .logo {
@@ -444,7 +444,7 @@ function Signup() {
           }
           
           .form-container {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
         }
       `}</style>

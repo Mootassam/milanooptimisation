@@ -158,7 +158,7 @@ function Wallet() {
 
         /* Main Section */
         .wallet-settings-section {
-          padding: 20px 15px;
+          padding: 20px 0px;
           max-width: 500px;
           margin: 0 auto;
           display: flex;
@@ -393,7 +393,7 @@ function Wallet() {
           }
 
           .wallet-settings-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
 
           .wallet-main-title {
@@ -419,7 +419,7 @@ function Wallet() {
         @media (min-width: 768px) {
           .wallet-settings-section {
             max-width: 500px;
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
       `}</style>

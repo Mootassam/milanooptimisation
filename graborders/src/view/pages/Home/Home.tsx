@@ -20,7 +20,7 @@ function Home() {
   const loading = useSelector(selector.selectLoading);
   const [Modal, setShowModal] = useState(false);
   const currentUser = useSelector(authSelectors.selectCurrentUser);
-  const searchAllCoins = async () => {};
+  const searchAllCoins = async () => { };
   interface DataItem {
     image: string;
     title: string;
@@ -63,7 +63,7 @@ function Home() {
     {
       icon: "fa-regular fa-building",
       text: "About",
-      link: "/company",
+      link: "/about",
     },
     {
       icon: "fa-solid fa-file-contract",
@@ -74,11 +74,6 @@ function Home() {
       icon: "fa fa-certificate",
       text: "Certificate",
       link: "/Certificate",
-    },
-    {
-      icon: "fa-solid fa-question",
-      text: "FAQs",
-      link: "/faqs",
     },
     {
       icon: "fa fa-user-plus",
@@ -113,13 +108,13 @@ function Home() {
 
   return (
     <div className="home-container">
-  
+
       {/* Image Slider */}
       <section className="slider-section">
-        <Carousel 
-          autoPlay 
-          infiniteLoop 
-          showThumbs={false} 
+        <Carousel
+          autoPlay
+          infiniteLoop
+          showThumbs={false}
           showStatus={false}
           interval={5000}
           className="main-slider"
@@ -138,42 +133,18 @@ function Home() {
       {/* Quick Actions - All in one line */}
       <section className="quick-actions">
         <div className="action-grid">
-          <div className="action-item">
+
+          {button__action.map((item) => <Link to={item.link}><div className="action-item">
             <div className="action-icon">
-              <i className="fas fa-users"></i>
+              <i className={item.icon}></i>
             </div>
-            <span className="action-label">Team</span>
+            <span className="action-label">{item.text}</span>
           </div>
-          <div className="action-item">
-            <div className="action-icon">
-              <i className="fas fa-info-circle"></i>
-            </div>
-            <span className="action-label">About</span>
-          </div>
-          <div className="action-item">
-            <div className="action-icon">
-              <i className="fas fa-certificate"></i>
-            </div>
-            <span className="action-label">Certificate</span>
-          </div>
-          <div className="action-item">
-            <div className="action-icon">
-              <i className="fas fa-file-contract"></i>
-            </div>
-            <span className="action-label">T&C</span>
-          </div>
-          <div className="action-item">
-            <div className="action-icon">
-              <i className="fas fa-question"></i>
-            </div>
-            <span className="action-label">FAQs</span>
-          </div>
-          <div className="action-item">
-            <div className="action-icon">
-              <i className="fas fa-user-plus"></i>
-            </div>
-            <span className="action-label">Invite</span>
-          </div>
+          </Link>
+
+          )}
+
+
         </div>
       </section>
 
@@ -182,7 +153,7 @@ function Home() {
         <div className="section-header">
           <h2><i className="fas fa-crown"></i> VIP Membership Levels</h2>
         </div>
-        
+
         <div className="vip-list">
           <div className="vip-list-item">
             <div className="vip-image-placeholder">
@@ -210,7 +181,7 @@ function Home() {
               <button className="upgrade-btn">Upgrade Now</button>
             </div>
           </div>
-          
+
           <div className="vip-list-item">
             <div className="vip-image-placeholder">
               <i className="fas fa-crown"></i>
@@ -237,7 +208,7 @@ function Home() {
               <button className="upgrade-btn primary">Upgrade Now</button>
             </div>
           </div>
-          
+
           <div className="vip-list-item">
             <div className="vip-image-placeholder">
               <i className="fas fa-crown"></i>
@@ -263,7 +234,7 @@ function Home() {
               <button className="upgrade-btn">Upgrade Now</button>
             </div>
           </div>
-          
+
           <div className="vip-list-item">
             <div className="vip-image-placeholder">
               <i className="fas fa-crown"></i>
@@ -297,7 +268,7 @@ function Home() {
         <div className="section-header">
           <h2><i className="fas fa-newspaper"></i> Latest Updates</h2>
         </div>
-        
+
         <div className="news-container">
           <div className="news-item">
             <div className="news-icon">
@@ -308,7 +279,7 @@ function Home() {
               <p>Earn 10% commission on your referrals' earnings</p>
             </div>
           </div>
-          
+
           <div className="news-item">
             <div className="news-icon">
               <i className="fas fa-chart-line"></i>
@@ -419,6 +390,7 @@ function Home() {
         
         .action-grid {
           display: flex;
+          justify-content : space-around;
           overflow-x: auto;
           padding: 10px 5px;
           scrollbar-width: none;

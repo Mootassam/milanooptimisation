@@ -162,7 +162,7 @@ function Withdraw() {
 
         /* Main Content Section */
         .withdraw-content-section {
-          padding: 20px 15px;
+          padding: 20px 0px;
           max-width: 500px;
           margin: 0 auto;
           display: flex;
@@ -417,7 +417,7 @@ function Withdraw() {
 
           .withdraw-main-card,
           .withdraw-rules-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
 
           .withdraw-main-title {
@@ -440,7 +440,7 @@ function Withdraw() {
         @media (min-width: 768px) {
           .withdraw-content-section {
             max-width: 500px;
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
       `}</style>

@@ -240,7 +240,7 @@ function HelpSupport() {
 
         /* Main Section */
         .help-support-section {
-          padding: 20px 15px;
+          padding: 20px 0px;
           max-width: 600px;
           margin: 0 auto;
           display: flex;
@@ -304,7 +304,7 @@ function HelpSupport() {
           background: #f8f9ff;
           border: 2px solid #f0f4ff;
           border-radius: 16px;
-          padding: 20px 15px;
+          padding: 20px 0px;
           text-align: center;
           transition: all 0.2s ease;
           cursor: pointer;
@@ -542,7 +542,7 @@ function HelpSupport() {
           .faq-section,
           .contact-section,
           .support-tips-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
 
           .quick-help-grid,
@@ -572,7 +572,7 @@ function HelpSupport() {
         @media (min-width: 768px) {
           .help-support-section {
             max-width: 600px;
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
       `}</style>

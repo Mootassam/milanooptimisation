@@ -126,7 +126,7 @@ function SecuritySettings() {
 
         /* Main Section */
         .security-settings-section {
-          padding: 20px 15px;
+          padding: 20px 0px;
           max-width: 600px;
           margin: 0 auto;
         }
@@ -271,7 +271,7 @@ function SecuritySettings() {
           }
 
           .security-tips-card {
-            padding: 20px 15px;
+            padding: 20px 0px;
           }
 
           .tips-header {
@@ -304,7 +304,7 @@ function SecuritySettings() {
         @media (min-width: 768px) {
           .security-settings-section {
             max-width: 600px;
-            padding: 30px 20px;
+            padding: 30px 0px;
           }
         }
       `}</style>

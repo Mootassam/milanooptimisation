@@ -229,7 +229,7 @@ function Online() {
         .category-item {
             background: white;
             border-radius: 12px;
-            padding: 20px 15px;
+            padding: 20px 0px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transition: all 0.2s ease;

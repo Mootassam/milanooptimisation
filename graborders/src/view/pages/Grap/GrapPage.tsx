@@ -183,7 +183,7 @@ const Grappage = () => {
       </>
       <style>{`  /* Page Content */
         .page-content {
-            padding: 20px 15px;
+            padding: 20px 0px;
         }
         
         .section-title {
