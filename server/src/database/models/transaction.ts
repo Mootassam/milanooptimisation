@@ -12,7 +12,6 @@ export default (database) => {
   const TransactionSchema = new Schema(
     {
 
-
       referenceNumber: {
         type: String,
         unique: true,
