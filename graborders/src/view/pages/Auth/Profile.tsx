@@ -34,7 +34,7 @@ function Profile() {
     history.push(param);
   };
   const currentUser = useSelector(authSelectors.selectCurrentUser);
-  
+
   const referenceCodeRef = useRef<any>(null);
 
   const copyToClipboardCoupon = () => {
@@ -183,18 +183,18 @@ function Profile() {
             <i className="fas fa-user" />
           </div>
           <div className="profile-info">
-            <h2 className="profile-name">John Doe</h2>
+            <h2 className="profile-name">{currentUser.email.split('@')[0]}</h2>
             <span className="profile-status">Gold Member</span>
           </div>
         </div>
         <div className="profile-details">
           <div className="profile-detail">
             <div className="detail-label">Invitation Code</div>
-            <div className="detail-value">MANO1234</div>
+            <div className="detail-value">{currentUser.refcode}</div>
           </div>
           <div className="profile-detail">
             <div className="detail-label">Credit Score</div>
-            <div className="detail-value">100</div>
+            <div className="detail-value">{currentUser.score}</div>
           </div>
         </div>
       </div>
@@ -205,7 +205,7 @@ function Profile() {
           <div className="balance-title">Available Balance</div>
           <div className="balance-info">USD</div>
         </div>
-        <div className="balance-amount">$1,250.75</div>
+        <div className="balance-amount">${currentUser.balance}</div>
         <div className="balance-buttons">
           {balanceActions.map((action, index) => (
             <Link key={index} to={action.path}>
@@ -273,9 +273,9 @@ function Profile() {
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         {navItems.map((item, index) => (
-          <Link 
-            key={index} 
-            to={item.path} 
+          <Link
+            key={index}
+            to={item.path}
             className={`nav-item ${item.active ? 'active' : ''}`}
           >
             <i className={item.icon} />
