@@ -146,89 +146,7 @@ function TransactionHistory() {
 
             <SubHeader title="Transaction History" />
 
-            {/* Summary Cards */}
-            <div className="summary-cards">
-                <div className="summary-card">
-                    <div className="summary-icon deposit">
-                        <i className="fas fa-arrow-down" />
-                    </div>
-                    <div className="summary-info">
-                        <div className="summary-label">Total Deposits</div>
-                        <div className="summary-amount">$501.80</div>
-                    </div>
-                </div>
-                <div className="summary-card">
-                    <div className="summary-icon withdraw">
-                        <i className="fas fa-arrow-up" />
-                    </div>
-                    <div className="summary-info">
-                        <div className="summary-label">Total Withdrawals</div>
-                        <div className="summary-amount">$430.50</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filter Section */}
-            <div className="filter-section">
-                <div className="filter-group">
-                    <div className="filter-label">Transaction Type</div>
-                    <div className="filter-buttons">
-                        <button
-                            className={`filter-btn ${filter === "all" ? "active" : ""}`}
-                            onClick={() => setFilter("all")}
-                        >
-                            All
-                        </button>
-                        <button
-                            className={`filter-btn ${filter === "deposit" ? "active" : ""}`}
-                            onClick={() => setFilter("deposit")}
-                        >
-                            <i className="fas fa-arrow-down" />
-                            Deposits
-                        </button>
-                        <button
-                            className={`filter-btn ${filter === "withdraw" ? "active" : ""}`}
-                            onClick={() => setFilter("withdraw")}
-                        >
-                            <i className="fas fa-arrow-up" />
-                            Withdrawals
-                        </button>
-                    </div>
-                </div>
-
-                <div className="filter-group">
-                    <div className="filter-label">Status</div>
-                    <div className="filter-buttons">
-                        <button
-                            className={`filter-btn ${statusFilter === "all" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("all")}
-                        >
-                            All
-                        </button>
-                        <button
-                            className={`filter-btn ${statusFilter === "completed" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("completed")}
-                        >
-                            <i className="fas fa-check-circle" />
-                            Completed
-                        </button>
-                        <button
-                            className={`filter-btn ${statusFilter === "pending" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("pending")}
-                        >
-                            <i className="fas fa-clock" />
-                            Pending
-                        </button>
-                        <button
-                            className={`filter-btn ${statusFilter === "failed" ? "active" : ""}`}
-                            onClick={() => setStatusFilter("failed")}
-                        >
-                            <i className="fas fa-times-circle" />
-                            Failed
-                        </button>
-                    </div>
-                </div>
-            </div>
+         
 
             {/* Transactions List */}
             <div className="transactions-section">
@@ -433,7 +351,7 @@ function TransactionHistory() {
         /* Transactions Section */
         .transactions-section {
           background: white;
-          margin: 0 15px 80px;
+          margin: 25px 0px 80px;
           border-radius: 20px;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
           overflow: hidden;
@@ -470,7 +388,7 @@ function TransactionHistory() {
         }
         
         .transactions-list {
-          max-height: 500px;
+        //   max-height: 500px;
           overflow-y: auto;
         }
         
