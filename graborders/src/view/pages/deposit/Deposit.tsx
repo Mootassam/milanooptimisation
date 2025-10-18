@@ -4,48 +4,24 @@ import SubHeader from "src/view/shared/Header/SubHeader";
 
 function Deposit() {
     // Payment methods data
-    const paymentMethods = [
-        {
-            id: 1,
-            name: "Crypto",
-            description: "BTC, ETH, USDT, and other cryptocurrencies",
-            icon: "fas fa-coins",
-            color: "#f7931a",
-            path: "/deposit/crypto"
-        },
-        {
-            id: 2,
-            name: "MTN Mobile Money",
-            description: "Deposit using your MTN mobile money",
-            icon: "fas fa-mobile-alt",
-            color: "#ffcc00",
-            path: "/deposit/mtn"
-        },
-        {
-            id: 3,
-            name: "Airtel Money",
-            description: "Deposit using your Airtel money",
-            icon: "fas fa-wifi",
-            color: "#e60000",
-            path: "/deposit/airtel"
-        },
-        {
-            id: 4,
-            name: "Telecel Money",
-            description: "Deposit using your Telecel money",
-            icon: "fas fa-broadcast-tower",
-            color: "#00aaff",
-            path: "/deposit/telecel"
-        },
-        {
-            id: 5,
-            name: "Orange Money",
-            description: "Deposit using your Orange money",
-            icon: "fas fa-bolt",
-            color: "#ff6600",
-            path: "/deposit/orange"
-        }
-    ];
+  const paymentMethods = [
+    {
+        id: 1,
+        name: "Crypto",
+        description: "BTC, ETH, USDT, and other cryptocurrencies",
+        icon: "fas fa-coins",
+        color: "#f7931a",
+        path: "/deposit/crypto"
+    },
+    {
+        id: 2,
+        name: "Mobile Money",
+        description: "MTN, Airtel, Telecel, Orange",
+        icon: "fas fa-mobile-alt",
+        color: "#0f2161",
+        path: "/deposit/mobile-money"
+    }
+];
 
 
     return (

@@ -160,13 +160,27 @@ const screenRoutes = [
     exact: true,
   },
 
+
+  {
+    path: "/history",
+    loader: () => import("src/view/pages/History/History"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
   {
     path: "/deposit/crypto",
     loader: () => import("src/view/pages/deposit/Crypto"),
     permissionRequired: permissions.categoryRead,
     exact: true,
+
   },
 
+  {
+    path: "/deposit/mobile-money",
+    loader: () => import("src/view/pages/deposit/Mtn"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
 
 
 
