@@ -11,11 +11,18 @@ export default (database) => {
 
   const TransactionSchema = new Schema(
     {
+
+
+      referenceNumber: {
+        type: String,
+        unique: true,
+      },
       status: {
         type: String,
         enum: ["pending", "canceled", "success"],
         default: "pending",
       },
+
       amount: {
         type: String,
       },
@@ -24,7 +31,7 @@ export default (database) => {
         enum: ["withdraw", "deposit"],
         default: "withdraw",
       },
-      photo: [FileSchema],
+
       user: {
         type: Schema.Types.ObjectId,
         ref: "user",
