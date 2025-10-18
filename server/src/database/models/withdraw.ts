@@ -3,20 +3,19 @@ const Schema = mongoose.Schema;
 
 export default (database) => {
   try {
-    return database.model("deposit");
+    return database.model("withdraw");
   } catch (error) {
     // continue, because model doesnt exist
   }
 
-  const DepositSchema = new Schema(
+  const WithdrawSchema = new Schema(
     {
-
       // Additional fields for tracking
       referenceNumber: {
         type: String,
         unique: true,
       },
-      // Basic deposit information
+      // Basic withdraw information
       status: {
         type: String,
         enum: ["pending", "canceled", "completed", "failed"],
@@ -40,7 +39,7 @@ export default (database) => {
 
       // Specific payment method details
       paymentDetails: {
-        // For Crypto deposits
+        // For Crypto withdrawals
         crypto: {
           currency: {
             type: String,
@@ -59,7 +58,7 @@ export default (database) => {
           }
         },
 
-        // For Mobile Money deposits
+        // For Mobile Money withdrawals
         mobileMoney: {
           provider: {
             type: String,
@@ -68,7 +67,7 @@ export default (database) => {
           phoneNumber: {
             type: String,
           },
-          depositId: {
+          withdrawId: {
             type: String,
           }
         }
@@ -85,7 +84,6 @@ export default (database) => {
         ref: "tenant",
         required: true,
       },
-
 
       // Audit fields
       createdBy: {
@@ -105,7 +103,7 @@ export default (database) => {
     }
   );
 
-  DepositSchema.index(
+  WithdrawSchema.index(
     { importHash: 1, tenant: 1 },
     {
       unique: true,
@@ -115,18 +113,18 @@ export default (database) => {
     }
   );
 
-  DepositSchema.virtual("id").get(function () {
+  WithdrawSchema.virtual("id").get(function () {
     // @ts-ignore
     return this._id.toHexString();
   });
 
-  DepositSchema.set("toJSON", {
+  WithdrawSchema.set("toJSON", {
     getters: true,
   });
 
-  DepositSchema.set("toObject", {
+  WithdrawSchema.set("toObject", {
     getters: true,
   });
 
-  return database.model("deposit", DepositSchema);
+  return database.model("withdraw", WithdrawSchema);
 };
