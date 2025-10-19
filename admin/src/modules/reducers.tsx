@@ -13,6 +13,9 @@ import transaction from 'src/modules/transaction/transactionReducers'
 import product from 'src/modules/product/productReducers'
 import record from 'src/modules/record/recordReducers'
 import company from 'src/modules/company/companyReducers';
+import deposit from 'src/modules/deposit/depositReducers';
+import withdraw from 'src/modules/withdraw/withdrawReducers';
+
 import { combineReducers } from 'redux';
 export default (history) =>
   combineReducers({
@@ -24,6 +27,8 @@ export default (history) =>
     vip,
     record,
     transaction,
+    deposit,
+    withdraw,
     product,
     tenant,
     user,
@@ -31,5 +36,5 @@ export default (history) =>
     auditLog,
     settings,
     numbers,
-    
+
   });

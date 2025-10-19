@@ -7,31 +7,35 @@ import FileRepository from "./fileRepository";
 import Deposit from "../models/deposit";
 
 class DepositRepository {
-  static async create(data, options: IRepositoryOptions) {
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const [record] = await Deposit(options.database).create(
-      [
-        {
-          ...data,
-          tenant: currentTenant.id,
-          createdBy: currentUser.id,
-          updatedBy: currentUser.id,
-        },
-      ],
-      options
-    );
+ static async create(data, options: IRepositoryOptions) {
+  console.log('Received data:', data);
+  console.log('Payment method:', data.paymentMethod);
+  console.log('Payment details:', data.paymentDetails);
 
-    await this._createAuditLog(
-      AuditLogRepository.CREATE,
-      record.id,
-      data,
-      options
-    );
+  const currentTenant = MongooseRepository.getCurrentTenant(options);
+  const currentUser = MongooseRepository.getCurrentUser(options);
+  
+  const [record] = await Deposit(options.database).create(
+    [
+      {
+        ...data,
+        tenant: currentTenant.id,
+        createdBy: currentUser.id,
+        updatedBy: currentUser.id,
+      },
+    ],
+    options
+  );
 
-    return this.findById(record.id, options);
-  }
+  await this._createAuditLog(
+    AuditLogRepository.CREATE,
+    record.id,
+    data,
+    options
+  );
 
+  return this.findById(record.id, options);
+}
 
 
 

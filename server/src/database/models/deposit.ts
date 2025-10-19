@@ -10,13 +10,6 @@ export default (database) => {
 
   const DepositSchema = new Schema(
     {
-
-      // Additional fields for tracking
-      referenceNumber: {
-        type: String,
-        unique: true,
-      },
-      // Basic deposit information
       status: {
         type: String,
         enum: ["pending", "canceled", "completed", "failed"],

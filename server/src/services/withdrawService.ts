@@ -18,41 +18,10 @@ export default class WithdrawService {
     );
 
     try {
-      await this.checkSolde(data, { ...this.options });
-
-      const values = {
-        status: data.status,
-        datetransaction: data.datetransaction,
-        user: data.user,
-        type: data.type,
-        amount: data.amount,
-        photo: data.photo,
-      };
-
-      const record = await WithdrawRepository.create(values, {
+      const record = await WithdrawRepository.create(data, {
         ...this.options,
         session,
       });
-
-      // For deposit transactions, create deposit_success notification
-      if (data.type === 'deposit') {
-        await this.updateUserBalance(data.user, data.amount, session, 'inc');
-
-        await this.createNotification(
-          data.user,
-          record._id,
-          'deposit_success', // Changed to deposit_success
-          data.amount,
-          { ...this.options, session }
-        );
-      }
-
-      // For withdrawal transactions, deduct balance but DON'T create notification
-      if (data.type === 'withdraw') {
-        await this.updateUserBalance(data.user, data.amount, session, 'dec');
-        // No notification created for withdrawal on creation
-      }
-
       await MongooseRepository.commitTransaction(session);
 
       return record;

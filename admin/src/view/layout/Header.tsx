@@ -59,7 +59,22 @@ function Header(props) {
         <i className="fas fa-bars" />
       </button>
 
-      <div>
+      <div style={
+        {
+          display
+            : 'flex',
+          gap: '10px',
+          alignItems: 'center'
+        }
+      }>
+
+        <div className='buttons__itesm'>
+          <div > Withdraw :(0)</div>
+        </div>
+
+
+
+
         <span className="i18n-select">
           <I18nSelect />
         </span>
@@ -82,14 +97,21 @@ function Header(props) {
                 {['multi', 'multi-with-subdomain'].includes(
                   config.tenantMode,
                 ) && (
-                  <span className="user-dropdown-text-tenant">
-                    {currentTenant && currentTenant.name}
-                  </span>
-                )}
+                    <span className="user-dropdown-text-tenant">
+                      {currentTenant && currentTenant.name}
+                    </span>
+                  )}
               </span>
             </div>
           </span>
           <div className="dropdown-menu dropdown-menu-right">
+
+
+
+
+
+
+
             <button
               onClick={doNavigateToProfile}
               className="dropdown-item"
@@ -109,15 +131,15 @@ function Header(props) {
             {['multi', 'multi-with-subdomain'].includes(
               config.tenantMode,
             ) && (
-              <button
-                onClick={doNavigateToTenants}
-                className="dropdown-item"
-                type="button"
-              >
-                <i className="fas fa-th-large" />
-                {i18n('auth.tenants')}
-              </button>
-            )}
+                <button
+                  onClick={doNavigateToTenants}
+                  className="dropdown-item"
+                  type="button"
+                >
+                  <i className="fas fa-th-large" />
+                  {i18n('auth.tenants')}
+                </button>
+              )}
 
             {/* <button
               onClick={doNavigateToSettings}

@@ -222,6 +222,120 @@ const privateRoutes = [
     exact: true,
   },
 
+
+  // deposit routes 
+
+
+  {
+    path: '/deposit',
+    loader: () =>
+      import(
+        'src/view/deposit/list/DepositListPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+  {
+    path: '/deposit/new',
+    loader: () =>
+      import(
+        'src/view/deposit/form/DepositFormPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/deposit/importer',
+    loader: () =>
+      import(
+        'src/view/deposit/importer/DepositImporterPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/deposit/:id/edit',
+    loader: () =>
+      import(
+        'src/view/deposit/form/DepositFormPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/deposit/:id',
+    loader: () =>
+      import(
+        'src/view/deposit/view/DepositViewPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+
+
+
+  // withdraw routes
+
+
+
+  {
+    path: '/withdraw',
+    loader: () =>
+      import(
+        'src/view/withdraw/list/WithdrawListPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+  {
+    path: '/withdraw/new',
+    loader: () =>
+      import(
+        'src/view/withdraw/form/WithdrawFormPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/withdraw/importer',
+    loader: () =>
+      import(
+        'src/view/withdraw/importer/WithdrawImporterPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/withdraw/:id/edit',
+    loader: () =>
+      import(
+        'src/view/withdraw/form/WithdrawFormPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+  {
+    path: '/withdraw/:id',
+    loader: () =>
+      import(
+        'src/view/withdraw/view/WithdrawViewPage'
+      ),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+
+
+
+
+
+
+
+
+
+
   // vip routes
 
   {
@@ -296,12 +410,7 @@ const privateRoutes = [
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
-  {
-    path: '/check',
-    loader: () => import('src/view/visa/Check'),
-    permissionRequired: permissions.categoryRead,
-    exact: true,
-  },
+
 
   {
     path: '/password-change',
@@ -334,11 +443,23 @@ const privateRoutes = [
   },
 
   {
+    path: '/clients',
+    loader: () => import('src/view/user/client/ClientPage'),
+    permissionRequired: permissions.userRead,
+    exact: true,
+  },
+
+
+
+  {
     path: '/user',
     loader: () => import('src/view/user/list/UserPage'),
     permissionRequired: permissions.userRead,
     exact: true,
   },
+
+
+
 
   {
     path: '/user/new',

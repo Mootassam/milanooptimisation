@@ -5,33 +5,178 @@
   width: 100%;
 }
 
-@media screen and (max-width :1100px ) {
-  .app__company { 
+@media screen and (max-width :1100px) {
+  .app__company {
     flex-direction: column;
   }
 }
 
+/* app.css */
+
+.app__company {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 20px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .company__item {
-  padding: 100px 60px;
-  outline: 1px solid #000;
-  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  justify-content: center;
+  padding: 40px 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecef;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
 }
+
+.company__item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
 .company__item:hover {
-  background-color: cadetblue;
-  color: white;
-  outline: 0px;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: #667eea;
 }
-.company__text {
-  font-size: 18px;
-  font-weight: 500;
+
+.company__item:hover::before {
+  transform: scaleX(1);
 }
+
+.company__item:hover .item__company {
+  transform: scale(1.1);
+  color: #667eea;
+}
+
+.company__item:hover .company__text {
+  color: #2d3748;
+}
+
 .item__company {
-  font-size: 54px;
+  font-size: 3rem;
+  margin-bottom: 16px;
+  color: #4a5568;
+  transition: all 0.3s ease;
 }
+
+.company__text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4a5568;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
 .remove__ligne {
   text-decoration: none;
+}
+
+/* Remove default link styles */
+.app__company a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app__company {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    padding: 16px 0;
+  }
+
+  .company__item {
+    padding: 32px 20px;
+    height: 160px;
+  }
+
+  .item__company {
+    font-size: 2.5rem;
+  }
+
+  .company__text {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app__company {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .company__item {
+    padding: 24px 16px;
+    height: 140px;
+    border-radius: 12px;
+  }
+
+  .item__company {
+    font-size: 2.25rem;
+    margin-bottom: 12px;
+  }
+
+  .company__text {
+    font-size: 1rem;
+  }
+}
+
+/* Optional: Add a subtle background pattern */
+.app__company {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.03) 1px, transparent 0);
+  background-size: 20px 20px;
+  min-height: calc(100vh - 200px);
+}
+
+/* Smooth page load animation */
+.app__company {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Individual card stagger animation */
+.company__item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.company__item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.company__item:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.company__item:nth-child(4) {
+  animation-delay: 0.4s;
 }
