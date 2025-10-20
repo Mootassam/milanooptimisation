@@ -158,6 +158,40 @@ const userListActions = {
     }
   },
 
+    fetchClient: (filter?, rawFilter?, keepPagination = false) => async (
+    dispatch,
+    getState,
+  ) => {
+    try {
+      dispatch({
+        type: userListActions.FETCH_STARTED,
+        payload: { filter, rawFilter, keepPagination },
+      });
+
+      const response = await UserService.fetchClients(
+        filter,
+        selectors.selectOrderBy(getState()),
+        selectors.selectLimit(getState()),
+        selectors.selectOffset(getState()),
+      );
+
+      dispatch({
+        type: userListActions.FETCH_SUCCESS,
+        payload: {
+          rows: response.rows,
+          count: response.count,
+        },
+      });
+    } catch (error) {
+      Errors.handle(error);
+
+      dispatch({
+        type: userListActions.FETCH_ERROR,
+      });
+    }
+  },
+
+
   doDestroy: (id) => async (dispatch, getState) => {
     try {
       dispatch({

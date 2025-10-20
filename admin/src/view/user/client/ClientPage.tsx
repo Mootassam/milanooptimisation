@@ -1,11 +1,10 @@
 import React from 'react';
 import { i18n } from 'src/i18n';
 import ContentWrapper from 'src/view/layout/styles/ContentWrapper';
-import Breadcrumb from 'src/view/shared/Breadcrumb';
 import PageTitle from 'src/view/shared/styles/PageTitle';
-import UserFilter from 'src/view/user/list/UserFilter';
-import UserTable from 'src/view/user/list/UserTable';
-import UserToolbar from 'src/view/user/list/UserToolbar';
+import UserFilter from 'src/view/user/client/ClientFilter';
+import UserTable from 'src/view/user/client/ClientTable';
+import UserToolbar from 'src/view/user/client/ClientToolbar';
 import { Col, Container, Row } from 'react-bootstrap';
 
 function UserPage() {

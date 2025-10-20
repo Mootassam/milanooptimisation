@@ -142,6 +142,29 @@ export default class UserService {
     return response.data;
   }
 
+
+  static async fetchClients(filter, orderBy, limit, offset) {
+    const params = {
+      filter,
+      orderBy,
+      limit,
+      offset,
+    };
+
+    const tenantId = AuthCurrentTenant.get();
+
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/clients`,
+      {
+        params,
+      },
+    );
+
+    return response.data;
+  }
+
+
+
   static async fetchUserAutocomplete(query, limit) {
     const params = {
       query,

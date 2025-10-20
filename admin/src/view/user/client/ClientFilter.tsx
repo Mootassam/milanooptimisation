@@ -47,7 +47,7 @@ const emptyValues = {
   email: null,
   role: null,
   status: null,
- 
+
 };
 
 const previewRenders = {
@@ -101,7 +101,7 @@ function UserFilter(props) {
 
   useEffect(() => {
     dispatch(
-      actions.doFetch(
+      actions.fetchClient(
         schema.cast(initialValues),
         rawFilter,
       ),
