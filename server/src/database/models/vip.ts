@@ -37,7 +37,7 @@ export default (database) => {
         type: String,
       },
       
-      tasksperday: { type: String },
+
       handlingfee: { type: String },
       withdrawlimit: { type: String },
 

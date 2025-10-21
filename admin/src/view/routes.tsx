@@ -438,6 +438,7 @@ const privateRoutes = [
     path: '/tenant/:id/edit',
     loader: () =>
       import('src/view/tenant/form/TenantFormPage'),
+      
     permissionRequired: null,
     exact: true,
   },

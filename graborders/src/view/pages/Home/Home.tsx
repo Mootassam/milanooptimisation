@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Vipactions from "src/modules/vip/list/vipListActions";
 import selector from "src/modules/vip/list/vipListSelectors";
-import LoadingModal from "src/shared/LoadingModal";
 import authSelectors from "src/modules/auth/authSelectors";
 import actions from "src/modules/auth/authActions";
 import listactions from "src/modules/company/list/companyListActions";
@@ -14,6 +13,7 @@ import selectors from "src/modules/company/list/companyListSelectors";
 function Home() {
   const dispatch = useDispatch();
   const record = useSelector(selector.selectRows);
+
   const logorecord = useSelector(selectors.selectRows);
   const loadingImage = useSelector(selectors?.selectLoading);
   const [timemodal, setBigModal] = useState(true);
@@ -155,111 +155,38 @@ function Home() {
         </div>
 
         <div className="vip-list">
-          <div className="vip-list-item">
+
+          {record.map((item) => <div className="vip-list-item">
             <div className="vip-image-placeholder">
-              <i className="fas fa-crown"></i>
+              <img src={item?.photo[0]?.downloadUrl} alt=""  />
             </div>
             <div className="vip-content">
               <div className="vip-header">
-                <h3>VIP 1</h3>
+                <h3>{item?.title}</h3>
                 <span className="vip-status current">Current Plan</span>
               </div>
               <div className="vip-details">
                 <div className="vip-detail">
                   <i className="fas fa-tasks"></i>
-                  <span>15 tasks/day</span>
+                  <span>{item?.dailyorder} tasks/set</span>
                 </div>
                 <div className="vip-detail">
                   <i className="fas fa-wallet"></i>
-                  <span>Min. $30 deposit</span>
+                  <span>Min. ${item?.levellimit} deposit</span>
                 </div>
                 <div className="vip-detail">
                   <i className="fas fa-money-bill-wave"></i>
-                  <span>5% withdrawal fee</span>
+                  <span>{item.comisionrate}% comission per product</span>
                 </div>
               </div>
               <button className="upgrade-btn">Upgrade Now</button>
             </div>
-          </div>
+          </div>)}
 
-          <div className="vip-list-item">
-            <div className="vip-image-placeholder">
-              <i className="fas fa-crown"></i>
-            </div>
-            <div className="vip-content">
-              <div className="vip-header">
-                <h3>VIP 2</h3>
-                <span className="vip-status recommended">Recommended</span>
-              </div>
-              <div className="vip-details">
-                <div className="vip-detail">
-                  <i className="fas fa-tasks"></i>
-                  <span>20 tasks/day</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-wallet"></i>
-                  <span>Min. $500 deposit</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-percentage"></i>
-                  <span>0.52% commission</span>
-                </div>
-              </div>
-              <button className="upgrade-btn primary">Upgrade Now</button>
-            </div>
-          </div>
 
-          <div className="vip-list-item">
-            <div className="vip-image-placeholder">
-              <i className="fas fa-crown"></i>
-            </div>
-            <div className="vip-content">
-              <div className="vip-header">
-                <h3>VIP 3</h3>
-              </div>
-              <div className="vip-details">
-                <div className="vip-detail">
-                  <i className="fas fa-tasks"></i>
-                  <span>30 tasks/day</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-wallet"></i>
-                  <span>Min. $1,500 deposit</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-percentage"></i>
-                  <span>0.75% commission</span>
-                </div>
-              </div>
-              <button className="upgrade-btn">Upgrade Now</button>
-            </div>
-          </div>
 
-          <div className="vip-list-item">
-            <div className="vip-image-placeholder">
-              <i className="fas fa-crown"></i>
-            </div>
-            <div className="vip-content">
-              <div className="vip-header">
-                <h3>VIP 4</h3>
-              </div>
-              <div className="vip-details">
-                <div className="vip-detail">
-                  <i className="fas fa-tasks"></i>
-                  <span>Unlimited tasks</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-wallet"></i>
-                  <span>Min. $5,000 deposit</span>
-                </div>
-                <div className="vip-detail">
-                  <i className="fas fa-percentage"></i>
-                  <span>1.25% commission</span>
-                </div>
-              </div>
-              <button className="upgrade-btn">Upgrade Now</button>
-            </div>
-          </div>
+
+
         </div>
       </section>
 
@@ -396,6 +323,7 @@ function Home() {
           scrollbar-width: none;
           gap: 8px;
         }
+
         
         .action-grid::-webkit-scrollbar {
           display: none;

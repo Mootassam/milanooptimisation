@@ -60,12 +60,7 @@ const schema = yup.object().shape({
       required: true,
     },
   ),
-  tasksperday: yupFormSchemas.integer(
-    i18n('entities.vip.fields.tasksperday'),
-    {
-      required: true,
-    },
-  ),
+
 
   withdrawperday: yupFormSchemas.decimal(
     i18n('entities.vip.fields.withdrawperday'),
@@ -92,7 +87,7 @@ function VipForm(props) {
       dailyorder: record.dailyorder,
       comisionrate: record.comisionrate,
       commissionmergedata: record.commissionmergedata,
-      tasksperday: record.tasksperday,
+
       handlingfee: record.handlingfee,
       setperday: record.setperday,
       withdrawperday: record.withdrawperday,
@@ -202,15 +197,7 @@ function VipForm(props) {
               />
             </div>
 
-            <div className="col-lg-7 col-md-8 col-12">
-              <InputNumberFormItem
-                name="tasksperday"
-                label={i18n(
-                  'entities.vip.fields.tasksperday',
-                )}
-                required={true}
-              />
-            </div>
+        
 
             <div className="col-lg-7 col-md-8 col-12">
               <InputNumberFormItem
