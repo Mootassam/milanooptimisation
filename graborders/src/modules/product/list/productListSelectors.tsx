@@ -19,6 +19,12 @@ const selectRows = createSelector(
 
 
 
+const showModal = createSelector(
+  [selectRaw],
+  (raw) => raw.showModal,
+);
+
+
 const selectSorter = createSelector(
   [selectRaw],
   (raw) => raw.sorter || {},
@@ -94,13 +100,6 @@ const selectIsAllSelected = createSelector(
   },
 );
 
-const selectShowModal = createSelector([selectRaw],  (raw) => {
-return raw.showModal
-})
-
-
-
-
 const productListSelectors = {
   selectLoading,
   selectRows,
@@ -114,7 +113,7 @@ const productListSelectors = {
   selectRawFilter,
   selectIsAllSelected,
   selectSorter,
-  selectShowModal
+  showModal
 };
 
 export default productListSelectors;

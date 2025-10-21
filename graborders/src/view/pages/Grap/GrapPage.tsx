@@ -18,54 +18,74 @@ import productListActions from "src/modules/product/list/productListActions";
 import GrapModal from "./GrapModal";
 
 const Grappage = () => {
-  const [showGrapModal, setShowGrapModal] = useState(false); // Add this state
 
-  const handleStartClick = () => {
-    setShowGrapModal(true); // Function to show the modal
+  const [showPrizeModal, setShowPrizeModal] = useState(false);
+  const [lodingRoll, setLoadingRoll] = useState(false);
+
+  const currentUser = useSelector(authSelectors.selectCurrentUser);
+  const history = useHistory();
+  const dispatch = useDispatch();
+
+  // Selectors
+  const items = useSelector(selector.selectRows);
+  const loading = useSelector(selector.selectLoading);
+  const showModals = useSelector(productListSelectors.showModal);
+  const checkLoading = useSelector(recordSelector.selectCheckLoading);
+  const selectCountRecord = useSelector(recordSelector.selectCountRecord);
+  const error = useSelector(recordSelector.selectError);
+
+  const [number] = useState(Dates.Number());
+
+  // Check if button should be disabled
+  const disableButton = currentUser?.balance <= 0 ||
+    !currentUser?.grab ||
+    currentUser?.tasksDone >= currentUser?.vip?.dailyorder;
+
+  const handleStartClick = async () => {
+    if (disableButton || lodingRoll) return;
+
+    setLoadingRoll(true);
+    try {
+      await rollAll();
+      // The modal will be shown based on the response from rollAll
+    } catch (error) {
+      console.log("Error starting grab:", error);
+    } finally {
+      setLoadingRoll(false);
+    }
   };
 
   const handleCloseModal = () => {
-    setShowGrapModal(false); // Function to hide the modal
+    dispatch(productListActions.doCloseModal());
   };
-
-  const history = useHistory();
-  const dispatch = useDispatch();
-  const record = useSelector(authSelectors.selectCurrentUser);
-  const items = useSelector(selector.selectRows);
-  const loading = useSelector(selector.selectLoading);
-  // const numberRecord = useSelector(recordSelector.selectCount);
-  // const [showModal, setShowModal] = useState(false);
-  const [lodingRoll, setLoadingRoll] = useState(false);
-  const selectCountRecord = useSelector(recordSelector.selectCountRecord);
-
-  const error = useSelector(recordSelector.selectError);
 
   const refreshItems = useCallback(async () => {
     await dispatch(recordListAction.doFetch());
     await dispatch(authActions.doRefreshCurrentUser());
   }, [dispatch]);
 
-
-  const showModals = useSelector(productListSelectors.selectShowModal);
-  const checkLoading = useSelector(recordSelector.selectCheckLoading);
   const rollAll = async () => {
     try {
-      await dispatch(recordListAction.doCheck());
+
+      const result = await dispatch(actions.doFetch());
+
+
+
+      return result;
     } catch (error) {
-      console.log(error);
+      console.log("Roll all error:", error);
+      throw error;
+    } finally {
+      setLoadingRoll(false);
     }
   };
 
   const hideModal = () => {
-    // setShowModal(false);
-    dispatch(actions.hidemodal());
+    dispatch(productListActions.doCloseModal());
   };
-
-  const [number] = useState(Dates.Number());
 
   useEffect(() => {
     dispatch(recordListAction.doCount());
-
   }, [dispatch, showModals, checkLoading]);
 
   const calcule__total = (price, comission) => {
@@ -73,9 +93,9 @@ const Grappage = () => {
     return total.toFixed(3);
   };
 
-  const currentUser = useSelector(authSelectors.selectCurrentUser);
-
   const submit = async () => {
+    if (!items) return;
+
     const values = {
       number: number,
       product: items?.id,
@@ -83,105 +103,141 @@ const Grappage = () => {
       user: currentUser.id,
     };
 
-    await dispatch(recordActions.doCreate(values));
-    await dispatch(actions.hidemodal());
-    await refreshItems();
+    try {
+      await dispatch(recordActions.doCreate(values));
+
+    } catch (error) {
+      console.log("Submit error:", error);
+    }
   };
 
   const goto = (param) => {
     history.push(param);
   };
+
   return (
     <>
-      <>
-        {/* Header Section */}
-        
-        {/* Page Content */}
-        <div className="page-content">
-          {/* Commission Section */}
-          <div className="commission-section">
-            <h2 className="section-title">
-              <i className="fas fa-chart-line" />
-              Commission Rate
-            </h2>
-            <div className="commission-rate">0.75%</div>
-            <p className="commission-desc">
-              Exclusive channel for exclusive members. Higher VIP levels unlock
-              better commission rates and more order opportunities.
-            </p>
-            <button className="start-button" onClick={handleStartClick}>Start</button>
-          </div>
-          {/* Achievements Section */}
-          <div className="achievements-section">
-            <h2 className="section-title">
-              <i className="fas fa-trophy" />
-              Today's Achievements
-            </h2>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-value">0.75%</div>
-                <div className="stat-label">Commission</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">0.00</div>
-                <div className="stat-label">Available Balance (USDT)</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">0</div>
-                <div className="stat-label">Orders Completed</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">15/15</div>
-                <div className="stat-label">Total Orders</div>
-              </div>
+      {/* Loading Modal */}
+      {(loading || lodingRoll) && <LoadingModal />}
+
+
+
+      {/* Grap Modal */}
+      {showModals && !loading && (
+        <GrapModal
+          show={showModals}
+          onClose={handleCloseModal}
+          items={items}
+          number={number}
+          submit={submit}
+        />
+      )}
+
+      {/* Page Content */}
+      <div className="page-content">
+        {/* Commission Section */}
+        <div className="commission-section">
+          <h2 className="section-title">
+            <i className="fas fa-chart-line" />
+            Commission Rate
+          </h2>
+          <div className="commission-rate">{currentUser?.vip?.comisionrate}%</div>
+          <p className="commission-desc">
+            Exclusive channel for exclusive members. Higher VIP levels unlock
+            better commission rates and more order opportunities.
+          </p>
+          <button
+            className={`start-button ${lodingRoll ? "loading" : ""} ${disableButton ? "disabled" : ""}`}
+            onClick={handleStartClick}
+            disabled={disableButton || lodingRoll}
+          >
+            {lodingRoll ? "Processing..." : "Start"}
+          </button>
+
+          {/* Show disabled reasons */}
+          {disableButton && (
+            <div className="disabled-reasons">
+              {currentUser?.balance <= 0 && <p>Insufficient balance</p>}
+              {!currentUser?.grab && <p>Grab feature not available</p>}
+              {currentUser?.tasksDone >= currentUser?.vip?.dailyorder && (
+                <p>Daily order limit reached</p>
+              )}
             </div>
-            <div className="info-note">
-              A higher rank member can unlock more orders and get more
-              commission. Upgrade your VIP level to increase your earning
-              potential.
+          )}
+        </div>
+
+        {/* Achievements Section */}
+        <div className="achievements-section">
+          <h2 className="section-title">
+            <i className="fas fa-trophy" />
+            Today's Achievements
+          </h2>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-value">{currentUser?.vip?.comisionrate}%</div>
+              <div className="stat-label">Commission</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{currentUser?.balance?.toFixed(2)}</div>
+              <div className="stat-label">Available Balance (USDT)</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{currentUser?.tasksDone}</div>
+              <div className="stat-label">Orders Completed</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value">{currentUser?.tasksDone}/{currentUser?.vip?.dailyorder}</div>
+              <div className="stat-label">Total Orders</div>
             </div>
           </div>
-          {/* Rules Section */}
-          <div className="rules-section">
-            <h2 className="section-title">
-              <i className="fas fa-info-circle" />
-              Rules Description
-            </h2>
-            <ul className="rules-list">
-              <li>
-                <div className="rule-number">1</div>
-                <div className="rule-text">
-                  Every user in the platform should be able to submit all daily
-                  orders before withdrawal
-                </div>
-              </li>
-              <li>
-                <div className="rule-number">2</div>
-                <div className="rule-text">
-                  Commissions depends on the VIP level
-                </div>
-              </li>
-              <li>
-                <div className="rule-number">3</div>
-                <div className="rule-text">
-                  The system automatically dispatch's the products through the
-                  cloud after submission
-                </div>
-              </li>
-              <li>
-                <div className="rule-number">4</div>
-                <div className="rule-text">
-                  If the order is not submitted, the user will not be able to
-                  continue with the next product. The user need to submit the
-                  previous product to continue with the task
-                </div>
-              </li>
-            </ul>
+          <div className="info-note">
+            A higher rank member can unlock more orders and get more
+            commission. Upgrade your VIP level to increase your earning
+            potential.
           </div>
         </div>
-     <GrapModal show={showGrapModal} onClose={handleCloseModal} />
-      </>
-      <style>{`  /* Page Content */
+
+        {/* Rules Section */}
+        <div className="rules-section">
+          <h2 className="section-title">
+            <i className="fas fa-info-circle" />
+            Rules Description
+          </h2>
+          <ul className="rules-list">
+            <li>
+              <div className="rule-number">1</div>
+              <div className="rule-text">
+                Every user in the platform should be able to submit all daily
+                orders before withdrawal
+              </div>
+            </li>
+            <li>
+              <div className="rule-number">2</div>
+              <div className="rule-text">
+                Commissions depends on the VIP level
+              </div>
+            </li>
+            <li>
+              <div className="rule-number">3</div>
+              <div className="rule-text">
+                The system automatically dispatch's the products through the
+                cloud after submission
+              </div>
+            </li>
+            <li>
+              <div className="rule-number">4</div>
+              <div className="rule-text">
+                If the order is not submitted, the user will not be able to
+                continue with the next product. The user need to submit the
+                previous product to continue with the task
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <style>{`
+        /* Page Content */
         .page-content {
             padding: 20px 0px;
         }
@@ -210,6 +266,7 @@ const Grappage = () => {
             margin-bottom: 25px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             text-align: center;
+            position: relative;
         }
         
         .commission-rate {
@@ -237,10 +294,40 @@ const Grappage = () => {
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 5px 15px rgba(15, 33, 97, 0.3);
+            width: 100%;
+            max-width: 200px;
         }
         
-        .start-button:active {
+        .start-button:hover:not(.disabled):not(.loading) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(15, 33, 97, 0.4);
+        }
+        
+        .start-button:active:not(.disabled):not(.loading) {
             transform: scale(0.97);
+        }
+        
+        .start-button.loading {
+            background: linear-gradient(135deg, #7b8796 0%, #a0aec0 100%);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .start-button.disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+        
+        .disabled-reasons {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #e53e3e;
+        }
+        
+        .disabled-reasons p {
+            margin: 2px 0;
         }
         
         /* Achievements Section */
@@ -332,37 +419,13 @@ const Grappage = () => {
             line-height: 1.5;
         }
         
-     
-        
-        .nav-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #7b8796;
-            font-size: 12px;
-            width: 20%;
-        }
-        
-        .nav-btn.active {
-            color: #0f2161;
-        }
-        
-        .nav-btn i {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-        
-        .nav-btn.active i {
-            color: #0f2161;
-        }
-        
         /* Responsive adjustments */
         @media (max-width: 340px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-        }`}</style>
+        }
+      `}</style>
     </>
   );
 };

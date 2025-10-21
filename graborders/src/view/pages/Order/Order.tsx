@@ -21,8 +21,8 @@ function Order() {
   }, [dispatch]);
 
   // Filter records based on active filter
-  const filteredRecords = activeFilter === "all" 
-    ? record 
+  const filteredRecords = activeFilter === "all"
+    ? record
     : record.filter(item => item.status === activeFilter);
 
   // Handle filter button clicks
@@ -31,99 +31,55 @@ function Order() {
   };
 
   // Sample data as fallback (you can remove this once your Redux data is working)
-  const sampleOrders = [
-    {
-      id: 'ORD-7842',
-      status: 'pending',
-      title: 'Blue T Shirt',
-      price: '154 USD',
-      image: 'https://chriscross.in/cdn/shop/files/ChrisCrossNavyBlueCottonT-Shirt.jpg?v=1740994598&width=2048',
-      amount: '154 USD',
-      commission: '0.25%',
-      estimatedReturn: '0.385 USD',
-      date: 'Today, 15:42'
-    },
-    {
-      id: 'ORD-7841',
-      status: 'completed',
-      title: 'Black Jeans',
-      price: '89 USD',
-      image: 'https://found.store/cdn/shop/files/Lacy-Baggy-Jeans-in-Vintage-Black-by-Found-FW-23-15_ebbd619b-0a2c-4d07-8c19-d2606a5189f1.jpg?v=1714676239&width=2880',
-      amount: '89 USD',
-      commission: '0.30%',
-      estimatedReturn: '0.267 USD',
-      date: 'Yesterday'
-    },
-    {
-      id: 'ORD-7840',
-      status: 'completed',
-      title: 'Red Sneakers',
-      price: '120 USD',
-      image: 'https://media.istockphoto.com/id/691616136/photo/red-sneakers.jpg?s=612x612&w=0&k=20&c=BBMNOxRnNNdaeEZmMooA1Xu9Exq-olwrP9n3B-iaJCU=',
-      amount: '120 USD',
-      commission: '0.28%',
-      estimatedReturn: '0.336 USD',
-      date: 'Oct 12'
-    },
-    {
-      id: 'ORD-7839',
-      status: 'canceled',
-      title: 'Green Backpack',
-      price: '75 USD',
-      image: 'https://www.madlug.com/cdn/shop/files/Classic_KellyGreen_3qtr_3ac56a6f-727e-46b5-bf27-bff3da37d328_large.jpg?v=1742422232',
-      amount: '75 USD',
-      commission: '0.22%',
-      estimatedReturn: '0.165 USD',
-      date: 'Oct 11'
-    }
-  ];
+
 
   // Use Redux data if available, otherwise use sample data
-  const displayOrders = record && record.length > 0 ? filteredRecords : sampleOrders;
+  const displayOrders =  filteredRecords 
 
   return (
     <>
       {/* Page Title */}
       <div className="page-title">Order History</div>
-      
+
       {/* Filter Section */}
       <div className="filter-section">
-        <button 
+        <button
           className={`filter-btn ${activeFilter === "all" ? "active" : ""}`}
           onClick={() => handleFilterClick("all")}
         >
           All Orders
         </button>
-        <button 
+        <button
           className={`filter-btn ${activeFilter === "pending" ? "active" : ""}`}
           onClick={() => handleFilterClick("pending")}
         >
           Pending
         </button>
-        <button 
+        <button
           className={`filter-btn ${activeFilter === "completed" ? "active" : ""}`}
           onClick={() => handleFilterClick("completed")}
         >
           Completed
         </button>
-        <button 
+        <button
           className={`filter-btn ${activeFilter === "canceled" ? "active" : ""}`}
           onClick={() => handleFilterClick("canceled")}
         >
           Canceled
         </button>
       </div>
-      
+
       {/* Orders Container */}
       <div className="orders-container">
         {displayOrders.length > 0 ? (
           displayOrders.map((item, index) => (
             <div className="order-card" key={index}>
               <div className="order-image-container">
-                <img 
-                  src={item.image || item?.product?.photo[0]?.downloadUrl || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'} 
+                <img
+                  src={item.image || item?.product?.photo[0]?.downloadUrl ||  item?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
                   alt={item.title || item?.product?.title}
                   className="order-image"
+                  loading="lazy"
                 />
               </div>
               <div className="order-content">
@@ -149,10 +105,10 @@ function Order() {
                     <div className="order-meta-item">
                       <span className="meta-label">Return:</span>
                       <span className="meta-value">
-                        {item.estimatedReturn || 
-                         (item?.product?.amount && item?.product?.commission 
-                          ? Calcule.calcule__total(item?.product?.amount, item?.product?.commission) + " USDT"
-                          : "N/A")}
+                        {item.estimatedReturn ||
+                          (item?.product?.amount && item?.product?.commission
+                            ? Calcule.calcule__total(item?.product?.amount, item?.product?.commission) + " USDT"
+                            : "N/A")}
                       </span>
                     </div>
                   </div>
@@ -171,7 +127,7 @@ function Order() {
           </div>
         )}
       </div>
-      
+
       {/* Bottom Navigation */}
       <div className="bottom-nav">
         <a href="#" className="nav-btn">

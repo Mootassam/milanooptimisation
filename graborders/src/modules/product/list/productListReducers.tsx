@@ -1,4 +1,4 @@
-import actions from "src/modules/product/list/productListActions";
+import actions from 'src/modules/product/list/productListActions';
 
 const INITIAL_PAGE_SIZE = 10;
 
@@ -6,8 +6,8 @@ const initialData = {
   rows: {},
   loading: false,
   filter: {},
-  rawFilter: {},
   showModal: false,
+  rawFilter: {},
   pagination: {
     current: 1,
     pageSize: INITIAL_PAGE_SIZE,
@@ -16,7 +16,7 @@ const initialData = {
   selectedKeys: [] as Array<string>,
 };
 
-export default (state = initialData, { type, payload }) => {
+export default (state = initialData, { type, payload, modal }) => {
   if (type === actions.RESETED) {
     return {
       ...initialData,
@@ -29,7 +29,9 @@ export default (state = initialData, { type, payload }) => {
     const exists = selectedKeys.includes(payload);
 
     if (exists) {
-      selectedKeys = selectedKeys.filter((key) => key !== payload);
+      selectedKeys = selectedKeys.filter(
+        (key) => key !== payload,
+      );
     } else {
       selectedKeys = [payload, ...selectedKeys];
     }
@@ -39,6 +41,8 @@ export default (state = initialData, { type, payload }) => {
       selectedKeys,
     };
   }
+
+
 
   if (type === actions.CLEAR_ALL_SELECTED) {
     return {
@@ -67,9 +71,8 @@ export default (state = initialData, { type, payload }) => {
   if (type === actions.FETCH_STARTED) {
     return {
       ...state,
-      showModal: false,
-
       loading: true,
+      showModal: modal,
       selectedKeys: [],
       filter: payload ? payload.filter : {},
       rawFilter: payload ? payload.rawFilter : {},
@@ -77,9 +80,9 @@ export default (state = initialData, { type, payload }) => {
         payload && payload.keepPagination
           ? state.pagination
           : {
-              current: 1,
-              pageSize: INITIAL_PAGE_SIZE,
-            },
+            current: 1,
+            pageSize: INITIAL_PAGE_SIZE,
+          },
     };
   }
 
@@ -88,7 +91,8 @@ export default (state = initialData, { type, payload }) => {
       ...state,
       loading: false,
       rows: payload,
-      showModal: true,
+      showModal: modal,
+
     };
   }
 
@@ -97,11 +101,17 @@ export default (state = initialData, { type, payload }) => {
       ...state,
       loading: false,
       rows: {},
-      showModal: false,
+      showModal: modal,
+
     };
   }
 
-  
+
+  if (type === actions.CLOSE_MODAL) {
+    return {
+      showModal: false,
+    };
+  }
 
   if (type === actions.EXPORT_STARTED) {
     return {
