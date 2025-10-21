@@ -128,29 +128,6 @@ function Order() {
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="bottom-nav">
-        <a href="#" className="nav-btn">
-          <i className="fas fa-home"></i>
-          <span>Home</span>
-        </a>
-        <a href="#" className="nav-btn">
-          <i className="fas fa-wallet"></i>
-          <span>Recharge</span>
-        </a>
-        <a href="#" className="nav-btn">
-          <i className="fas fa-hand-holding-usd"></i>
-          <span>Grap</span>
-        </a>
-        <a href="#" className="nav-btn active">
-          <i className="fas fa-shopping-cart"></i>
-          <span>Orders</span>
-        </a>
-        <a href="#" className="nav-btn">
-          <i className="fas fa-user"></i>
-          <span>Account</span>
-        </a>
-      </div>
 
       <style>{`        
         /* Page Title */

@@ -271,29 +271,7 @@ function Tc() {
   <a href="#" className="back-to-top">
     <i className="fas fa-arrow-up" />
   </a>
-  {/* Bottom Navigation */}
-  <div className="bottom-nav">
-    <a href="#" className="nav-item">
-      <i className="fas fa-home" />
-      <span>Home</span>
-    </a>
-    <a href="#" className="nav-item">
-      <i className="fas fa-wallet" />
-      <span>Recharge</span>
-    </a>
-    <a href="#" className="nav-item">
-      <i className="fas fa-hand-holding-usd" />
-      <span>Grap</span>
-    </a>
-    <a href="#" className="nav-item">
-      <i className="fas fa-shopping-cart" />
-      <span>Order</span>
-    </a>
-    <a href="#" className="nav-item active">
-      <i className="fas fa-user" />
-      <span>Account</span>
-    </a>
-  </div>
+
   <style>{`       * {
             margin: 0;
             padding: 0;

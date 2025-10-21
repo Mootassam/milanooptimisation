@@ -270,19 +270,7 @@ function Profile() {
         </button>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="bottom-nav">
-        {navItems.map((item, index) => (
-          <Link
-            key={index}
-            to={item.path}
-            className={`nav-item ${item.active ? 'active' : ''}`}
-          >
-            <i className={item.icon} />
-            <span>{item.name}</span>
-          </Link>
-        ))}
-      </div>
+
 
       <style>{`
         /* Profile Section */

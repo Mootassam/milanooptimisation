@@ -4,11 +4,11 @@ function GrapModal({ show, onClose, items, number, submit }) {
   // Calculate commission and estimated return
   const calculateCommission = () => {
     if (!items) return { commission: 0, estimatedReturn: 0 };
-
+    
     const commissionRate = items.commission || 0.25;
     const price = items.amount || 154;
     const estimatedReturn = (commissionRate / 100) * price;
-
+    
     return {
       commission: commissionRate,
       estimatedReturn: estimatedReturn.toFixed(3)
@@ -19,10 +19,10 @@ function GrapModal({ show, onClose, items, number, submit }) {
 
   // Format current time
   const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit',
+    return new Date().toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
       minute: '2-digit',
-      hour12: true
+      hour12: true 
     });
   };
 
@@ -64,9 +64,10 @@ function GrapModal({ show, onClose, items, number, submit }) {
         {/* Product Section */}
         <div className="product-section">
           <img
-            src={items.image || items?.product?.photo[0]?.downloadUrl || items?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
+           src={items.image || items?.product?.photo[0]?.downloadUrl || items?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
             alt={items.title || items?.product?.title}
-            className="order-image"
+            className="product-image"
+            loading="lazy"
           />
           <div className="product-details">
             <div className="product-name">
@@ -104,8 +105,8 @@ function GrapModal({ show, onClose, items, number, submit }) {
           >
             Cancel
           </button>
-          <button
-            className="modal-btn btn-submit"
+          <button 
+            className="modal-btn btn-submit" 
             onClick={handleSubmit}
           >
             Submit
