@@ -9,6 +9,7 @@ import authSelectors from "src/modules/auth/authSelectors";
 import actions from "src/modules/auth/authActions";
 import listactions from "src/modules/company/list/companyListActions";
 import selectors from "src/modules/company/list/companyListSelectors";
+import { log } from "node:console";
 
 function Home() {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ function Home() {
   const [timemodal, setBigModal] = useState(true);
   const loading = useSelector(selector.selectLoading);
   const [Modal, setShowModal] = useState(false);
+  const [selectedVip, setSelectedVip] = useState(null);
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const searchAllCoins = async () => { };
   interface DataItem {
@@ -42,6 +44,12 @@ function Home() {
     dispatch(listactions.doFetch());
   };
 
+  const currentVip = (Id) => {
+    if (currentUser.vip.id === Id) {
+      return "Current Plan";
+    }
+    return "Upgrade";
+  }
   useEffect(() => {
     dolistCompany();
     searchAllCoins();
@@ -52,11 +60,16 @@ function Home() {
 
   const hideModal = () => {
     setShowModal(false);
+    setSelectedVip(null);
   };
 
   const showModal = (item) => {
     setItems(item);
     setShowModal(true);
+  };
+
+  const showVipModal = (vipItem) => {
+    setSelectedVip(vipItem);
   };
 
   const button__action = [
@@ -87,6 +100,7 @@ function Home() {
       vip: item,
     };
     dispatch(actions.doUpdateProfileMobile(data));
+    hideModal();
   };
 
   const NewsTicker = () => {
@@ -134,16 +148,16 @@ function Home() {
       <section className="quick-actions">
         <div className="action-grid">
 
-          {button__action.map((item) => <Link to={item.link}><div className="action-item">
-            <div className="action-icon">
-              <i className={item.icon}></i>
-            </div>
-            <span className="action-label">{item.text}</span>
-          </div>
-          </Link>
-
-          )}
-
+          {button__action.map((item, index) => (
+            <Link to={item.link} key={index}>
+              <div className="action-item">
+                <div className="action-icon">
+                  <i className={item.icon}></i>
+                </div>
+                <span className="action-label">{item.text}</span>
+              </div>
+            </Link>
+          ))}
 
         </div>
       </section>
@@ -156,36 +170,39 @@ function Home() {
 
         <div className="vip-list">
 
-          {record.map((item) => <div className="vip-list-item">
-            <div className="vip-image-placeholder">
-              <img src={item?.photo[0]?.downloadUrl} alt=""  />
-            </div>
-            <div className="vip-content">
-              <div className="vip-header">
-                <h3>{item?.title}</h3>
-                <span className="vip-status current">Current Plan</span>
+          {record.map((item, index) => (
+            <div className="vip-list-item" key={item._id}>
+              <div className="vip-image-placeholder">
+                <img src={item?.photo[0]?.downloadUrl} alt={item.title} />
               </div>
-              <div className="vip-details">
-                <div className="vip-detail">
-                  <i className="fas fa-tasks"></i>
-                  <span>{item?.dailyorder} tasks/set</span>
+              <div className="vip-content">
+                <div className="vip-header">
+                  <h3>{item?.title}</h3>
+                  <span className="vip-status current">{currentVip(item.id)}</span>
                 </div>
-                <div className="vip-detail">
-                  <i className="fas fa-wallet"></i>
-                  <span>Min. ${item?.levellimit} deposit</span>
+                <div className="vip-details">
+                  <div className="vip-detail">
+                    <i className="fas fa-tasks"></i>
+                    <span>{item?.dailyorder} tasks/set</span>
+                  </div>
+                  <div className="vip-detail">
+                    <i className="fas fa-wallet"></i>
+                    <span>Min. ${item?.levellimit} deposit</span>
+                  </div>
+                  <div className="vip-detail">
+                    <i className="fas fa-money-bill-wave"></i>
+                    <span>{item.comisionrate}% commission per product</span>
+                  </div>
                 </div>
-                <div className="vip-detail">
-                  <i className="fas fa-money-bill-wave"></i>
-                  <span>{item.comisionrate}% comission per product</span>
-                </div>
+                <button
+                  className="upgrade-btn"
+                  onClick={() => showVipModal(item)}
+                >
+                  Upgrade Now
+                </button>
               </div>
-              <button className="upgrade-btn">Upgrade Now</button>
             </div>
-          </div>)}
-
-
-
-
+          ))}
 
         </div>
       </section>
@@ -219,9 +236,63 @@ function Home() {
         </div>
       </section>
 
+      {/* VIP Upgrade Modal */}
+      {selectedVip && (
+        <div className="modal-overlay" onClick={hideModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Upgrade to {selectedVip.title}</h2>
+              <button className="modal-close" onClick={hideModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
 
+            <div className="modal-body">
+              <div className="vip-modal-image">
+                <img src={selectedVip?.photo[0]?.downloadUrl} alt={selectedVip.title} />
+              </div>
 
-      <style >{`
+              <div className="benefits-list">
+                <h3>Benefits:</h3>
+                <div className="benefit-item">
+                  <i className="fas fa-check-circle"></i>
+                  <span><strong>Commission Rate:</strong> {selectedVip.comisionrate}% per product</span>
+                </div>
+                <div className="benefit-item">
+                  <i className="fas fa-check-circle"></i>
+                  <span><strong>tasks per set:</strong> {selectedVip.dailyorder} task</span>
+                </div>
+                <div className="benefit-item">
+                  <i className="fas fa-check-circle"></i>
+                  <span><strong>Minimum Deposit:</strong> ${selectedVip.levellimit}</span>
+                </div>
+                <div className="benefit-item">
+                  <i className="fas fa-check-circle"></i>
+                  <span><strong>Withdrawals per Day:</strong> {selectedVip.withdrawperday}</span>
+                </div>
+                <div className="benefit-item">
+                  <i className="fas fa-check-circle"></i>
+                  <span><strong>Sets per Day:</strong> {selectedVip.setperday}</span>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={hideModal}>
+                  Cancel
+                </button>
+                <button
+                  className="confirm-upgrade-btn"
+                  onClick={() => submit(selectedVip)}
+                >
+                  Confirm Upgrade
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
         /* Base styles */
         .home-container {
           max-width: 480px;
@@ -317,7 +388,7 @@ function Home() {
         
         .action-grid {
           display: flex;
-          justify-content : space-around;
+          justify-content: space-around;
           overflow-x: auto;
           padding: 10px 5px;
           scrollbar-width: none;
@@ -413,10 +484,15 @@ function Home() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #0f2161;
-          font-size: 24px;
           margin-right: 16px;
           flex-shrink: 0;
+          overflow: hidden;
+        }
+        
+        .vip-image-placeholder img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
         
         .vip-content {
@@ -485,6 +561,11 @@ function Home() {
           cursor: pointer;
           font-size: 14px;
           width: 100%;
+          transition: all 0.3s ease;
+        }
+        
+        .upgrade-btn:hover {
+          background: #e1e8ff;
         }
         
         .upgrade-btn.primary {
@@ -538,6 +619,177 @@ function Home() {
           margin: 0;
         }
         
+        /* VIP Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+        
+        .modal-content {
+          background: white;
+          border-radius: 20px;
+          width: 100%;
+          max-width: 400px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px 24px 16px;
+          border-bottom: 1px solid #e8eaf0;
+        }
+        
+        .modal-header h2 {
+          color: #0f2161;
+          font-size: 20px;
+          font-weight: 700;
+          margin: 0;
+        }
+        
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 20px;
+          color: #7b8796;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+        
+        .modal-close:hover {
+          background: #f0f4ff;
+        }
+        
+        .modal-body {
+          padding: 24px;
+        }
+        
+        .vip-modal-image {
+          width: 120px;
+          height: 120px;
+          border-radius: 16px;
+          margin: 0 auto 20px;
+          overflow: hidden;
+          background: #f0f4ff;
+        }
+        
+        .vip-modal-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .benefits-list {
+          margin-bottom: 24px;
+        }
+        
+        .benefits-list h3 {
+          color: #0f2161;
+          font-size: 18px;
+          margin-bottom: 16px;
+          text-align: center;
+        }
+        
+        .benefit-item {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 12px;
+          padding: 12px;
+          background: #f8faff;
+          border-radius: 8px;
+        }
+        
+        .benefit-item i {
+          color: #0f9d58;
+          margin-right: 12px;
+          font-size: 16px;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+        
+        .benefit-item span {
+          color: #0f2161;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        
+        .benefit-item strong {
+          color: #0f2161;
+        }
+        
+        .modal-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+        }
+        
+        .cancel-btn {
+          flex: 1;
+          padding: 14px;
+          border: 2px solid #e8eaf0;
+          background: white;
+          color: #7b8796;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
+        }
+        
+        .cancel-btn:hover {
+          background: #f5f7ff;
+          border-color: #0f2161;
+        }
+        
+        .confirm-upgrade-btn {
+          flex: 2;
+          padding: 14px;
+          border: none;
+          background: linear-gradient(135deg, #ffde59 0%, #ffd000 100%);
+          color: #0f2161;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
+        }
+        
+        .confirm-upgrade-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(255, 222, 89, 0.4);
+        }
+        
         /* Bottom Navigation */
         .bottom-navigation {
           position: fixed;
@@ -585,6 +837,15 @@ function Home() {
           
           .action-label {
             font-size: 11px;
+          }
+          
+          .modal-content {
+            margin: 10px;
+            max-height: 85vh;
+          }
+          
+          .modal-body {
+            padding: 16px;
           }
         }
       `}</style>
