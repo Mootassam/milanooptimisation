@@ -74,6 +74,19 @@ const schema = yup.object().shape({
       required: true,
     },
   ),
+
+  min: yupFormSchemas.decimal(
+    i18n('entities.vip.fields.min'),
+    {
+      required: true,
+    },
+  ),
+  max: yupFormSchemas.decimal(
+    i18n('entities.vip.fields.max'),
+    {
+      required: true,
+    },
+  ),
 });
 
 function VipForm(props) {
@@ -87,7 +100,8 @@ function VipForm(props) {
       dailyorder: record.dailyorder,
       comisionrate: record.comisionrate,
       commissionmergedata: record.commissionmergedata,
-
+      min: record.min,
+      max: record.max,
       handlingfee: record.handlingfee,
       setperday: record.setperday,
       withdrawperday: record.withdrawperday,
@@ -175,7 +189,7 @@ function VipForm(props) {
                 required={true}
               />
             </div>
-{/* 
+            {/* 
             <div className="col-lg-7 col-md-8 col-12">
               <InputFormItem
                 name="withdrawlimit"
@@ -197,7 +211,7 @@ function VipForm(props) {
               />
             </div>
 
-        
+
 
             <div className="col-lg-7 col-md-8 col-12">
               <InputNumberFormItem
@@ -209,6 +223,28 @@ function VipForm(props) {
               />
             </div>
 
+            <div className="col-lg-7 col-md-8 col-12">
+              <InputFormItem
+                name="min"
+                label={i18n(
+                  'entities.vip.fields.min',
+                )}
+                required={true}
+                autoFocus
+              />
+            </div>
+
+
+            <div className="col-lg-7 col-md-8 col-12">
+              <InputFormItem
+                name="max"
+                label={i18n(
+                  'entities.vip.fields.max',
+                )}
+                required={true}
+                autoFocus
+              />
+            </div>
             <div className="col-lg-7 col-md-8 col-12">
               <ImagesFormItem
                 name="photo"

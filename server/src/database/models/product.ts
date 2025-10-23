@@ -19,15 +19,15 @@ export default (database) => {
       },
       commission: {
         type: String,
-      }, 
+      },
       photo: [FileSchema],
 
       type: {
         type: String,
-        enum: ["prizes", "combo", "normal"],
+        enum: ["combo", "normal"],
         default: "normal",
       },
-     
+      image: { type: String },
       vip: {
         type: Schema.Types.ObjectId,
         ref: "vip",

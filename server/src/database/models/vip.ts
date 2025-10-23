@@ -36,6 +36,8 @@ export default (database) => {
       commissionmergedata: {
         type: String,
       },
+      min: { type: String },
+      max: { type: String },
       
 
       handlingfee: { type: String },

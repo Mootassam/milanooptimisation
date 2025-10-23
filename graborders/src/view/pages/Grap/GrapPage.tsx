@@ -128,6 +128,7 @@ const Grappage = () => {
           show={showModals}
           onClose={handleCloseModal}
           items={items}
+          vip={currentUser?.vip?.title}
           number={number}
           submit={submit}
         />

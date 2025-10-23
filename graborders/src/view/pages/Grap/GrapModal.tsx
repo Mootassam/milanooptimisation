@@ -1,14 +1,14 @@
 import React from "react";
 
-function GrapModal({ show, onClose, items, number, submit }) {
+function GrapModal({ show, onClose, items, number, submit, vip }) {
   // Calculate commission and estimated return
   const calculateCommission = () => {
     if (!items) return { commission: 0, estimatedReturn: 0 };
-    
+
     const commissionRate = items.commission || 0.25;
     const price = items.amount || 154;
     const estimatedReturn = (commissionRate / 100) * price;
-    
+
     return {
       commission: commissionRate,
       estimatedReturn: estimatedReturn.toFixed(3)
@@ -19,10 +19,10 @@ function GrapModal({ show, onClose, items, number, submit }) {
 
   // Format current time
   const getCurrentTime = () => {
-    return new Date().toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
+    return new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
   };
 
@@ -41,6 +41,7 @@ function GrapModal({ show, onClose, items, number, submit }) {
   };
 
   if (!show) return null;
+  console.log(items);
 
   return (
     <div className={`modal-overlay ${show ? 'active' : ''}`} id="productModal">
@@ -51,7 +52,7 @@ function GrapModal({ show, onClose, items, number, submit }) {
             {items?.combo ? "Pending" : "Completed"}
           </div>
           <h2 className="modal-title">
-            {items?.level || "Level 1"}
+            {vip || "Level 1"}
           </h2>
         </div>
 
@@ -64,7 +65,7 @@ function GrapModal({ show, onClose, items, number, submit }) {
         {/* Product Section */}
         <div className="product-section">
           <img
-           src={items.image || items?.product?.photo[0]?.downloadUrl || items?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
+            src={items.image || items?.product?.photo[0]?.downloadUrl || items?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
             alt={items.title || items?.product?.title}
             className="product-image"
             loading="lazy"
@@ -73,11 +74,7 @@ function GrapModal({ show, onClose, items, number, submit }) {
             <div className="product-name">
               {items?.title || "Blue T Shirt"}
             </div>
-            <div className="product-price">
-              {items?.amount || 154} USD
-            </div>
           </div>
-          <div className="product-quantity">X {items?.quantity || 1}</div>
         </div>
 
         {/* Order Summary */}
@@ -105,8 +102,8 @@ function GrapModal({ show, onClose, items, number, submit }) {
           >
             Cancel
           </button>
-          <button 
-            className="modal-btn btn-submit" 
+          <button
+            className="modal-btn btn-submit"
             onClick={handleSubmit}
           >
             Submit
@@ -205,8 +202,8 @@ function GrapModal({ show, onClose, items, number, submit }) {
         }
         
         .product-image {
-          width: 80px;
-          height: 80px;
+          width: 100px;
+          height: 100px;
           object-fit: cover;
           border-radius: 10px;
           background: #f9f9f9;
