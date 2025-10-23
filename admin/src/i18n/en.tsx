@@ -1,3 +1,4 @@
+import { max } from "lodash";
 
 const en = {
   common: {
@@ -104,6 +105,8 @@ const en = {
       },
       fields: {
         title: 'Vip Name',
+        min: "Min Amount",
+        max: "Max Amount",
         dailyorder: 'Tasks per set',
         commissionrate: ' commission',
         tasksDone: 'tasksDone',
