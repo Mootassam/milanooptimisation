@@ -51,12 +51,12 @@ export default class AuthProfileEditor {
       );
 
       const currentUser = MongooseRepository.getCurrentUser(this.options);
-      if (currentUser.withdrawPassword !== data.withdrawPassword) {
-        throw new Error400(
-          this.options.language,
-          "validation.inValidWithdrawPassword"
-        );
-      }
+      // if (currentUser.withdrawPassword !== data.withdrawPassword) {
+      //   throw new Error400(
+      //     this.options.language,
+      //     "validation.inValidWithdrawPassword"
+      //   );
+      // }
 
       await UserRepository.updateProfile(
         this.options.currentUser.id,

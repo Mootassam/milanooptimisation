@@ -5,6 +5,7 @@ import Error404 from "../../errors/Error404";
 import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Withdraw from "../models/withdraw";
+import withdraw from "../models/withdraw";
 
 
 class WithdrawRepository {
@@ -33,6 +34,14 @@ class WithdrawRepository {
     return this.findById(record.id, options);
   }
 
+
+
+  static async withdraw(data, options: IRepositoryOptions) {
+    const currentTenant = MongooseRepository.getCurrentTenant(options);
+    const currentUser = MongooseRepository.getCurrentUser(options);
+
+
+  }
 
 
 

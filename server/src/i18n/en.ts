@@ -10,7 +10,7 @@ const en = {
   validation: {
     inValidWithdrawPassword: 'Your withdraw Password is not correct please check again',
     exceedsBalance: 'It looks like your withdrawal amount exceeds your balance',
-    missingWalletAddress: 'Please go to the "Wallet" section to bind your USDT (TRC20) or ERC20 address before submitting a withdrawal request.',
+    missingWalletAddress: 'Please go to the "Wallet" section to bind your USDT address before submitting a withdrawal request.',
     requiredAmount: 'Please write amount',
     notFoundTransaction: 'Transaction not found',
     permissoin: "Please try to contact the customer Support for help",

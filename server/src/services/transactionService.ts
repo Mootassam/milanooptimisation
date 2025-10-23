@@ -18,16 +18,16 @@ export default class TransactionService {
     );
 
     try {
-      await this.checkSolde(data, { ...this.options });
+      // await this.checkSolde(data, { ...this.options });
 
       const values = {
         status: data.status,
-        datetransaction: data.datetransaction,
-        user: data.user,
+        datetransaction: data.datetransaction || new Date(),
+        user: data.user || MongooseRepository.getCurrentUser(this.options).id,
         type: data.type,
         amount: data.amount,
-        photo: data.photo,
       };
+      console.log("🚀 ~ TransactionService ~ create ~ values:", values)
 
       const record = await TransactionRepository.create(values, {
         ...this.options,
@@ -49,6 +49,7 @@ export default class TransactionService {
 
       // For withdrawal transactions, deduct balance but DON'T create notification
       if (data.type === 'withdraw') {
+
         await this.updateUserBalance(data.user, data.amount, session, 'dec');
         // No notification created for withdrawal on creation
       }

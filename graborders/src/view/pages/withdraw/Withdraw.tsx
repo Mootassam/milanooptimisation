@@ -27,9 +27,9 @@ const schema = yup.object().shape({
 function Withdraw() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const dispatch = useDispatch();
-  
-  useEffect(() => {}, [currentUser]);
-  
+
+  useEffect(() => { }, [currentUser]);
+
   const onSubmit = ({ amount, withdrawPassword }) => {
     const values = {
       status: "pending",
@@ -47,7 +47,7 @@ function Withdraw() {
   const [initialValues] = useState({
     amount: "",
   });
-  
+
   const form = useForm({
     resolver: yupResolver(schema),
     mode: "onSubmit",
@@ -57,7 +57,7 @@ function Withdraw() {
   return (
     <div className="withdraw-page-container">
       <SubHeader title="Withdraw" path="/" />
-      
+
       <div className="withdraw-content-section">
         <div className="withdraw-main-card">
           {/* Header Section */}
@@ -69,7 +69,7 @@ function Withdraw() {
             <div className="withdraw-balance-info">
               <i className="fas fa-wallet balance-icon" />
               <span className="balance-text">
-                Available balance: <strong>{currentUser?.balance?.toFixed(2) || 0} USDT</strong>
+                Available balance: <strong>${currentUser?.balance?.toFixed(2) || 0} </strong>
               </span>
             </div>
           </div>
@@ -82,12 +82,12 @@ function Withdraw() {
                 <div className="withdraw-input-group">
                   <div className="withdraw-input-label">
                     <span className="required-asterisk">*</span>
-                    <span className="label-text">Withdrawal Amount (USDT)</span>
+                    <span className="label-text">Withdrawal Amount </span>
                   </div>
                   <InputFormItem
                     type="number"
                     name="amount"
-                    placeholder="Enter amount (minimum 20 USDT)"
+                    placeholder="Enter amount (minimum $20 )"
                     className="withdraw-input-field"
                   />
                 </div>
@@ -131,11 +131,11 @@ function Withdraw() {
             <i className="fas fa-info-circle rules-icon" />
             <h3 className="rules-title">Rules Description</h3>
           </div>
-          
+
           <ul className="rules-list">
             <li className="rules-list-item">
               <span className="rule-number">(1)</span>
-              <span className="rule-text">Minimum withdrawal is 20 USDT</span>
+              <span className="rule-text">Minimum withdrawal is $20 </span>
             </li>
             <li className="rules-list-item">
               <span className="rule-number">(2)</span>
@@ -381,7 +381,7 @@ function Withdraw() {
           margin: 0;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          // gap: 12px;
         }
 
         .rules-list-item {

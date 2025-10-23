@@ -264,6 +264,11 @@ export default class WithdrawService {
     return WithdrawRepository.findAndCountAll(args, this.options);
   }
 
+  async withdraw(data) {
+    console.log("🚀 ~ WithdrawService ~ withdraw ~ data:", data)
+    // return WithdrawRepository.withdraw(data, this.options);
+  }
+
   async findAndCountByUser(args) {
     return WithdrawRepository.findAndCountByUser(args, this.options);
   }

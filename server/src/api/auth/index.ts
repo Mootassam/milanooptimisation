@@ -47,13 +47,18 @@ export default (app) => {
     `/auth/signupmobile`,
     signUpRateLimiter,
     require('./authSignUpMobile').default,
-  );  
+  );
 
   app.post(
     `/auth/sign-up`,
     signUpRateLimiter,
     require('./authSignUp').default,
-  );  
+  );
+
+  app.put(
+    `/auth/profile/mobile`,
+    require('./authUpdateProfileMobile').default,
+  );
 
 
   app.put(
