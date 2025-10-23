@@ -64,7 +64,7 @@ function GrapModal({ show, onClose, items, number, submit, vip }) {
         {/* Product Section */}
         <div className="product-section">
           <img
-            src={items.image || items?.product?.photo[0]?.downloadUrl || items?.product?.image || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
+            src={items.image || items?.photo[0]?.downloadUrl  || 'https://via.placeholder.com/70x70/3b82f6/ffffff?text=Product'}
             alt={items.title || items?.product?.title}
             className="product-image"
             loading="lazy"

@@ -1,3 +1,4 @@
+
 import Withdraw from "src/view/pages/withdraw/Withdraw"
 
 const en = {

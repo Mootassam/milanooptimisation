@@ -16,12 +16,13 @@ import Amount from "src/shared/Amount";
 import productListSelectors from "src/modules/product/list/productListSelectors";
 import productListActions from "src/modules/product/list/productListActions";
 import GrapModal from "./GrapModal";
+import selectors from "src/modules/record/list/recordListSelectors";
 
 const Grappage = () => {
 
   const [showPrizeModal, setShowPrizeModal] = useState(false);
   const [lodingRoll, setLoadingRoll] = useState(false);
-
+  const totalperday = useSelector(selectors.selectTotalPerday);
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const history = useHistory();
   const dispatch = useDispatch();
@@ -85,7 +86,12 @@ const Grappage = () => {
   };
 
   useEffect(() => {
-    dispatch(recordListAction.doCount());
+
+    dispatch(recordListAction.doCountDay());
+  }, []);
+
+  useEffect(() => {
+
   }, [dispatch, showModals, checkLoading]);
 
   const calcule__total = (price, comission) => {
@@ -183,7 +189,7 @@ const Grappage = () => {
               <div className="stat-label">Available Balance (USDT)</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value">{currentUser?.tasksDone}</div>
+              <div className="stat-value"> ${totalperday?.toFixed(2) || "0.00"}</div>
               <div className="stat-label">Orders Completed</div>
             </div>
             <div className="stat-card">

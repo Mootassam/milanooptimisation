@@ -196,6 +196,14 @@ function Profile() {
             <div className="detail-label">Credit Score</div>
             <div className="detail-value">{currentUser.score}</div>
           </div>
+          <div className="profile-detail">
+            <div className="detail-label">Today's Earnings</div>
+            <div className="detail-value earnings-value">
+              ${totalperday?.toFixed(2) || "0.00"}
+              <i className="fas fa-chart-line earnings-icon" />
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -205,7 +213,7 @@ function Profile() {
           <div className="balance-title">Available Balance</div>
           <div className="balance-info">USD</div>
         </div>
-        <div className="balance-amount">${currentUser.balance}</div>
+        <div className="balance-amount">${currentUser?.balance.toFixed(0)}</div>
         <div className="balance-buttons">
           {balanceActions.map((action, index) => (
             <Link key={index} to={action.path}>
@@ -269,8 +277,6 @@ function Profile() {
           Logout
         </button>
       </div>
-
-
 
       <style>{`
         /* Profile Section */
@@ -348,9 +354,8 @@ function Profile() {
         }
         
         .profile-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            display: flex;
+            gap: 10px;
         }
         
         .profile-detail {
@@ -358,6 +363,12 @@ function Profile() {
             padding: 12px;
             border-radius: 12px;
             backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .profile-detail:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
         
         .detail-label {
@@ -369,6 +380,24 @@ function Profile() {
         .detail-value {
             font-size: 16px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .earnings-value {
+            color: #4cd964;
+            font-weight: 700;
+        }
+        
+        .earnings-icon {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .balance-value {
+            color: #ffd700;
+            font-weight: 700;
         }
         
         /* Balance Section */
