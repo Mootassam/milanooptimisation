@@ -3152,7 +3152,7 @@ const en = {
     product: 'Product',
     transaction: 'transaction',
     online: 'Online',
-    Level: 'Level',
+    Level: 'VIP',
     labelphone: 'Write the Phone number',
     add: 'Add Number',
     download: 'Download the template',

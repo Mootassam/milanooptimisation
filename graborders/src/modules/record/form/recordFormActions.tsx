@@ -76,7 +76,7 @@ const recordFormActions = {
       ]);
 
       Message.success(
-        i18n('entities.record.create.success'),
+        i18n('order.completed'),
       );
 
     } catch (error) {
@@ -104,7 +104,7 @@ const recordFormActions = {
         i18n('entities.record.update.success'),
       );
 
-      getHistory().push('/grap');
+
     } catch (error) {
       Errors.handle(error);
 
@@ -116,3 +116,4 @@ const recordFormActions = {
 };
 
 export default recordFormActions;
+

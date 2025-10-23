@@ -41,7 +41,6 @@ function GrapModal({ show, onClose, items, number, submit, vip }) {
   };
 
   if (!show) return null;
-  console.log(items);
 
   return (
     <div className={`modal-overlay ${show ? 'active' : ''}`} id="productModal">
