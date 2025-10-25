@@ -5,6 +5,7 @@ const initialData = {
   saveLoading: false,
 
   showModal: false,
+  showErrorModal: false,
   record: null,
 };
 
@@ -31,6 +32,7 @@ export default (state = initialData, { type, payload }) => {
       ...state,
       record: payload,
       showModal: false,
+      showErrorModal: false,
     };
   }
 
@@ -63,7 +65,8 @@ export default (state = initialData, { type, payload }) => {
     return {
       ...state,
       saveLoading: false,
-      showModal: true
+      showModal: true, 
+      showErrorModal: true,
     };
   }
 

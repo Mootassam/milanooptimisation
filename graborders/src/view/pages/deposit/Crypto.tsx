@@ -1,25 +1,43 @@
-import axios from "axios";
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { FormProvider, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import Message from "src/view/shared/message";
 import actions from 'src/modules/deposit/form/depositFormActions';
 import selector from "src/modules/deposit/form/depositFormSelectors";
+import InputFormItem from "src/shared/form/InputFormItem";
+import { i18n } from "../../../i18n";
+import yupFormSchemas from "src/modules/shared/yup/yupFormSchemas";
+import QRCode from "react-qr-code";
+// Validation Schema
+const schema = yup.object().shape({
+  amount: yupFormSchemas.decimal(
+    i18n("deposit.fields.amount"),
+    {
+      required: true,
+      min: 10 // Minimum deposit amount
+    }
+  ),
+  txid: yupFormSchemas.string(
+    i18n("deposit.fields.txid"),
+    {
+      required: true,
+      min: 10 // Minimum transaction ID length
+    }
+  ),
+});
+
 function CryptoDeposit() {
   const dispatch = useDispatch();
-  const [amount, setAmount] = useState("");
-  const [txid, setTxid] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [verificationData, setVerificationData] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
   const qrCodeRef = useRef(null);
 
-
-
+  // Redux selectors
+  const showErrorModal = useSelector(selector.modalError);
   const record = useSelector(selector.selectRecord);
   const showModal = useSelector(selector.selectModal);
+  const loading = useSelector(selector.selectSaveLoading); // Assuming you have loading selector
 
   // USDT Wallet data
   const usdtWallet = {
@@ -30,11 +48,20 @@ function CryptoDeposit() {
     color: "#26a17b",
     minDeposit: 10
   };
-  const submit = async (data) => {
-    const values = { amount, txid };
-    dispatch(actions.doCreate(values))
-  }
 
+  // Form initialization
+  const form = useForm({
+    resolver: yupResolver(schema),
+    mode: "onSubmit",
+    defaultValues: {
+      amount: "",
+      txid: "",
+    },
+  });
+
+  const onSubmit = (data) => {
+    dispatch(actions.doCreate(data));
+  };
 
   const copyToClipboard = (text) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -57,10 +84,9 @@ function CryptoDeposit() {
     }
   };
 
-
   const closeSuccessModal = () => {
     dispatch(actions.closeModal());
-  }
+  };
 
   // Bottom Navigation Items
   const navItems = [
@@ -164,10 +190,6 @@ function CryptoDeposit() {
 
             <div className="modal-content">
               <div className="error-message">
-                {errorMessage}
-              </div>
-
-              <div className="error-suggestions">
                 <div className="suggestion-item">
                   <i className="fas fa-network-wired" />
                   <span>Ensure you're using TRC20 network</span>
@@ -191,10 +213,6 @@ function CryptoDeposit() {
               <button className="modal-btn secondary" onClick={closeSuccessModal}>
                 <i className="fas fa-times" />
                 Close
-              </button>
-              <button className="modal-btn primary" onClick={() => setShowErrorModal(false)}>
-                <i className="fas fa-redo" />
-                Try Again
               </button>
             </div>
           </div>
@@ -221,14 +239,14 @@ function CryptoDeposit() {
 
         <div className="qr-code-container">
           <div className="qr-code-placeholder">
-            <i className="fas fa-qrcode" />
-            <span>USDT QR Code</span>
+           <QRCode value={usdtWallet.address} />
           </div>
         </div>
 
         <div className="address-container">
           <div className="address-label">Your USDT (TRC20) Address</div>
           <div className="address-value" ref={qrCodeRef}>
+     
             {usdtWallet.address}
           </div>
           <button
@@ -250,57 +268,50 @@ function CryptoDeposit() {
       </div>
 
       {/* Deposit Form Section */}
-      <div className="form-section">
-        <div className="section-title">
-          <i className="fas fa-edit" />
-          Deposit Details
-        </div>
+      <FormProvider {...form}>
+        <div className="form-section">
+          <div className="section-title">
+            <i className="fas fa-edit" />
+            Deposit Details
+          </div>
 
-        <div className="form-group">
-          <label className="form-label">
-            Amount (USDT) *
-          </label>
-          <div className="input-container">
-            <input
-              type="number"
-              className="form-input"
-              placeholder={`Minimum ${usdtWallet.minDeposit} USDT`}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              step="any"
-            />
-          </div>
-          <div className="input-hint">
-            Minimum deposit: {usdtWallet.minDeposit} USDT
-          </div>
-        </div>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
 
-        <div className="form-group">
-          <label className="form-label">
-            Transaction ID (TXID) *
-          </label>
-          <div className="input-container">
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter your USDT transaction hash"
-              value={txid}
-              onChange={(e) => setTxid(e.target.value)}
-            />
-          </div>
-          <div className="input-hint">
-            Find this in your wallet's USDT transaction history
-          </div>
-        </div>
+            <div style={
+              {padding : '0px 15px'}
+            }>
 
-        <button
-          className="deposit-submit-btn"
-          onClick={submit}
-        >
-          <i className="fas fa-paper-plane" />
-          Submit USDT Deposit
-        </button>
-      </div>
+
+              <InputFormItem
+                label="Amount (USDT) *"
+                name="amount"
+                placeholder={`Minimum ${usdtWallet.minDeposit} USDT`}
+                iname="fas fa-coins"
+                externalErrorMessage={null}
+              />
+
+              <InputFormItem
+                label="Transaction ID (TXID) *"
+                name="txid"
+                placeholder="Enter your USDT transaction hash"
+                type="text"
+                iname="fas fa-receipt"
+                externalErrorMessage={null}
+              />
+            </div>
+
+
+            <button
+              className="deposit-submit-btn"
+              type="submit"
+              disabled={loading}
+            >
+              <i className="fas fa-paper-plane" />
+              {loading ? "Submitting..." : "Submit USDT Deposit"}
+            </button>
+          </form>
+        </div>
+      </FormProvider>
 
       {/* Important Notices */}
       <div className="notices-section">
@@ -606,6 +617,7 @@ function CryptoDeposit() {
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
           overflow: hidden;
         }
+
         
         .section-title {
           padding: 20px 20px 15px;
@@ -635,7 +647,6 @@ function CryptoDeposit() {
           width: 200px;
           height: 200px;
           background: #f8f9fa;
-          border: 2px dashed #dee2e6;
           border-radius: 15px;
           display: flex;
           flex-direction: column;
@@ -778,7 +789,13 @@ function CryptoDeposit() {
           box-shadow: 0 4px 15px rgba(15, 33, 97, 0.2);
         }
         
-        .deposit-submit-btn:active {
+        .deposit-submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        
+        .deposit-submit-btn:active:not(:disabled) {
           transform: scale(0.98);
         }
         

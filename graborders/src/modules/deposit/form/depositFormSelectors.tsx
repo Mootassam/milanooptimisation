@@ -12,6 +12,12 @@ const selectModal = createSelector(
 );
 
 
+const modalError = createSelector(
+  [selectRaw],
+  (raw) => raw.showErrorModal,
+);
+
+
 
 
 const selectInitLoading = createSelector(
@@ -29,6 +35,7 @@ const couponsFormSelectors = {
   selectSaveLoading,
   selectRecord,
   selectModal,
+  modalError,
   selectRaw,
 };
 

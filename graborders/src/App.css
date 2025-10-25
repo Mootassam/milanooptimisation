@@ -158,3 +158,39 @@
  a:hover {
      text-decoration: none;
  }
+
+    
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #0f2161;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 16px 45px;
+            border: 2px solid #e1e5eb;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #0f2161;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            border-color: #0f2161;
+            outline: none;
+        }
+        
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            color: #0f2161;
+            font-size: 18px;
+        }

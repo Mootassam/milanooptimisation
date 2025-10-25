@@ -79,7 +79,8 @@ const depositFormActions = {
     dispatch({
       type: depositFormActions.HIDE_MODAL,
       payload: null,
-      showModal: false
+      showModal: false,
+      showErrorModal: false
     });
   },
 
