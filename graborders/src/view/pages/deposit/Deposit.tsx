@@ -1,83 +1,90 @@
-import React from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import authSelectors from "src/modules/auth/authSelectors";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 function Deposit() {
-    // Payment methods data
+
+  const currentUser = useSelector(authSelectors.selectCurrentUser);
+  // Payment methods data
   const paymentMethods = [
     {
-        id: 1,
-        name: "Crypto",
-        description: "BTC, ETH, USDT, and other cryptocurrencies",
-        icon: "fas fa-coins",
-        color: "#f7931a",
-        path: "/deposit/crypto"
+      id: 1,
+      name: "Crypto",
+      description: "BTC, ETH, USDT, and other cryptocurrencies",
+      icon: "fas fa-coins",
+      color: "#f7931a",
+      path: "/deposit/crypto"
     },
     {
-        id: 2,
-        name: "Mobile Money",
-        description: "MTN, Airtel, Telecel, Orange",
-        icon: "fas fa-mobile-alt",
-        color: "#0f2161",
-        path: "/deposit/mobile-money"
+      id: 2,
+      name: "Mobile Money",
+      description: "MTN, Airtel, Telecel, Orange",
+      icon: "fas fa-mobile-alt",
+      color: "#0f2161",
+      path: "/deposit/mobile-money"
     }
-];
+  ];
+
+ 
 
 
-    return (
-        <>
-            {/* Header */}
 
-            <SubHeader title="Deposit Funds" />
 
-            {/* Balance Overview */}
-            <div className="balance-overview">
-                <div className="balance-label">Available Balance</div>
-                <div className="balance-amount">$1,250.75</div>
-                <div className="balance-currency">USD</div>
-            </div>
+  return (
+    <>
+      {/* Header */}
 
-            {/* Payment Methods Section */}
-            <div className="payment-section">
-                <div className="section-title">
-                    <i className="fas fa-credit-card" />
-                    Select Payment Method
+      <SubHeader title="Deposit Funds" />
+
+      {/* Balance Overview */}
+      <div className="balance-overview">
+        <div className="balance-label">Available Balance</div>
+        <div className="balance-amount">${currentUser?.balance.toFixed(0)}</div>
+        <div className="balance-currency">USD</div>
+      </div>
+
+      {/* Payment Methods Section */}
+      <div className="payment-section">
+        <div className="section-title">
+          <i className="fas fa-credit-card" />
+          Select Payment Method
+        </div>
+
+        <div className="payment-methods">
+          {paymentMethods.map((method) => (
+            <Link
+              key={method.id}
+              to={method.path}
+              className="payment-method"
+            >
+              <div className="method-left">
+                <div
+                  className="method-icon"
+                  style={{ backgroundColor: `${method.color}20`, color: method.color }}
+                >
+                  <i className={method.icon} />
                 </div>
-
-                <div className="payment-methods">
-                    {paymentMethods.map((method) => (
-                        <Link
-                            key={method.id}
-                            to={method.path}
-                            className="payment-method"
-                        >
-                            <div className="method-left">
-                                <div
-                                    className="method-icon"
-                                    style={{ backgroundColor: `${method.color}20`, color: method.color }}
-                                >
-                                    <i className={method.icon} />
-                                </div>
-                                <div className="method-info">
-                                    <div className="method-name">{method.name}</div>
-                                    <div className="method-desc">{method.description}</div>
-                                </div>
-                            </div>
-                            <div className="method-arrow">
-                                <i className="fas fa-chevron-right" />
-                            </div>
-                        </Link>
-                    ))}
+                <div className="method-info">
+                  <div className="method-name">{method.name}</div>
+                  <div className="method-desc">{method.description}</div>
                 </div>
-            </div>
+              </div>
+              <div className="method-arrow">
+                <i className="fas fa-chevron-right" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
 
-            {/* Recent Transactions */}
+      {/* Recent Transactions */}
 
 
-            {/* Bottom Navigation */}
+      {/* Bottom Navigation */}
 
 
-            <style>{`
+      <style>{`
         /* Header Styles */
         .deposit-header {
           display: flex;
@@ -313,8 +320,8 @@ function Deposit() {
           }
         }
       `}</style>
-        </>
-    );
+    </>
+  );
 }
 
 export default Deposit;

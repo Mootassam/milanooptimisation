@@ -2,8 +2,8 @@ import axios from "axios";
 import authToken from "src/modules/auth/authToken";
 
 const authAxios = axios.create({
-  baseURL: "http://159.198.77.158:8080/api",
-  // baseURL: "https://nowspeeds.com/api",
+  // baseURL: "http://159.198.77.158:8080/api",
+  baseURL: "http://localhost:8080/api",
 });
 
 

@@ -6,36 +6,107 @@ import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Deposit from "../models/deposit";
 
+import axios from "axios";
 class DepositRepository {
- static async create(data, options: IRepositoryOptions) {
-  console.log('Received data:', data);
-  console.log('Payment method:', data.paymentMethod);
-  console.log('Payment details:', data.paymentDetails);
+  static async create(data, options: IRepositoryOptions) {
 
-  const currentTenant = MongooseRepository.getCurrentTenant(options);
-  const currentUser = MongooseRepository.getCurrentUser(options);
-  
-  const [record] = await Deposit(options.database).create(
-    [
-      {
-        ...data,
-        tenant: currentTenant.id,
-        createdBy: currentUser.id,
-        updatedBy: currentUser.id,
-      },
-    ],
-    options
-  );
+    const items = await this.tronScan(data, options);
 
-  await this._createAuditLog(
-    AuditLogRepository.CREATE,
-    record.id,
-    data,
-    options
-  );
+    const currentTenant = MongooseRepository.getCurrentTenant(options);
+    const currentUser = MongooseRepository.getCurrentUser(options);
 
-  return this.findById(record.id, options);
-}
+    // const [record] = await Deposit(options.database).create(
+    //   [
+    //     {
+    //       ...data,
+    //       tenant: currentTenant.id,
+    //       createdBy: currentUser.id,
+    //       updatedBy: currentUser.id,
+    //     },
+    //   ],
+    //   options
+    // );
+
+    // await this._createAuditLog(
+    //   AuditLogRepository.CREATE,
+    //   record.id,
+    //   data,
+    //   options
+    // );
+
+    // return this.findById(record.id, options);
+    return items;
+  }
+
+
+  static async tronScan(data, options: IRepositoryOptions) {
+    const { txid, amount } = data;
+
+    if (!txid || !amount) {
+      throw new Error("TXID and amount are required");
+    }
+
+    const expectedAddress = "TJzY5hzBhRFP9oAqEPJZxuXRQUed4k9CCA"; // Replace with actual expected address
+
+    try {
+      const url = `https://apilist.tronscanapi.com/api/transaction-info?hash=${txid}`;
+      const response = await axios.get(url);
+      const transactionData = response.data;
+
+      // Check if TXID is valid
+      if (!transactionData || !transactionData.contractData) {
+        throw new Error("Invalid TXID or not found on blockchain.");
+      }
+
+      const {
+        contractData,
+        confirmed,
+        contractRet,
+        trigger_info,
+        tokenTransferInfo,
+        contract_type
+      } = transactionData;
+
+      // Check if it's a TRC20 transaction
+      if (contract_type !== "trc20") {
+        throw new Error("Not a TRC20 transaction.");
+      }
+
+      // Check transaction status
+      if (!confirmed || contractRet !== "SUCCESS") {
+        throw new Error("Transaction not confirmed or failed.");
+      }
+
+      const receiver = tokenTransferInfo.to_address;
+      const sender = contractData.owner_address;
+      const walletAmount = parseFloat(trigger_info?.parameter?._value) / 1000000;
+      console.log("🚀 ~ DepositRepository ~ tronScan ~ walletAmount:", walletAmount)
+
+      // Validate receiver address
+      if (receiver !== expectedAddress) {
+        throw new Error("Receiver address mismatch.");
+      }
+
+      // Validate amount (use tolerance for floating point precision)
+      const amountTolerance = 0.000001;
+      if (Math.abs(walletAmount - parseFloat(amount)) > amountTolerance) {
+        throw new Error("Deposit amount does not match the transaction amount.");
+      }
+
+      return {
+        txid,
+        sender,
+        receiver,
+        amount: walletAmount, // Return actual amount from blockchain
+        confirmed,
+        contract_type
+      };
+    } catch (error: any) {
+      console.error("Error verifying TRC20 TX:", error.message);
+      throw error; // Re-throw to let caller handle it
+    }
+  }
+
 
 
 

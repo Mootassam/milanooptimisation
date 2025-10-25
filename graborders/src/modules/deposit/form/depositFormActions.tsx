@@ -2,7 +2,7 @@
 import Errors from 'src/modules/shared/error/errors';
 import Message from 'src/view/shared/message';
 import { getHistory } from 'src/modules/store';
-import { i18n } from 'src/i18n';
+import { i18n } from '../../../i18n';
 import DepositService from 'src/modules/deposit/depositService';
 import depositListActions from 'src/modules/deposit/list/depositListActions';
 
@@ -13,6 +13,9 @@ const depositFormActions = {
   INIT_SUCCESS: `${prefix}_INIT_SUCCESS`,
   INIT_ERROR: `${prefix}_INIT_ERROR`,
 
+
+
+  HIDE_MODAL: `${prefix}_HIDE_MODAL`,
   CREATE_STARTED: `${prefix}_CREATE_STARTED`,
   CREATE_SUCCESS: `${prefix}_CREATE_SUCCESS`,
   CREATE_ERROR: `${prefix}_CREATE_ERROR`,
@@ -56,17 +59,13 @@ const depositFormActions = {
         type: depositFormActions.CREATE_STARTED,
       });
 
-      await DepositService.create(values);
+      const record = await DepositService.create(values);
 
       dispatch({
         type: depositFormActions.CREATE_SUCCESS,
+        payload: record,
       });
 
-      Message.success(
-        i18n('entities.deposit.create.success'),
-      );
-
-      getHistory().push('/deposit');
     } catch (error) {
       Errors.handle(error);
 
@@ -74,6 +73,14 @@ const depositFormActions = {
         type: depositFormActions.CREATE_ERROR,
       });
     }
+  },
+
+  closeModal: () => async (dispatch) => {
+    dispatch({
+      type: depositFormActions.HIDE_MODAL,
+      payload: null,
+      showModal: false
+    });
   },
 
   doUpdate: (id, values) => async (dispatch, getState) => {
@@ -102,7 +109,7 @@ const depositFormActions = {
     }
   },
 
-    doUpdateStatus: (values) => async (dispatch, getState) => {
+  doUpdateStatus: (values) => async (dispatch, getState) => {
     try {
       dispatch({
         type: depositFormActions.UPDATE_STARTED,

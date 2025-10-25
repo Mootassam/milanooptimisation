@@ -1,12 +1,25 @@
+import axios from "axios";
 import React, { useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import Message from "src/view/shared/message";
-
+import actions from 'src/modules/deposit/form/depositFormActions';
+import selector from "src/modules/deposit/form/depositFormSelectors";
 function CryptoDeposit() {
+  const dispatch = useDispatch();
   const [amount, setAmount] = useState("");
   const [txid, setTxid] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [verificationData, setVerificationData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const qrCodeRef = useRef(null);
+
+
+
+  const record = useSelector(selector.selectRecord);
+  const showModal = useSelector(selector.selectModal);
 
   // USDT Wallet data
   const usdtWallet = {
@@ -17,6 +30,11 @@ function CryptoDeposit() {
     color: "#26a17b",
     minDeposit: 10
   };
+  const submit = async (data) => {
+    const values = { amount, txid };
+    dispatch(actions.doCreate(values))
+  }
+
 
   const copyToClipboard = (text) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -39,24 +57,10 @@ function CryptoDeposit() {
     }
   };
 
-  const handleDeposit = () => {
-    if (!amount || !txid) {
-      Message.error("Please fill in all required fields");
-      return;
-    }
 
-    const minAmount = usdtWallet.minDeposit;
-    if (parseFloat(amount) < minAmount) {
-      Message.error(`Minimum deposit is ${minAmount} ${usdtWallet.symbol}`);
-      return;
-    }
-
-    // Here you would typically dispatch an action to process the deposit
-    Message.success("Deposit request submitted! Waiting for confirmation.");
-    // Reset form
-    setAmount("");
-    setTxid("");
-  };
+  const closeSuccessModal = () => {
+    dispatch(actions.closeModal());
+  }
 
   // Bottom Navigation Items
   const navItems = [
@@ -90,10 +94,112 @@ function CryptoDeposit() {
   return (
     <>
       {/* Header */}
-
-
-
       <SubHeader title="USDT Deposit" />
+
+      {/* Success Modal */}
+      {showModal && record && (
+        <div className="modal-overlay">
+          <div className="modal-container success-modal">
+            <div className="modal-header">
+              <div className="modal-icon success">
+                <i className="fas fa-check-circle" />
+              </div>
+              <h3 className="modal-title">Deposit Verified Successfully!</h3>
+            </div>
+
+            <div className="modal-content">
+              <div className="verification-details">
+                <div className="detail-item">
+                  <span className="detail-label">Transaction ID:</span>
+                  <span className="detail-value">{record.txid}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Amount:</span>
+                  <span className="detail-value">{record.amount} USDT</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Sender:</span>
+                  <span className="detail-value">{record.sender}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Receiver:</span>
+                  <span className="detail-value">{record.receiver}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Network:</span>
+                  <span className="detail-value">{record.contract_type}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Status:</span>
+                  <span className="detail-value success-text">Confirmed</span>
+                </div>
+              </div>
+
+              <div className="success-message">
+                <i className="fas fa-info-circle" />
+                Your deposit has been successfully verified and will be credited to your account shortly.
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="modal-btn primary" onClick={closeSuccessModal}>
+                <i className="fas fa-check" />
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="modal-overlay">
+          <div className="modal-container error-modal">
+            <div className="modal-header">
+              <div className="modal-icon error">
+                <i className="fas fa-exclamation-triangle" />
+              </div>
+              <h3 className="modal-title">Verification Failed</h3>
+            </div>
+
+            <div className="modal-content">
+              <div className="error-message">
+                {errorMessage}
+              </div>
+
+              <div className="error-suggestions">
+                <div className="suggestion-item">
+                  <i className="fas fa-network-wired" />
+                  <span>Ensure you're using TRC20 network</span>
+                </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-check-double" />
+                  <span>Verify transaction is confirmed on blockchain</span>
+                </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-address-card" />
+                  <span>Check if you sent to correct deposit address</span>
+                </div>
+                <div className="suggestion-item">
+                  <i className="fas fa-coins" />
+                  <span>Confirm minimum deposit amount is met</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="modal-btn secondary" onClick={closeSuccessModal}>
+                <i className="fas fa-times" />
+                Close
+              </button>
+              <button className="modal-btn primary" onClick={() => setShowErrorModal(false)}>
+                <i className="fas fa-redo" />
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* USDT Only Notice */}
       <div className="usdt-notice">
@@ -112,7 +218,7 @@ function CryptoDeposit() {
           <i className="fas fa-wallet" />
           USDT Deposit Address
         </div>
-        
+
         <div className="qr-code-container">
           <div className="qr-code-placeholder">
             <i className="fas fa-qrcode" />
@@ -125,7 +231,7 @@ function CryptoDeposit() {
           <div className="address-value" ref={qrCodeRef}>
             {usdtWallet.address}
           </div>
-          <button 
+          <button
             className="copy-btn"
             onClick={() => copyToClipboard(usdtWallet.address)}
           >
@@ -137,7 +243,7 @@ function CryptoDeposit() {
         <div className="deposit-notice">
           <i className="fas fa-exclamation-triangle" />
           <div className="notice-content">
-            <strong>Important:</strong> Send only <strong>USDT (TRC20)</strong> to this address. 
+            <strong>Important:</strong> Send only <strong>USDT (TRC20)</strong> to this address.
             Sending any other cryptocurrency (BTC, ETH, etc.) will result in permanent loss of funds.
           </div>
         </div>
@@ -187,9 +293,9 @@ function CryptoDeposit() {
           </div>
         </div>
 
-        <button 
+        <button
           className="deposit-submit-btn"
-          onClick={handleDeposit}
+          onClick={submit}
         >
           <i className="fas fa-paper-plane" />
           Submit USDT Deposit
@@ -224,10 +330,209 @@ function CryptoDeposit() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-
-
       <style>{`
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          padding: 20px;
+        }
+        
+        .modal-container {
+          background: white;
+          border-radius: 20px;
+          max-width: 400px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        .modal-header {
+          padding: 30px 25px 20px;
+          text-align: center;
+          border-bottom: 1px solid #f0f4ff;
+        }
+        
+        .modal-icon {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          font-size: 40px;
+        }
+        
+        .modal-icon.success {
+          background: #e8f5e8;
+          color: #26a17b;
+        }
+        
+        .modal-icon.error {
+          background: #ffe8e8;
+          color: #e74c3c;
+        }
+        
+        .modal-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #0f2161;
+          margin: 0;
+        }
+        
+        .modal-content {
+          padding: 25px;
+        }
+        
+        .verification-details {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 20px;
+        }
+        
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-item:last-child {
+          margin-bottom: 0;
+          padding-bottom: 0;
+          border-bottom: none;
+        }
+        
+        .detail-label {
+          font-weight: 600;
+          color: #7b8796;
+          font-size: 13px;
+          flex-shrink: 0;
+          margin-right: 10px;
+        }
+        
+        .detail-value {
+          color: #0f2161;
+          font-size: 13px;
+          text-align: right;
+          word-break: break-all;
+          font-family: monospace;
+        }
+        
+        .success-text {
+          color: #26a17b;
+          font-weight: 700;
+        }
+        
+        .success-message {
+          background: #e8f5e8;
+          border: 1px solid #26a17b;
+          border-radius: 10px;
+          padding: 15px;
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: #26a17b;
+          font-size: 13px;
+        }
+        
+        .error-message {
+          background: #ffe8e8;
+          border: 1px solid #e74c3c;
+          border-radius: 10px;
+          padding: 15px;
+          color: #e74c3c;
+          font-size: 14px;
+          margin-bottom: 20px;
+          text-align: center;
+          font-weight: 600;
+        }
+        
+        .error-suggestions {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 20px;
+        }
+        
+        .suggestion-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+          color: #7b8796;
+          font-size: 13px;
+        }
+        
+        .suggestion-item:last-child {
+          margin-bottom: 0;
+        }
+        
+        .suggestion-item i {
+          color: #0f2161;
+          font-size: 14px;
+          width: 16px;
+        }
+        
+        .modal-actions {
+          padding: 20px 25px 30px;
+          display: flex;
+          gap: 12px;
+        }
+        
+        .modal-btn {
+          flex: 1;
+          padding: 15px;
+          border: none;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.2s ease;
+          font-size: 14px;
+        }
+        
+        .modal-btn.primary {
+          background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
+          color: white;
+        }
+        
+        .modal-btn.secondary {
+          background: #f8f9fa;
+          color: #7b8796;
+        }
+        
+        .modal-btn:active {
+          transform: scale(0.98);
+        }
+        
         /* Header Styles */
         .deposit-header {
           display: flex;
@@ -554,6 +859,10 @@ function CryptoDeposit() {
           
           .usdt-message {
             font-size: 13px;
+          }
+          
+          .modal-container {
+            margin: 10px;
           }
         }
       `}</style>
