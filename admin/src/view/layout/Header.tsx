@@ -49,6 +49,10 @@ function Header(props) {
     getHistory().push('/tenant');
   };
 
+  // Mock data for counts - replace with actual data from your state
+  const withdrawCount = 5; // Example count
+  const depositCount = 12; // Example count
+
   return (
     <HeaderWrapper className="navbar sticky-top navbar-light bg-white border-bottom">
       <button
@@ -59,21 +63,37 @@ function Header(props) {
         <i className="fas fa-bars" />
       </button>
 
-      <div style={
-        {
-          display
-            : 'flex',
-          gap: '10px',
-          alignItems: 'center'
-        }
-      }>
+      <div style={{
+        display: 'flex',
+        gap: '15px',
+        alignItems: 'center'
+      }}>
 
-        <div className='buttons__itesm'>
-          <div > Withdraw :(0)</div>
+        <div className='header-buttons'>
+          {/* Deposit Button */}
+          <div 
+            className="header-button deposit-button"
+            onClick={() => getHistory().push('/deposit')}
+          >
+            <div className="button-content">
+              <i className="fas fa-arrow-down button-icon"></i>
+              <span className="button-text">Deposit</span>
+              <span className="count-badge">{depositCount}</span>
+            </div>
+          </div>
+
+          {/* Withdraw Button */}
+          <div 
+            className="header-button withdraw-button"
+            onClick={() => getHistory().push('/withdraw')}
+          >
+            <div className="button-content">
+              <i className="fas fa-arrow-up button-icon"></i>
+              <span className="button-text">Withdraw</span>
+              <span className="count-badge">{withdrawCount}</span>
+            </div>
+          </div>
         </div>
-
-
-
 
         <span className="i18n-select">
           <I18nSelect />
@@ -105,13 +125,6 @@ function Header(props) {
             </div>
           </span>
           <div className="dropdown-menu dropdown-menu-right">
-
-
-
-
-
-
-
             <button
               onClick={doNavigateToProfile}
               className="dropdown-item"
@@ -141,15 +154,6 @@ function Header(props) {
                 </button>
               )}
 
-            {/* <button
-              onClick={doNavigateToSettings}
-              className="dropdown-item"
-              type="button"
-            >
-              <i className="fas fa-wrench" />
-              {i18n('settings.menu')}
-            </button> */}
-
             <button
               onClick={doNavigateToAuditLog}
               className="dropdown-item"
@@ -170,6 +174,143 @@ function Header(props) {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .header-buttons {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .header-button {
+          display: flex;
+          align-items: center;
+          padding: 8px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: 1px solid transparent;
+          background: #f8f9fa;
+          position: relative;
+        }
+
+        .header-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .deposit-button:hover {
+          background: #e7f3ff;
+          border-color: #007bff;
+        }
+
+        .withdraw-button:hover {
+          background: #fff5f5;
+          border-color: #dc3545;
+        }
+
+        .button-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 500;
+        }
+
+        .button-icon {
+          font-size: 14px;
+        }
+
+        .deposit-button .button-icon {
+          color: #007bff;
+        }
+
+        .withdraw-button .button-icon {
+          color: #dc3545;
+        }
+
+        .button-text {
+          font-size: 14px;
+          color: #495057;
+          white-space: nowrap;
+        }
+
+        .count-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 24px;
+          height: 20px;
+          padding: 0 6px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 600;
+          color: white;
+        }
+
+        .deposit-button .count-badge {
+          background: #007bff;
+        }
+
+        .withdraw-button .count-badge {
+          background: #dc3545;
+        }
+
+        /* Pulse animation for counts */
+        .count-badge {
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+          .header-buttons {
+            gap: 8px;
+          }
+          
+          .header-button {
+            padding: 6px 12px;
+          }
+          
+          .button-text {
+            font-size: 12px;
+          }
+          
+          .button-content {
+            gap: 6px;
+          }
+          
+          .count-badge {
+            min-width: 20px;
+            height: 18px;
+            font-size: 10px;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .button-text {
+            display: none;
+          }
+          
+          .header-button {
+            padding: 8px;
+          }
+          
+          .button-content {
+            gap: 4px;
+          }
+        }
+      `}</style>
     </HeaderWrapper>
   );
 }

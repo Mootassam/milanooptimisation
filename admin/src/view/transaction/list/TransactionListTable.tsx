@@ -22,7 +22,6 @@ function TransactionListTable(props) {
   const findLoading = useSelector(selectors.selectLoading);
   const destroyLoading = useSelector(destroySelectors.selectLoading);
   const loading = findLoading || destroyLoading;
-
   const rows = useSelector(selectors.selectRows);
   const pagination = useSelector(selectors.selectPagination);
   const sorter = useSelector(selectors.selectSorter);
@@ -110,72 +109,80 @@ function TransactionListTable(props) {
   const formatAmount = (amount, type) => {
     const symbol = type === 'deposit' ? '+' : '-';
     return (
-      <span className={`txn-amount ${type === 'deposit' ? 'txn-amount-deposit' : 'txn-amount-withdraw'}`}>
+      <span className={`amount-value ${type === 'deposit' ? 'amount-deposit' : 'amount-withdraw'}`}>
         {symbol}${amount}
       </span>
     );
   };
 
   return (
-    <TableWrapper>
-      <div className="txn-table-container">
-        <table className="txn-table">
-          <thead className="txn-table-header">
+    <div className="transaction-list-container">
+      <div className="table-responsive">
+        <table className="transaction-list-table">
+          <thead className="table-header">
             <tr>
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'user'}
-                label={i18n('entities.transaction.fields.user')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'type'}
-                label={i18n('entities.transaction.fields.type')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'amount'}
-                label={i18n('entities.transaction.fields.amount')}
-                align="right"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'status'}
-                label={i18n('entities.transaction.fields.status')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'createdAt'}
-                label="Date"
-              />
+              <th className="sortable-header" onClick={() => doChangeSort('user')}>
+                {i18n('entities.transaction.fields.user')}
+                {sorter.field === 'user' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('type')}>
+                {i18n('entities.transaction.fields.type')}
+                {sorter.field === 'type' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('amount')}>
+                {i18n('entities.transaction.fields.amount')}
+                {sorter.field === 'amount' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+            
+              <th className="sortable-header" onClick={() => doChangeSort('createdAt')}>
+                Date
+                {sorter.field === 'createdAt' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+                <th className="sortable-header" onClick={() => doChangeSort('status')}>
+                {i18n('entities.transaction.fields.status')}
+                {sorter.field === 'status' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
             </tr>
           </thead>
-          <tbody className="txn-table-body">
+          <tbody className="table-body">
             {loading && (
               <tr>
-                <td colSpan={5}>
-                  <div className="txn-loading-container">
+                <td colSpan={5} className="loading-cell">
+                  <div className="loading-container">
                     <Spinner />
+                    <span className="loading-text">
+                      Loading data...
+                    </span>
                   </div>
                 </td>
               </tr>
             )}
             {!loading && !hasRows && (
               <tr>
-                <td colSpan={5}>
-                  <div className="txn-empty-state">
-                    <i className="fa-solid fa-receipt"></i>
-                    <span>{i18n('table.noData')}</span>
+                <td colSpan={5} className="no-data-cell">
+                  <div className="no-data-content">
+                    <i className="fas fa-database no-data-icon"></i>
+                    <p>{i18n('table.noData')}</p>
                   </div>
                 </td>
               </tr>
@@ -186,13 +193,13 @@ function TransactionListTable(props) {
               const isPending = row.status === 'pending';
               
               return (
-                <tr key={row.id} className="txn-table-row">
-                  <td className="txn-user-cell">
+                <tr key={row.id} className="table-row">
+                  <td className="table-cell">
                     <UserListItem value={row.user} />
                   </td>
-                  <td className="txn-type-cell">
+                  <td className="table-cell">
                     <div 
-                      className="txn-type-badge"
+                      className="type-badge"
                       style={{ 
                         color: typeInfo.color,
                         backgroundColor: typeInfo.bgColor,
@@ -203,22 +210,25 @@ function TransactionListTable(props) {
                       <span>{typeInfo.text}</span>
                     </div>
                   </td>
-                  <td className="txn-amount-cell">
+                  <td className="table-cell numeric">
                     {formatAmount(row.amount, row.type)}
                   </td>
-                  <td className="txn-status-cell">
+               
+                  <td className="table-cell">
+                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
+                  </td>
+                     <td className="table-cell">
                     {isPending ? (
-                      // Show buttons for pending status
-                      <div className="txn-status-buttons">
+                      <div className="status-buttons">
                         <button
-                          className="txn-btn-accept"
+                          className="btn-action success"
                           onClick={() => handleStatusChange(row.id, 'success')}
                         >
                           <i className="fa-solid fa-check"></i>
                           Accept
                         </button>
                         <button
-                          className="txn-btn-reject"
+                          className="btn-action danger"
                           onClick={() => handleStatusChange(row.id, 'canceled')}
                         >
                           <i className="fa-solid fa-xmark"></i>
@@ -226,21 +236,18 @@ function TransactionListTable(props) {
                         </button>
                       </div>
                     ) : (
-                      // Show status badge for non-pending status
                       <div 
-                        className="txn-status-badge"
+                        className="status-badge"
                         style={{ 
                           color: statusInfo.color,
-                          backgroundColor: statusInfo.bgColor
+                          backgroundColor: statusInfo.bgColor,
+                          borderColor: statusInfo.color
                         }}
                       >
                         <i className={statusInfo.icon}></i>
                         <span>{statusInfo.text}</span>
                       </div>
                     )}
-                  </td>
-                  <td className="txn-date-cell">
-                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
                   </td>
                 </tr>
               );
@@ -249,11 +256,13 @@ function TransactionListTable(props) {
         </table>
       </div>
 
-      <Pagination
-        onChange={doChangePagination}
-        disabled={loading}
-        pagination={pagination}
-      />
+      <div className="pagination-container">
+        <Pagination
+          onChange={doChangePagination}
+          disabled={loading}
+          pagination={pagination}
+        />
+      </div>
 
       {recordIdToDestroy && (
         <ConfirmModal
@@ -264,208 +273,213 @@ function TransactionListTable(props) {
       )}
 
       <style>{`
-        .txn-table-container {
-          background: #FFFFFF;
-          border-radius: 12px;
-          border: 1px solid #E2E8F0;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .txn-table {
+        .transaction-list-container {
           width: 100%;
-          border-collapse: collapse;
         }
 
-        .txn-table-header {
-          background: #F7FAFC;
-          border-bottom: 1px solid #E2E8F0;
-        }
-
-        .txn-table-header th {
-          padding: 16px 20px;
+        .sort-icon {
+          margin-left: 8px;
           font-size: 12px;
+        }
+
+        .table-header {
+          background: #f8fafc;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-header th {
+          padding: 16px 12px;
           font-weight: 600;
-          color: #718096;
+          color: #475569;
+          font-size: 12px;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          text-align: left;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #e2e8f0;
         }
 
-        .txn-table-body {
-          background: #FFFFFF;
+        .sortable-header {
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          user-select: none;
         }
 
-        .txn-table-row {
-          border-bottom: 1px solid #F1F5F9;
-          transition: all 0.2s ease;
+        .sortable-header:hover {
+          background: #f1f5f9;
         }
 
-        .txn-table-row:hover {
-          background: #F8FAFC;
+        .table-body {
+          background: white;
         }
 
-        .txn-table-row:last-child {
-          border-bottom: none;
+        .table-row {
+          transition: background-color 0.2s ease;
+          border-bottom: 1px solid #f1f5f9;
         }
 
-        .txn-table-row td {
-          padding: 16px 20px;
+        .table-row:hover {
+          background: #f8fafc;
+        }
+
+        .table-cell {
+          padding: 16px 12px;
           font-size: 14px;
-          color: #2D3748;
+          color: #475569;
+          vertical-align: middle;
         }
 
-        .txn-user-cell {
-          font-weight: 500;
+        .numeric {
+          text-align: right;
         }
 
-        .txn-type-badge {
+        .type-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          border-radius: 20px;
           font-size: 12px;
           font-weight: 600;
-          border: 1px solid;
+    
         }
 
-        .txn-type-badge i {
+        .type-badge i {
           font-size: 10px;
         }
 
-        .txn-amount-cell {
-          text-align: right;
+        .amount-value {
           font-weight: 600;
+          font-size: 14px;
         }
 
-        .txn-amount-deposit {
-          color: #48BB78;
+        .amount-deposit {
+          color: #28a745;
         }
 
-        .txn-amount-withdraw {
-          color: #F56565;
+        .amount-withdraw {
+          color: #dc3545;
         }
 
-        .txn-status-cell {
-          min-width: 140px;
-        }
-
-        .txn-status-buttons {
+        .status-buttons {
           display: flex;
           gap: 8px;
-          justify-content: center;
+          align-items: center;
         }
 
-        .txn-btn-accept,
-        .txn-btn-reject {
-          display: flex;
+        .btn-action {
+          display: inline-flex;
           align-items: center;
           gap: 4px;
-          padding: 6px 12px;
+          padding: 6px 10px;
           border: none;
           border-radius: 6px;
           font-size: 11px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
+          white-space: nowrap;
         }
 
-        .txn-btn-accept {
-          background: #48BB78;
+        .btn-action.success {
+          background: #28a745;
           color: white;
         }
 
-        .txn-btn-accept:hover {
-          background: #38A169;
-          transform: translateY(-1px);
+        .btn-action.success:hover {
+          background: #218838;
         }
 
-        .txn-btn-reject {
-          background: #F56565;
+        .btn-action.danger {
+          background: #dc3545;
           color: white;
         }
 
-        .txn-btn-reject:hover {
-          background: #E53E3E;
-          transform: translateY(-1px);
+        .btn-action.danger:hover {
+          background: #c82333;
         }
 
-        .txn-status-badge {
+        .btn-action i {
+          font-size: 10px;
+        }
+
+        .status-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          border-radius: 20px;
           font-size: 12px;
           font-weight: 600;
-          border: 1px solid;
-          border-color: inherit;
         }
 
-        .txn-status-badge i {
+        .status-badge i {
           font-size: 10px;
         }
 
-        .txn-date-cell {
-          color: #718096;
-          font-size: 13px;
+        .loading-cell {
+          text-align: center;
+          padding: 40px !important;
         }
 
-        .txn-loading-container {
-          display: flex;
-          justify-content: center;
-          padding: 40px;
-        }
-
-        .txn-empty-state {
+        .loading-container {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 60px 20px;
-          color: #718096;
+          gap: 12px;
         }
 
-        .txn-empty-state i {
-          font-size: 48px;
-          margin-bottom: 16px;
-          color: #CBD5E0;
-        }
-
-        .txn-empty-state span {
+        .loading-text {
+          color: #6c757d;
           font-size: 14px;
-          font-weight: 500;
         }
 
-        /* Responsive design */
+        .no-data-cell {
+          text-align: center;
+          padding: 60px 20px !important;
+        }
+
+        .no-data-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          color: #6c757d;
+        }
+
+        .no-data-icon {
+          font-size: 48px;
+          color: #adb5bd;
+        }
+
+        .no-data-content p {
+          margin: 0;
+          font-size: 14px;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+          margin-top: 20px;
+          display: flex;
+          justify-content: center;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-          .txn-table-container {
-            border-radius: 8px;
-          }
-          
-          .txn-table-header th,
-          .txn-table-row td {
-            padding: 12px 16px;
-          }
-          
-          .txn-type-badge {
-            padding: 4px 8px;
-            font-size: 11px;
-          }
-          
-          .txn-status-buttons {
+          .status-buttons {
             flex-direction: column;
             gap: 4px;
           }
           
-          .txn-btn-accept,
-          .txn-btn-reject {
+          .btn-action {
             padding: 4px 8px;
             font-size: 10px;
           }
+          
+          .type-badge,
+          .status-badge {
+            padding: 4px 8px;
+            font-size: 11px;
+          }
         }
       `}</style>
-    </TableWrapper>
+    </div>
   );
 }
 

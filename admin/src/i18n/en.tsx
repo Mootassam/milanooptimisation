@@ -2896,7 +2896,7 @@ const en = {
       email: 'Email',
       tasksDone: "tasksDone",
       username: 'Username',
-      refcode: 'refcode',
+      refcode: 'Invitation Code',
       score: 'Score',
       grab: 'Grab',
       withdraw: 'Withdraw',
@@ -3138,6 +3138,7 @@ const en = {
   },
   dashboard: {
     valider: 'validate',
+    settings: 'Settings',
     dashboard: "Dashboard",
     file: 'No file selected',
     typecsv: 'Invalid file type. Please select a CSV file.',

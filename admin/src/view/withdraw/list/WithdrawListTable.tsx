@@ -17,16 +17,38 @@ import UserListItem from 'src/view/user/list/UserListItem';
 
 function WithdrawListTable(props) {
   const [recordIdToDestroy, setRecordIdToDestroy] = useState(null);
+  const [selectedWithdraw, setSelectedWithdraw] = useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const dispatch = useDispatch();
 
   const findLoading = useSelector(selectors.selectLoading);
   const destroyLoading = useSelector(destroySelectors.selectLoading);
   const loading = findLoading || destroyLoading;
-
   const rows = useSelector(selectors.selectRows);
   const pagination = useSelector(selectors.selectPagination);
-  const sorter = useSelector(selectors.selectSorter);
+  const selectedKeys = useSelector(selectors.selectSelectedKeys);
   const hasRows = useSelector(selectors.selectHasRows);
+  const sorter = useSelector(selectors.selectSorter);
+  const isAllSelected = useSelector(selectors.selectIsAllSelected);
+  const hasPermissionToEdit = useSelector(
+    couponsSelectors.selectPermissionToEdit,
+  );
+  const hasPermissionToDestroy = useSelector(
+    couponsSelectors.selectPermissionToDestroy,
+  );
+
+  const doDestroy = (id) => {
+    doCloseDestroyConfirmModal();
+    dispatch(destroyActions.doDestroy(id));
+  };
+
+  const doOpenDestroyConfirmModal = (id) => {
+    setRecordIdToDestroy(id);
+  };
+
+  const doCloseDestroyConfirmModal = () => {
+    setRecordIdToDestroy(null);
+  };
 
   const doChangeSort = (field) => {
     const order = sorter.field === field && sorter.order === 'ascend' ? 'descend' : 'ascend';
@@ -37,6 +59,14 @@ function WithdrawListTable(props) {
     dispatch(actions.doChangePagination(pagination));
   };
 
+  const doToggleAllSelected = () => {
+    dispatch(actions.doToggleAllSelected());
+  };
+
+  const doToggleOneSelected = (id) => {
+    dispatch(actions.doToggleOneSelected(id));
+  };
+
   const handleStatusChange = (id, newStatus) => {
     let data = {
       status: newStatus,
@@ -45,7 +75,36 @@ function WithdrawListTable(props) {
     dispatch(actionsForm.doUpdateStatus(data));
   };
 
-  // Get status color and display text - Updated for Withdraw model
+  const openPaymentModal = (withdraw) => {
+    setSelectedWithdraw(withdraw);
+    setShowPaymentModal(true);
+  };
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setSelectedWithdraw(null);
+  };
+
+  const copyToClipboard = (text) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          // You can add a success message here if needed
+        })
+        .catch((error) => {
+          console.error('Error copying to clipboard:', error);
+        });
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  };
+
+  // Get status color and display text
   const getStatusInfo = (status) => {
     switch (status) {
       case 'completed':
@@ -86,7 +145,7 @@ function WithdrawListTable(props) {
     }
   };
 
-  // Get payment method info - Updated for Withdraw model
+  // Get payment method info
   const getPaymentMethodInfo = (paymentMethod) => {
     switch (paymentMethod) {
       case 'crypto':
@@ -102,6 +161,13 @@ function WithdrawListTable(props) {
           bgColor: '#EBF8FF',
           icon: 'fa-solid fa-mobile-screen',
           text: 'Mobile Money'
+        };
+      case 'bank_transfer':
+        return {
+          color: '#38A169',
+          bgColor: '#F0FFF4',
+          icon: 'fa-solid fa-building-columns',
+          text: 'Bank Transfer'
         };
       default:
         return {
@@ -129,83 +195,93 @@ function WithdrawListTable(props) {
     } else if (withdraw.paymentMethod === 'mobile_money' && withdraw.paymentDetails?.mobileMoney) {
       const mobile = withdraw.paymentDetails.mobileMoney;
       return `${mobile.provider} • ${mobile.phoneNumber}`;
+    } else if (withdraw.paymentMethod === 'bank_transfer' && withdraw.paymentDetails?.bank) {
+      const bank = withdraw.paymentDetails.bank;
+      return `${bank.bankName} • ${bank.accountNumber}`;
     }
     return '-';
   };
 
-  // Format reference number
-  const formatReference = (referenceNumber) => {
-    if (!referenceNumber) return '-';
-    return `#${referenceNumber}`;
-  };
-
   return (
-    <TableWrapper>
-      <div className="withdraw-table-container">
-        <table className="withdraw-table">
-          <thead className="withdraw-table-header">
+    <div className="withdraw-list-container">
+      <div className="table-responsive">
+        <table className="withdraw-list-table">
+          <thead className="table-header">
             <tr>
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'referenceNumber'}
-                label="Reference"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'user'}
-                label={i18n('entities.withdraw.fields.user')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'paymentMethod'}
-                label="Payment Method"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'amount'}
-                label={i18n('entities.withdraw.fields.amount')}
-                align="right"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'status'}
-                label={i18n('entities.withdraw.fields.status')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'createdAt'}
-                label="Date"
-              />
+              <th className="checkbox-column">
+                {hasRows && (
+                  <div className="checkbox-wrapper">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox"
+                      checked={Boolean(isAllSelected)}
+                      onChange={doToggleAllSelected}
+                    />
+                  </div>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('user')}>
+                {i18n('entities.withdraw.fields.user')}
+                {sorter.field === 'user' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('paymentMethod')}>
+                Payment Method
+                {sorter.field === 'paymentMethod' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('amount')}>
+                {i18n('entities.withdraw.fields.amount')}
+                {sorter.field === 'amount' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('createdAt')}>
+                Date
+                {sorter.field === 'createdAt' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="sortable-header" onClick={() => doChangeSort('status')}>
+                {i18n('entities.withdraw.fields.status')}
+                {sorter.field === 'status' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="actions-header">Actions</th>
             </tr>
           </thead>
-          <tbody className="withdraw-table-body">
+          <tbody className="table-body">
             {loading && (
               <tr>
-                <td colSpan={6}>
-                  <div className="withdraw-loading-container">
+                <td colSpan={7} className="loading-cell">
+                  <div className="loading-container">
                     <Spinner />
+                    <span className="loading-text">
+                      Loading data...
+                    </span>
                   </div>
                 </td>
               </tr>
             )}
             {!loading && !hasRows && (
               <tr>
-                <td colSpan={6}>
-                  <div className="withdraw-empty-state">
-                    <i className="fa-solid fa-money-bill-transfer"></i>
-                    <span>{i18n('table.noData')}</span>
+                <td colSpan={7} className="no-data-cell">
+                  <div className="no-data-content">
+                    <i className="fas fa-database no-data-icon"></i>
+                    <p>{i18n('table.noData')}</p>
                   </div>
                 </td>
               </tr>
@@ -214,21 +290,30 @@ function WithdrawListTable(props) {
               const paymentMethodInfo = getPaymentMethodInfo(row.paymentMethod);
               const statusInfo = getStatusInfo(row.status);
               const isPending = row.status === 'pending';
+              const hasDetails = row.paymentDetails && 
+                ((row.paymentMethod === 'crypto' && row.paymentDetails.crypto) ||
+                 (row.paymentMethod === 'mobile_money' && row.paymentDetails.mobileMoney) ||
+                 (row.paymentMethod === 'bank_transfer' && row.paymentDetails.bank));
 
               return (
-                <tr key={row.id} className="withdraw-table-row">
-                  <td className="withdraw-reference-cell">
-                    <span className="withdraw-reference">
-                      {formatReference(row.referenceNumber)}
-                    </span>
+                <tr key={row.id} className="table-row">
+                  <td className="checkbox-column">
+                    <div className="checkbox-wrapper">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox"
+                        checked={selectedKeys.includes(row.id)}
+                        onChange={() => doToggleOneSelected(row.id)}
+                      />
+                    </div>
                   </td>
-                  <td className="withdraw-user-cell">
+                  <td className="table-cell">
                     <UserListItem value={row.user} />
                   </td>
-                  <td className="withdraw-payment-cell">
-                    <div className="withdraw-payment-info">
+                  <td className="table-cell">
+                    <div className="payment-info">
                       <div
-                        className="withdraw-payment-badge"
+                        className="payment-badge"
                         style={{
                           color: paymentMethodInfo.color,
                           backgroundColor: paymentMethodInfo.bgColor,
@@ -238,29 +323,29 @@ function WithdrawListTable(props) {
                         <i className={paymentMethodInfo.icon}></i>
                         <span>{paymentMethodInfo.text}</span>
                       </div>
-                      <div className="withdraw-payment-details">
-                        {getPaymentDetails(row)}
-                      </div>
+                      
                     </div>
                   </td>
-                  <td className="withdraw-amount-cell">
-                    <span className="withdraw-amount">
+                  <td className="table-cell numeric">
+                    <span className="amount-withdraw">
                       {formatCurrency(row.amount, row.currency)}
                     </span>
                   </td>
-                  <td className="withdraw-status-cell">
+                  <td className="table-cell">
+                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
+                  </td>
+                  <td className="table-cell">
                     {isPending ? (
-                      // Show buttons for pending status
-                      <div className="withdraw-status-buttons">
+                      <div className="status-buttons">
                         <button
-                          className="withdraw-btn-complete"
+                          className="btn-action success"
                           onClick={() => handleStatusChange(row.id, 'completed')}
                         >
                           <i className="fa-solid fa-check"></i>
                           Complete
                         </button>
                         <button
-                          className="withdraw-btn-cancel"
+                          className="btn-action danger"
                           onClick={() => handleStatusChange(row.id, 'canceled')}
                         >
                           <i className="fa-solid fa-xmark"></i>
@@ -268,9 +353,8 @@ function WithdrawListTable(props) {
                         </button>
                       </div>
                     ) : (
-                      // Show status badge for non-pending status
                       <div
-                        className="withdraw-status-badge"
+                        className="status-badge"
                         style={{
                           color: statusInfo.color,
                           backgroundColor: statusInfo.bgColor,
@@ -282,8 +366,18 @@ function WithdrawListTable(props) {
                       </div>
                     )}
                   </td>
-                  <td className="withdraw-date-cell">
-                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
+                  <td className="actions-cell">
+                    <div className='actions-container' style={{ cursor: 'pointer' }}>
+                      {hasDetails && (
+                        <div 
+                          className={`view-details`} 
+                          onClick={() => hasDetails && openPaymentModal(row)}
+                        >
+                          <i className="fa-solid fa-eye"></i>
+                          View Details
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );
@@ -292,241 +386,679 @@ function WithdrawListTable(props) {
         </table>
       </div>
 
-      <Pagination
-        onChange={doChangePagination}
-        disabled={loading}
-        pagination={pagination}
-      />
+      <div className="pagination-container">
+        <Pagination
+          onChange={doChangePagination}
+          disabled={loading}
+          pagination={pagination}
+        />
+      </div>
+
+      {/* Payment Details Modal */}
+      {showPaymentModal && selectedWithdraw && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <i className="fa-solid fa-money-bill-transfer"></i>
+                Withdrawal Details
+              </h3>
+              <button className="modal-close" onClick={closePaymentModal}>
+                <i className="fa-solid fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-content">
+              <div className="payment-details-grid">
+                {/* Status and Amount */}
+                <div className="detail-section">
+                  <div className="detail-row">
+                    <span className="detail-label">Status:</span>
+                    <div className="detail-value">
+                      <div
+                        className="status-badge"
+                        style={{
+                          color: getStatusInfo(selectedWithdraw?.status).color,
+                          backgroundColor: getStatusInfo(selectedWithdraw?.status).bgColor,
+                          borderColor: getStatusInfo(selectedWithdraw?.status).color
+                        }}
+                      >
+                        <i className={getStatusInfo(selectedWithdraw?.status).icon}></i>
+                        {getStatusInfo(selectedWithdraw?.status).text}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Amount:</span>
+                    <span className="detail-value amount">
+                      {formatCurrency(selectedWithdraw.amount, selectedWithdraw.currency)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Crypto Details */}
+                {selectedWithdraw.paymentMethod === 'crypto' && selectedWithdraw.paymentDetails?.crypto && (
+                  <div className="detail-section">
+                    <h4 className="section-title">Crypto Information</h4>
+                    <div className="detail-row">
+                      <span className="detail-label">Network:</span>
+                      <span className="detail-value">{selectedWithdraw.paymentDetails.crypto.network}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Currency:</span>
+                      <span className="detail-value">{selectedWithdraw.paymentDetails.crypto.currency}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Wallet Address:</span>
+                      <div className="detail-value with-copy">
+                        <span className="crypto-address">
+                          {selectedWithdraw.paymentDetails.crypto.walletAddress}
+                        </span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedWithdraw.paymentDetails.crypto.walletAddress)}
+                        >
+                          <i className="fa-solid fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                    {selectedWithdraw.paymentDetails.crypto.txid && (
+                      <div className="detail-row">
+                        <span className="detail-label">Transaction ID:</span>
+                        <div className="detail-value with-copy">
+                          <span className="txid">
+                            {selectedWithdraw.paymentDetails.crypto.txid}
+                          </span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedWithdraw.paymentDetails.crypto.txid)}
+                          >
+                            <i className="fa-solid fa-copy"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mobile Money Details */}
+                {selectedWithdraw.paymentMethod === 'mobile_money' && selectedWithdraw.paymentDetails?.mobileMoney && (
+                  <div className="detail-section">
+                    <h4 className="section-title">Mobile Money Information</h4>
+                    <div className="detail-row">
+                      <span className="detail-label">Provider:</span>
+                      <span className="detail-value">{selectedWithdraw.paymentDetails.mobileMoney.provider}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Phone Number:</span>
+                      <div className="detail-value with-copy">
+                        <span className="phone-number">
+                          {selectedWithdraw.paymentDetails.mobileMoney.phoneNumber}
+                        </span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedWithdraw.paymentDetails.mobileMoney.phoneNumber)}
+                        >
+                          <i className="fa-solid fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                    {selectedWithdraw.paymentDetails.mobileMoney.transactionId && (
+                      <div className="detail-row">
+                        <span className="detail-label">Transaction ID:</span>
+                        <div className="detail-value with-copy">
+                          <span className="txid">
+                            {selectedWithdraw.paymentDetails.mobileMoney.transactionId}
+                          </span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedWithdraw.paymentDetails.mobileMoney.transactionId)}
+                          >
+                            <i className="fa-solid fa-copy"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Bank Transfer Details */}
+                {selectedWithdraw.paymentMethod === 'bank_transfer' && selectedWithdraw.paymentDetails?.bank && (
+                  <div className="detail-section">
+                    <h4 className="section-title">Bank Information</h4>
+                    <div className="detail-row">
+                      <span className="detail-label">Bank Name:</span>
+                      <span className="detail-value">{selectedWithdraw.paymentDetails.bank.bankName}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Account Number:</span>
+                      <div className="detail-value with-copy">
+                        <span className="account-number">
+                          {selectedWithdraw.paymentDetails.bank.accountNumber}
+                        </span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedWithdraw.paymentDetails.bank.accountNumber)}
+                        >
+                          <i className="fa-solid fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Account Holder:</span>
+                      <span className="detail-value">{selectedWithdraw.paymentDetails.bank.accountHolder}</span>
+                    </div>
+                    {selectedWithdraw.paymentDetails.bank.swiftCode && (
+                      <div className="detail-row">
+                        <span className="detail-label">SWIFT Code:</span>
+                        <span className="detail-value">{selectedWithdraw.paymentDetails.bank.swiftCode}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Transaction Info */}
+                <div className="detail-section">
+                  <h4 className="section-title">Transaction Information</h4>
+                  <div className="detail-row">
+                    <span className="detail-label">Date:</span>
+                    <span className="detail-value">
+                      {selectedWithdraw.createdAt ? new Date(selectedWithdraw.createdAt).toLocaleString() : '-'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Payment Method:</span>
+                    <span className="detail-value">
+                      <div
+                        className="payment-badge"
+                        style={{
+                          color: getPaymentMethodInfo(selectedWithdraw.paymentMethod).color,
+                          backgroundColor: getPaymentMethodInfo(selectedWithdraw.paymentMethod).bgColor,
+                          borderColor: getPaymentMethodInfo(selectedWithdraw.paymentMethod).color
+                        }}
+                      >
+                        <i className={getPaymentMethodInfo(selectedWithdraw.paymentMethod).icon}></i>
+                        {getPaymentMethodInfo(selectedWithdraw.paymentMethod).text}
+                      </div>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-action primary" onClick={closePaymentModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {recordIdToDestroy && (
         <ConfirmModal
           title={i18n('common.areYouSure')}
+          onConfirm={() => doDestroy(recordIdToDestroy)}
+          onClose={() => doCloseDestroyConfirmModal()}
           okText={i18n('common.yes')}
           cancelText={i18n('common.no')}
         />
       )}
 
       <style>{`
-        .withdraw-table-container {
-          background: #FFFFFF;
-          border-radius: 12px;
-          border: 1px solid #E2E8F0;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .withdraw-table {
+        .withdraw-list-container {
           width: 100%;
-          border-collapse: collapse;
         }
 
-        .withdraw-table-header {
-          background: #F7FAFC;
-          border-bottom: 1px solid #E2E8F0;
-        }
-
-        .withdraw-table-header th {
-          padding: 16px 20px;
+        .sort-icon {
+          margin-left: 8px;
           font-size: 12px;
-          font-weight: 600;
-          color: #718096;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          text-align: left;
         }
 
-        .withdraw-table-body {
-          background: #FFFFFF;
+        .checkbox-column {
+          width: 40px;
+          padding: 16px 8px !important;
         }
 
-        .withdraw-table-row {
-          border-bottom: 1px solid #F1F5F9;
-          transition: all 0.2s ease;
-        }
-
-        .withdraw-table-row:hover {
-          background: #F8FAFC;
-        }
-
-        .withdraw-table-row:last-child {
-          border-bottom: none;
-        }
-
-        .withdraw-table-row td {
-          padding: 16px 20px;
-          font-size: 14px;
-          color: #2D3748;
-        }
-
-        .withdraw-reference-cell {
-          font-weight: 600;
-          color: #4A5568;
-        }
-
-        .withdraw-reference {
-          font-family: 'Courier New', monospace;
-          font-size: 13px;
-        }
-
-        .withdraw-user-cell {
-          font-weight: 500;
-        }
-
-        .withdraw-payment-info {
+        .checkbox-wrapper {
           display: flex;
-          align-items:center;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .form-checkbox {
+          width: 16px;
+          height: 16px;
+          cursor: pointer;
+        }
+
+        .table-header {
+          background: #f8fafc;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-header th {
+          padding: 16px 12px;
+          font-weight: 600;
+          color: #475569;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #e2e8f0;
+        }
+
+        .sortable-header {
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          user-select: none;
+        }
+
+        .sortable-header:hover {
+          background: #f1f5f9;
+        }
+
+        .actions-header {
+          width: 120px;
+        }
+
+        .table-body {
+          background: white;
+        }
+
+        .table-row {
+          transition: background-color 0.2s ease;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-row:hover {
+          background: #f8fafc;
+        }
+
+        .table-cell {
+          padding: 16px 12px;
+          font-size: 14px;
+          color: #475569;
+          vertical-align: middle;
+        }
+
+        .actions-cell {
+          position: sticky;
+          right: 0;
+          background: inherit;
+          z-index: 2;
+        }
+
+        .actions-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 40px;
+        }
+
+        .numeric {
+          text-align: right;
+        }
+
+        .payment-info {
+          display: flex;
+          flex-direction: column;
           gap: 4px;
         }
 
-        .withdraw-payment-badge {
+        .payment-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 4px 8px;
-          border-radius: 12px;
           font-size: 11px;
           font-weight: 600;
-          border: 1px solid;
           width: fit-content;
         }
 
-        .withdraw-payment-badge i {
+        .payment-badge i {
           font-size: 10px;
         }
 
-        .withdraw-payment-details {
+        .payment-details {
           font-size: 12px;
-          color: #718096;
-          margin-top: 2px;
+          color: #6c757d;
         }
 
-        .withdraw-amount-cell {
-          text-align: right;
-          font-weight: 600;
-        }
-
-        .withdraw-amount {
-          color: #F56565; /* Red for withdrawals */
-        }
-
-        .withdraw-status-cell {
-          min-width: 140px;
-        }
-
-        .withdraw-status-buttons {
-          display: flex;
-          gap: 8px;
-          justify-content: center;
-        }
-
-        .withdraw-btn-complete,
-        .withdraw-btn-cancel {
+        .view-details {
           display: flex;
           align-items: center;
           gap: 4px;
-          padding: 6px 12px;
+          font-size: 11px;
+          color: #4299E1;
+          font-weight: 500;
+          padding: 6px 10px;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+        }
+
+        .view-details:hover {
+          background: #EBF8FF;
+        }
+
+        .view-details i {
+          font-size: 10px;
+        }
+
+        .amount-withdraw {
+          color: #dc3545;
+          font-weight: 600;
+        }
+
+        .status-buttons {
+          display: flex;
+          gap: 8px;
+        }
+
+        .btn-action {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 10px;
           border: none;
           border-radius: 6px;
           font-size: 11px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        .withdraw-btn-complete {
-          background: #48BB78;
+        .btn-action.success {
+          background: #28a745;
           color: white;
         }
 
-        .withdraw-btn-complete:hover {
-          background: #38A169;
-          transform: translateY(-1px);
+        .btn-action.success:hover {
+          background: #218838;
         }
 
-        .withdraw-btn-cancel {
-          background: #F56565;
+        .btn-action.danger {
+          background: #dc3545;
           color: white;
         }
 
-        .withdraw-btn-cancel:hover {
-          background: #E53E3E;
-          transform: translateY(-1px);
+        .btn-action.danger:hover {
+          background: #c82333;
         }
 
-        .withdraw-status-badge {
+        .btn-action.primary {
+          background: #007bff;
+          color: white;
+        }
+
+        .btn-action.primary:hover {
+          background: #0056b3;
+        }
+
+        .btn-action i {
+          font-size: 10px;
+        }
+
+        .status-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          border-radius: 20px;
           font-size: 12px;
           font-weight: 600;
-          border: 1px solid;
         }
 
-        .withdraw-status-badge i {
+        .status-badge i {
           font-size: 10px;
         }
 
-        .withdraw-date-cell {
-          color: #718096;
-          font-size: 13px;
+        .loading-cell {
+          text-align: center;
+          padding: 40px !important;
         }
 
-        .withdraw-loading-container {
-          display: flex;
-          justify-content: center;
-          padding: 40px;
-        }
-
-        .withdraw-empty-state {
+        .loading-container {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 60px 20px;
-          color: #718096;
+          gap: 12px;
         }
 
-        .withdraw-empty-state i {
+        .loading-text {
+          color: #6c757d;
+          font-size: 14px;
+        }
+
+        .no-data-cell {
+          text-align: center;
+          padding: 60px 20px !important;
+        }
+
+        .no-data-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          color: #6c757d;
+        }
+
+        .no-data-icon {
           font-size: 48px;
-          margin-bottom: 16px;
-          color: #CBD5E0;
+          color: #adb5bd;
         }
 
-        .withdraw-empty-state span {
+        .no-data-content p {
+          margin: 0;
+          font-size: 14px;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+          margin-top: 20px;
+          display: flex;
+          justify-content: center;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-container {
+          background: white;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+          padding: 20px;
+          border-bottom: 1px solid #e9ecef;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+          color: #495057;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 18px;
+          color: #6c757d;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+          background-color: #f8f9fa;
+        }
+
+        .modal-content {
+          padding: 20px;
+        }
+
+        .payment-details-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .detail-section {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .section-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #495057;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .detail-label {
+          color: #6c757d;
           font-size: 14px;
           font-weight: 500;
+          min-width: 120px;
         }
 
-        /* Responsive design */
+        .detail-value {
+          color: #495057;
+          font-size: 14px;
+          font-weight: 500;
+          text-align: right;
+          flex: 1;
+        }
+
+        .detail-value.amount {
+          font-size: 16px;
+          font-weight: 700;
+          color: #dc3545;
+        }
+
+        .detail-value.with-copy {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          justify-content: flex-end;
+        }
+
+        .crypto-address,
+        .txid,
+        .phone-number,
+        .account-number {
+          font-family: monospace;
+          font-size: 12px;
+          background: #f8f9fa;
+          padding: 4px 8px;
+          border-radius: 4px;
+          word-break: break-all;
+        }
+
+        .copy-btn {
+          background: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px;
+          font-size: 12px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+        }
+
+        .copy-btn:hover {
+          background: #495057;
+        }
+
+        .modal-actions {
+          padding: 20px;
+          border-top: 1px solid #e9ecef;
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-          .withdraw-table-container {
-            border-radius: 8px;
-          }
-          
-          .withdraw-table-header th,
-          .withdraw-table-row td {
-            padding: 12px 16px;
-          }
-          
-          .withdraw-payment-badge {
-            padding: 3px 6px;
-            font-size: 10px;
-          }
-          
-          .withdraw-status-buttons {
+          .status-buttons {
             flex-direction: column;
             gap: 4px;
           }
           
-          .withdraw-btn-complete,
-          .withdraw-btn-cancel {
+          .btn-action {
             padding: 4px 8px;
             font-size: 10px;
           }
+          
+          .payment-badge,
+          .status-badge {
+            padding: 4px 8px;
+            font-size: 11px;
+          }
+          
+          .modal-container {
+            margin: 10px;
+            max-width: calc(100vw - 20px);
+          }
+          
+          .detail-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+          }
+          
+          .detail-value {
+            text-align: left;
+          }
+          
+          .detail-value.with-copy {
+            justify-content: flex-start;
+          }
+
+          .actions-cell {
+            position: static;
+          }
         }
       `}</style>
-    </TableWrapper>
+    </div>
   );
 }
 

@@ -17,6 +17,8 @@ import depositDestroyActions from 'src/modules/deposit/destroy/depositDestroyAct
 
 function DepositListTable(props) {
   const [recordIdToDestroy, setRecordIdToDestroy] = useState(null);
+  const [selectedDeposit, setSelectedDeposit] = useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const dispatch = useDispatch();
 
   const findLoading = useSelector(selectors.selectLoading);
@@ -38,7 +40,6 @@ function DepositListTable(props) {
 
   const doDestroy = (id) => {
     doCloseDestroyConfirmModal();
-
     dispatch(depositDestroyActions.doDestroy(id));
   };
 
@@ -73,6 +74,35 @@ function DepositListTable(props) {
       id: id
     };
     dispatch(actionsForm.doUpdateStatus(data));
+  };
+
+  const openPaymentModal = (deposit) => {
+    setSelectedDeposit(deposit);
+    setShowPaymentModal(true);
+  };
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setSelectedDeposit(null);
+  };
+
+  const copyToClipboard = (text) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          // You can add a success message here if needed
+        })
+        .catch((error) => {
+          console.error('Error copying to clipboard:', error);
+        });
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
   };
 
   // Get status color and display text
@@ -164,193 +194,339 @@ function DepositListTable(props) {
   };
 
   return (
-    <TableWrapper>
-      <div className="txn-table-container">
-        <table className="txn-table">
-          <thead className="txn-table-header">
+    <div className="spot-list-container">
+      <div className="table-responsive">
+        <table className="spot-list-table">
+          <thead className="table-header">
             <tr>
-              <TableColumnHeader className="th-checkbox">
+              <th className="checkbox-column">
                 {hasRows && (
-                  <div className="custom-checkbox">
+                  <div className="checkbox-wrapper">
                     <input
                       type="checkbox"
-                      className="custom-checkbox-input"
-                      id="table-header-checkbox"
+                      className="form-checkbox"
                       checked={Boolean(isAllSelected)}
-                      onChange={() => doToggleAllSelected()}
+                      onChange={doToggleAllSelected}
                     />
-                    <label
-                      htmlFor="table-header-checkbox"
-                      className="custom-checkbox-label"
-                    >
-                      &#160;
-                    </label>
                   </div>
                 )}
-              </TableColumnHeader>
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'user'}
-                label={i18n('entities.deposit.fields.user')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'paymentMethod'}
-                label="Payment Method"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'amount'}
-                label={i18n('entities.deposit.fields.amount')}
-                align="right"
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'status'}
-                label={i18n('entities.deposit.fields.status')}
-              />
-              <TableColumnHeader
-                onSort={doChangeSort}
-                hasRows={hasRows}
-                sorter={sorter}
-                name={'createdAt'}
-                label="Date"
-              />
-              <TableColumnHeader className="th-actions" />
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => doChangeSort('user')}
+              >
+                {i18n('entities.deposit.fields.user')}
+                {sorter.field === 'user' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => doChangeSort('paymentMethod')}
+              >
+                Payment Method
+                {sorter.field === 'paymentMethod' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => doChangeSort('amount')}
+              >
+                {i18n('entities.deposit.fields.amount')}
+                {sorter.field === 'amount' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => doChangeSort('status')}
+              >
+                {i18n('entities.deposit.fields.status')}
+                {sorter.field === 'status' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th
+                className="sortable-header"
+                onClick={() => doChangeSort('createdAt')}
+              >
+                Date
+                {sorter.field === 'createdAt' && (
+                  <span className="sort-icon">
+                    {sorter.order === 'ascend' ? '↑' : '↓'}
+                  </span>
+                )}
+              </th>
+              <th className="actions-header">Actions</th>
             </tr>
           </thead>
-          <tbody className="txn-table-body">
+          <tbody className="table-body">
             {loading && (
               <tr>
-                <td colSpan={7}>
-                  <div className="txn-loading-container">
+                <td colSpan={7} className="loading-cell">
+                  <div className="loading-container">
                     <Spinner />
+                    <span className="loading-text">
+                      Loading data...
+                    </span>
                   </div>
                 </td>
               </tr>
             )}
             {!loading && !hasRows && (
               <tr>
-                <td colSpan={7}>
-                  <div className="txn-empty-state">
-                    <i className="fa-solid fa-coins"></i>
-                    <span>{i18n('table.noData')}</span>
+                <td colSpan={7} className="no-data-cell">
+                  <div className="no-data-content">
+                    <i className="fas fa-database no-data-icon"></i>
+                    <p>{i18n('table.noData')}</p>
                   </div>
                 </td>
               </tr>
             )}
-            {!loading && rows.map((row) => {
-              const paymentMethodInfo = getPaymentMethodInfo(row.paymentMethod);
-              const statusInfo = getStatusInfo(row.status);
-              const isPending = row.status === 'pending';
+            {!loading &&
+              rows.map((row) => {
+                const paymentMethodInfo = getPaymentMethodInfo(row.paymentMethod);
+                const statusInfo = getStatusInfo(row.status);
+                const isPending = row.status === 'pending';
+                const isCrypto = row.paymentMethod === 'crypto';
 
-              return (
-                <tr key={row.id} className="txn-table-row">
-                  <td className="th-checkbox">
-                    <div className="custom-checkbox">
-                      <input
-                        type="checkbox"
-                        className="custom-checkbox-input"
-                        id={`table-header-checkbox-${row.id}`}
-                        checked={selectedKeys.includes(row.id)}
-                        onChange={() => doToggleOneSelected(row.id)}
-                      />
-                      <label
-                        htmlFor={`table-header-checkbox-${row.id}`}
-                        className="custom-checkbox-label"
-                      >
-                        &#160;
-                      </label>
-                    </div>
-                  </td>
-                  <td className="txn-user-cell">
-                    <UserListItem value={row.user} />
-                  </td>
-                  <td className="txn-payment-cell">
-                    <div className="txn-payment-info">
+                return (
+                  <tr key={row.id} className="table-row">
+                    <td className="checkbox-column">
+                      <div className="checkbox-wrapper">
+                        <input
+                          type="checkbox"
+                          className="form-checkbox"
+                          checked={selectedKeys.includes(row.id)}
+                          onChange={() => doToggleOneSelected(row.id)}
+                        />
+                      </div>
+                    </td>
+                    <td className="table-cell">
+                      <UserListItem value={row.user} />
+                    </td>
+                    <td className="table-cell">
                       <div
-                        className="txn-payment-badge"
-                        style={{
-                          color: paymentMethodInfo.color,
-                          backgroundColor: paymentMethodInfo.bgColor,
-                          borderColor: paymentMethodInfo.color
-                        }}
-                      >
-                        <i className={paymentMethodInfo.icon}></i>
-                        <span>{paymentMethodInfo.text}</span>
-                      </div>
-                      <div className="txn-payment-details">
-                        {getPaymentDetails(row)}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="txn-amount-cell">
-                    <span className="txn-amount-deposit">
-                      {formatCurrency(row.amount, row.currency)}
-                    </span>
-                  </td>
-                  <td className="txn-status-cell">
-                    {isPending ? (
-                      <div className="txn-status-buttons">
-                        <button
-                          className="txn-btn-accept"
-                          onClick={() => handleStatusChange(row.id, 'completed')}
-                        >
-                          <i className="fa-solid fa-check"></i>
-                          Complete
-                        </button>
-                        <button
-                          className="txn-btn-reject"
-                          onClick={() => handleStatusChange(row.id, 'canceled')}
-                        >
-                          <i className="fa-solid fa-xmark"></i>
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        className="txn-status-badge"
-                        style={{
-                          color: statusInfo.color,
-                          backgroundColor: statusInfo.bgColor,
-                          borderColor: statusInfo.color
-                        }}
-                      >
-                        <i className={statusInfo.icon}></i>
-                        <span>{statusInfo.text}</span>
-                      </div>
-                    )}
-                  </td>
-                  <td className="txn-date-cell">
-                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
-                  </td>
+                        className={`payment-info`}
 
-                </tr>
-              );
-            })}
+                      >
+                        <div
+                          className="payment-badge"
+                          style={{
+                            color: paymentMethodInfo.color,
+                            backgroundColor: paymentMethodInfo.bgColor,
+                            borderColor: paymentMethodInfo.color
+                          }}
+                        >
+                          <i className={paymentMethodInfo.icon}></i>
+                          <span>{paymentMethodInfo.text}</span>
+                        </div>
+
+                      </div>
+                    </td>
+                    <td className="table-cell numeric">
+                      <span className="amount-deposit">
+                        {formatCurrency(row.amount, row.currency)}
+                      </span>
+                    </td>
+                    <td className="table-cell">
+                      {isPending ? (
+                        <div className="status-buttons">
+                          <button
+                            className="btn-action edit"
+                            onClick={() => handleStatusChange(row.id, 'completed')}
+                          >
+                            <i className="fa-solid fa-check"></i>
+                            Complete
+                          </button>
+                          <button
+                            className="btn-action delete"
+                            onClick={() => handleStatusChange(row.id, 'canceled')}
+                          >
+                            <i className="fa-solid fa-xmark"></i>
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          className="status-badge"
+                          style={{
+                            color: statusInfo.color,
+                            backgroundColor: statusInfo.bgColor,
+                            borderColor: statusInfo.color
+                          }}
+                        >
+                          <i className={statusInfo.icon}></i>
+                          <span>{statusInfo.text}</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="table-cell">
+                      {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="actions-cell">
+                      <div className='actions-container' style={{ cursor: 'pointer' }}>
+
+                        {isCrypto && (
+                          <div className={`view-details  `} onClick={() => isCrypto && openPaymentModal(row)}>
+                            <i className="fa-solid fa-eye"></i>
+                            View Details
+                          </div>
+                        )}
+
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
 
-      <Pagination
-        onChange={doChangePagination}
-        disabled={loading}
-        pagination={pagination}
-      />
+      <div className="pagination-container">
+        <Pagination
+          onChange={doChangePagination}
+          disabled={loading}
+          pagination={pagination}
+        />
+      </div>
+
+      {/* Payment Details Modal */}
+      {showPaymentModal && selectedDeposit && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <i className="fa-solid fa-coins"></i>
+                Crypto Payment Details
+              </h3>
+              <button className="modal-close" onClick={closePaymentModal}>
+                <i className="fa-solid fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-content">
+              <div className="payment-details-grid">
+                {/* Status and Amount */}
+                <div className="detail-section">
+                  <div className="detail-row">
+                    <span className="detail-label">Status:</span>
+                    <div className="detail-value">
+                      <div
+                        className="status-badge"
+                        style={{
+                          color: getStatusInfo(selectedDeposit?.status).color,
+                          backgroundColor: getStatusInfo(selectedDeposit?.status).bgColor,
+                          borderColor: getStatusInfo(selectedDeposit?.status).color
+                        }}
+                      >
+                        <i className={getStatusInfo(selectedDeposit?.status).icon}></i>
+                        {getStatusInfo(selectedDeposit?.status).text}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Amount:</span>
+                    <span className="detail-value amount">
+                      {formatCurrency(selectedDeposit.amount, selectedDeposit.currency)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Crypto Details */}
+                {selectedDeposit.paymentDetails?.crypto && (
+                  <div className="detail-section">
+                    <h4 className="section-title">Crypto Information</h4>
+                    <div className="detail-row">
+                      <span className="detail-label">Network:</span>
+                      <span className="detail-value">{selectedDeposit.paymentDetails.crypto.network}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Currency:</span>
+                      <span className="detail-value">{selectedDeposit.paymentDetails.crypto.currency}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Wallet Address:</span>
+                      <div className="detail-value with-copy">
+                        <span className="crypto-address">
+                          {selectedDeposit.paymentDetails.crypto.walletAddress}
+                        </span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedDeposit.paymentDetails.crypto.walletAddress)}
+                        >
+                          <i className="fa-solid fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Transaction ID:</span>
+                      <div className="detail-value with-copy">
+                        <span className="txid">
+                          {selectedDeposit.paymentDetails.crypto.txid}
+                        </span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedDeposit.paymentDetails.crypto.txid)}
+                        >
+                          <i className="fa-solid fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transaction Info */}
+                <div className="detail-section">
+                  <h4 className="section-title">Transaction Information</h4>
+                  <div className="detail-row">
+                    <span className="detail-label">Date:</span>
+                    <span className="detail-value">
+                      {selectedDeposit.createdAt ? new Date(selectedDeposit.createdAt).toLocaleString() : '-'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Payment Method:</span>
+                    <span className="detail-value">
+                      <div
+                        className="payment-badge"
+                        style={{
+                          color: getPaymentMethodInfo(selectedDeposit.paymentMethod).color,
+                          backgroundColor: getPaymentMethodInfo(selectedDeposit.paymentMethod).bgColor,
+                          borderColor: getPaymentMethodInfo(selectedDeposit.paymentMethod).color
+                        }}
+                      >
+                        <i className={getPaymentMethodInfo(selectedDeposit.paymentMethod).icon}></i>
+                        {getPaymentMethodInfo(selectedDeposit.paymentMethod).text}
+                      </div>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-action primary" onClick={closePaymentModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {recordIdToDestroy && (
         <ConfirmModal
           title={i18n('common.areYouSure')}
           onConfirm={() => doDestroy(recordIdToDestroy)}
-
           onClose={() => doCloseDestroyConfirmModal()}
           okText={i18n('common.yes')}
           cancelText={i18n('common.no')}
@@ -358,294 +534,397 @@ function DepositListTable(props) {
       )}
 
       <style>{`
-        .txn-table-container {
-          background: #FFFFFF;
-          border-radius: 12px;
-          border: 1px solid #E2E8F0;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .txn-table {
+        .spot-list-container {
           width: 100%;
-          border-collapse: collapse;
         }
-
-        .txn-table-header {
-          background: #F7FAFC;
-          border-bottom: 1px solid #E2E8F0;
-        }
-
-        .txn-table-header th {
-          padding: 16px 20px;
+        .sort-icon {
+          margin-left: 8px;
           font-size: 12px;
-          font-weight: 600;
-          color: #718096;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          text-align: left;
         }
 
-        .txn-table-body {
-          background: #FFFFFF;
-        }
-
-        .txn-table-row {
-          border-bottom: 1px solid #F1F5F9;
-          transition: all 0.2s ease;
-        }
-
-        .txn-table-row:hover {
-          background: #F8FAFC;
-        }
-
-        .txn-table-row:last-child {
-          border-bottom: none;
-        }
-
-        .txn-table-row td {
-          padding: 16px 20px;
-          font-size: 14px;
-          color: #2D3748;
-        }
-
-        /* Checkbox Styles */
-        .th-checkbox {
+        .checkbox-column {
           width: 40px;
-          padding: 16px 10px !important;
+          padding: 16px 8px !important;
         }
 
-        .custom-checkbox {
-          position: relative;
-          display: inline-block;
+        .checkbox-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .custom-checkbox-input {
-          position: absolute;
-          opacity: 0;
+        .form-checkbox {
+          width: 16px;
+          height: 16px;
           cursor: pointer;
         }
 
-        .custom-checkbox-label {
-          position: relative;
-          display: inline-block;
-          width: 18px;
-          height: 18px;
-          background: #FFFFFF;
-          border: 2px solid #CBD5E0;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: all 0.2s ease;
+   
+
+        .numeric {
+          text-align: right;
         }
 
-        .custom-checkbox-input:checked + .custom-checkbox-label {
-          background: #4299E1;
-          border-color: #4299E1;
+        .loading-cell {
+          text-align: center;
+          padding: 40px !important;
         }
 
-        .custom-checkbox-input:checked + .custom-checkbox-label::after {
-          content: '';
-          position: absolute;
-          left: 5px;
-          top: 2px;
-          width: 4px;
-          height: 8px;
-          border: solid white;
-          border-width: 0 2px 2px 0;
-          transform: rotate(45deg);
-        }
-
-        .custom-checkbox-input:focus + .custom-checkbox-label {
-          border-color: #4299E1;
-          box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-
-        .custom-checkbox-label:hover {
-          border-color: #4299E1;
-        }
-
-        .txn-user-cell {
-          font-weight: 500;
-        }
-
-        .txn-payment-info {
+        .loading-container {
           display: flex;
           flex-direction: column;
-          align-items:center;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .loading-text {
+          color: #6c757d;
+          font-size: 14px;
+        }
+
+        .no-data-cell {
+          text-align: center;
+          padding: 60px 20px !important;
+        }
+
+        .no-data-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          color: #6c757d;
+        }
+
+        .no-data-icon {
+          font-size: 48px;
+          color: #adb5bd;
+        }
+
+        .no-data-content p {
+          margin: 0;
+          font-size: 14px;
+        }
+
+    
+
+        .actions-header {
+          width: 120px;
+        }
+
+        /* Payment Info Styles */
+        .payment-info {
+          display: flex;
+          flex-direction: column;
           gap: 4px;
         }
 
-        .txn-payment-badge {
+        .payment-info.clickable {
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .payment-info.clickable:hover {
+          background: #f8f9ff;
+          border-radius: 6px;
+          padding: 8px;
+          margin: -8px;
+        }
+
+        .payment-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 4px 8px;
-          border-radius: 12px;
           font-size: 11px;
           font-weight: 600;
-          border: 1px solid;
           width: fit-content;
         }
 
-        .txn-payment-badge i {
+        .payment-badge i {
           font-size: 10px;
         }
 
-        .txn-payment-details {
+        .payment-details {
           font-size: 12px;
-          color: #718096;
+          color: #6c757d;
         }
 
-        .txn-amount-cell {
-          text-align: right;
+        .view-details {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          color: #4299E1;
+          margin-top: 2px;
+          font-weight: 500;
+        }
+
+        .view-details i {
+          font-size: 10px;
+        }
+
+        /* Amount Styles */
+        .amount-deposit {
+          color: #28a745;
           font-weight: 600;
         }
 
-        .txn-amount-deposit {
-          color: #48BB78;
-        }
-
-        .txn-status-cell {
-          min-width: 140px;
-        }
-
-        .txn-status-buttons {
+        /* Status Styles */
+        .status-buttons {
           display: flex;
           gap: 8px;
-          justify-content: center;
         }
 
-        .txn-btn-accept,
-        .txn-btn-reject {
+        .btn-action {
           display: flex;
           align-items: center;
           gap: 4px;
           padding: 6px 12px;
           border: none;
-          border-radius: 6px;
-          font-size: 11px;
-          font-weight: 600;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        .txn-btn-accept {
-          background: #48BB78;
+        .btn-action.edit {
+          background: #28a745;
           color: white;
         }
 
-        .txn-btn-accept:hover {
-          background: #38A169;
-          transform: translateY(-1px);
+        .btn-action.edit:hover {
+          background: #218838;
         }
 
-        .txn-btn-reject {
-          background: #F56565;
+        .btn-action.delete {
+          background: #dc3545;
           color: white;
         }
 
-        .txn-btn-reject:hover {
-          background: #E53E3E;
-          transform: translateY(-1px);
+        .btn-action.delete:hover {
+          background: #c82333;
         }
 
-        .txn-status-badge {
+        .btn-action.primary {
+          background: #007bff;
+          color: white;
+        }
+
+        .btn-action.primary:hover {
+          background: #0056b3;
+        }
+
+        .status-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
-          border-radius: 20px;
           font-size: 12px;
           font-weight: 600;
-          border: 1px solid;
+         
         }
 
-        .txn-status-badge i {
+        .status-badge i {
           font-size: 10px;
         }
 
-        .txn-date-cell {
-          color: #718096;
-          font-size: 13px;
-        }
-
-        .td-actions {
-          white-space: nowrap;
-        }
-
-        .td-actions .btn-link {
-          padding: 4px 8px;
-          font-size: 12px;
-          color: #4299E1;
-          text-decoration: none;
-          border: none;
-          background: none;
-          cursor: pointer;
-        }
-
-        .td-actions .btn-link:hover {
-          color: #3182CE;
-          text-decoration: underline;
-        }
-
-        .txn-loading-container {
+        /* Pagination Styles */
+        .pagination-container {
+          margin-top: 20px;
           display: flex;
           justify-content: center;
-          padding: 40px;
         }
 
-        .txn-empty-state {
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-container {
+          background: white;
+          border-radius: 8px;
+          max-width: 500px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+          padding: 20px;
+          border-bottom: 1px solid #e9ecef;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+          color: #495057;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 18px;
+          color: #6c757d;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+          background-color: #f8f9fa;
+        }
+
+        .modal-content {
+          padding: 20px;
+        }
+
+        .payment-details-grid {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          padding: 60px 20px;
-          color: #718096;
+          gap: 20px;
         }
 
-        .txn-empty-state i {
-          font-size: 48px;
-          margin-bottom: 16px;
-          color: #CBD5E0;
+        .detail-section {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
 
-        .txn-empty-state span {
+        .section-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #495057;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .detail-label {
+          color: #6c757d;
           font-size: 14px;
           font-weight: 500;
+          min-width: 120px;
         }
 
-        /* Responsive design */
+        .detail-value {
+          color: #495057;
+          font-size: 14px;
+          font-weight: 500;
+          text-align: right;
+          flex: 1;
+        }
+
+        .detail-value.amount {
+          font-size: 16px;
+          font-weight: 700;
+          color: #28a745;
+        }
+
+        .detail-value.with-copy {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          justify-content: flex-end;
+        }
+
+        .crypto-address,
+        .txid {
+          font-family: monospace;
+          font-size: 12px;
+          background: #f8f9fa;
+          padding: 4px 8px;
+          border-radius: 4px;
+          word-break: break-all;
+        }
+
+        .copy-btn {
+          background: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 6px;
+          font-size: 12px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+        }
+
+        .copy-btn:hover {
+          background: #495057;
+        }
+
+        .modal-actions {
+          padding: 20px;
+          border-top: 1px solid #e9ecef;
+          display: flex;
+          gap: 12px;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-          .txn-table-container {
-            border-radius: 8px;
-          }
-          
-          .txn-table-header th,
-          .txn-table-row td {
-            padding: 12px 16px;
-          }
-          
-          .txn-payment-badge {
-            padding: 3px 6px;
-            font-size: 10px;
-          }
-          
-          .txn-status-buttons {
+      
+          .status-buttons {
             flex-direction: column;
             gap: 4px;
           }
           
-          .txn-btn-accept,
-          .txn-btn-reject {
+          .btn-action {
             padding: 4px 8px;
-            font-size: 10px;
+            font-size: 11px;
           }
-
-          .th-checkbox {
-            padding: 12px 8px !important;
+          
+          .modal-container {
+            margin: 10px;
+            max-width: calc(100vw - 20px);
+          }
+          
+          .detail-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+          }
+          
+          .detail-value {
+            text-align: left;
+          }
+          
+          .detail-value.with-copy {
+            justify-content: flex-start;
           }
         }
       `}</style>
-    </TableWrapper>
+    </div>
   );
 }
 

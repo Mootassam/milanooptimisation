@@ -1,3 +1,4 @@
+
 import CompanyService from 'src/modules/company/companyService';
 import Errors from 'src/modules/shared/error/errors';
 import Message from 'src/view/shared/message';
@@ -44,7 +45,7 @@ const CompanyFormActions = {
         type: CompanyFormActions.INIT_ERROR,
       });
 
-      getHistory().push('/company');
+      getHistory().push('/logo');
     }
   },
 
@@ -64,7 +65,7 @@ const CompanyFormActions = {
         i18n('entities.category.create.success'),
       );
 
-      getHistory().push('/company');
+      getHistory().push('/logo');
     } catch (error) {
       Errors.handle(error);
 
@@ -90,7 +91,7 @@ const CompanyFormActions = {
         i18n('entities.category.update.success'),
       );
 
-      getHistory().push('/company');
+      getHistory().push('/logo');
     } catch (error) {
       Errors.handle(error);
 

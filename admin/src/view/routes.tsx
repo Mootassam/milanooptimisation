@@ -6,7 +6,7 @@ const permissions = Permissions.values;
 const privateRoutes = [
   {
     path: '/',
-    loader: () => import('src/view/company/company'),
+    loader: () => import('src/view/dashboard/dahboard'),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
@@ -35,8 +35,8 @@ const privateRoutes = [
     exact: true,
   },
   {
-    path: '/company',
-    loader: () => import('src/view/company/company'),
+    path: '/settings/wallet',
+    loader: () => import('src/view/company/Logo'),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },

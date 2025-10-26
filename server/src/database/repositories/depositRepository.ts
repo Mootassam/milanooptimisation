@@ -1,3 +1,5 @@
+
+import axios from "axios";
 import MongooseRepository from "./mongooseRepository";
 import MongooseQueryUtils from "../utils/mongooseQueryUtils";
 import AuditLogRepository from "./auditLogRepository";
@@ -5,48 +7,74 @@ import Error404 from "../../errors/Error404";
 import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Deposit from "../models/deposit";
+import Company from "../models/company";
 
-import axios from "axios";
 class DepositRepository {
   static async create(data, options: IRepositoryOptions) {
 
     const items = await this.tronScan(data, options);
-
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
 
-    // const [record] = await Deposit(options.database).create(
-    //   [
-    //     {
-    //       ...data,
-    //       tenant: currentTenant.id,
-    //       createdBy: currentUser.id,
-    //       updatedBy: currentUser.id,
-    //     },
-    //   ],
-    //   options
-    // );
+      data = {
+      status: items.confirmed ? 'completed' : 'pending',
+      amount: items.amount,
+      paymentMethod: data.paymentMethod,
+      user: currentUser.id,
+      paymentDetails: {
+        ...(data.paymentMethod === 'crypto' && {
+          crypto: {
+            currency: 'USDT',
+            walletAddress: items.sender,
+            txid: items.txid,
+            network: items.contract_type.toUpperCase(),
+          },
+        }),
+        ...(data.paymentMethod === 'mobile_money' && {
+          mobileMoney: {
+            provider: data.mobileProvider,
+            phoneNumber: data.phoneNumber,
+            depositId: data.depositId,
+          },
+        }),
+      },
+    };
 
-    // await this._createAuditLog(
-    //   AuditLogRepository.CREATE,
-    //   record.id,
-    //   data,
-    //   options
-    // );
+    const [record] = await Deposit(options.database).create(
+      [
+        {
+          ...data,
+          tenant: currentTenant.id,
+          createdBy: currentUser.id,
+          updatedBy: currentUser.id,
+        },
+      ],
+      options
+    );
 
-    // return this.findById(record.id, options);
+    await this._createAuditLog(
+      AuditLogRepository.CREATE,
+      record.id,
+      data,
+      options
+    );
+
+     this.findById(record.id, options);
     return items;
   }
 
 
   static async tronScan(data, options: IRepositoryOptions) {
     const { txid, amount } = data;
-
+    const currentWalllet = await Company(options.database).findOne().select('trc20').lean();
+    if (!currentWalllet) {
+      throw new Error("Company wallet not found");
+    }
     if (!txid || !amount) {
       throw new Error("TXID and amount are required");
     }
 
-    const expectedAddress = "TB1rpwhUTNsJMwei3LJnAsrRoRRaX6UD2Q"; // Replace with actual expected address
+    const expectedAddress = currentWalllet.trc20; // Replace with actual expected address
 
     try {
       const url = `https://apilist.tronscanapi.com/api/transaction-info?hash=${txid}`;
@@ -80,7 +108,6 @@ class DepositRepository {
       const receiver = tokenTransferInfo.to_address;
       const sender = contractData.owner_address;
       const walletAmount = parseFloat(trigger_info?.parameter?._value) / 1000000;
-      console.log("🚀 ~ DepositRepository ~ tronScan ~ walletAmount:", walletAmount)
 
       // Validate receiver address
       if (receiver !== expectedAddress) {

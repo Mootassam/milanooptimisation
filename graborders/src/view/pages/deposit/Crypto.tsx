@@ -56,10 +56,13 @@ function CryptoDeposit() {
     defaultValues: {
       amount: "",
       txid: "",
+      paymentMethod: 'crypto'
     },
   });
 
   const onSubmit = (data) => {
+
+    data.paymentMethod = 'crypto';
     dispatch(actions.doCreate(data));
   };
 
@@ -239,14 +242,14 @@ function CryptoDeposit() {
 
         <div className="qr-code-container">
           <div className="qr-code-placeholder">
-           <QRCode value={usdtWallet.address} />
+            <QRCode value={usdtWallet.address} />
           </div>
         </div>
 
         <div className="address-container">
           <div className="address-label">Your USDT (TRC20) Address</div>
           <div className="address-value" ref={qrCodeRef}>
-     
+
             {usdtWallet.address}
           </div>
           <button
@@ -278,10 +281,8 @@ function CryptoDeposit() {
           <form onSubmit={form.handleSubmit(onSubmit)}>
 
             <div style={
-              {padding : '0px 15px'}
+              { padding: '0px 15px' }
             }>
-
-
               <InputFormItem
                 label="Amount (USDT) *"
                 name="amount"
