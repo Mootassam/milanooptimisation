@@ -22,10 +22,10 @@ function Wallet() {
 
   const [initialValues] = useState(() => {
     return {
-      trc20: "" || currentUser.trc20,
-      erc20: "" || currentUser.erc20,
-      walletname: "" || currentUser.walletname,
-      usernamewallet: "" || currentUser.usernamewallet,
+      trc20:  currentUser.trc20,
+      erc20:currentUser.erc20,
+      walletname:  currentUser.walletname,
+      usernamewallet: currentUser.usernamewallet,
       balance: currentUser?.balance
     };
   });
@@ -68,51 +68,36 @@ function Wallet() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="wallet-settings-form">
               <div className="wallet-form-content">
-                <div className="wallet-form-group">
-                  <div className="wallet-input-group">
-                    <div className="wallet-input-label">
-                      <span className="required-asterisk">*</span>
-                      <span className="label-text">Username</span>
-                    </div>
-                    <div className="wallet-input-container">
-                      <InputFormItem
-                        type="text"
-                        name="usernamewallet"
-                        placeholder="Enter your username"
-                        className="wallet-input-field"
-                      />
-                    </div>
-                  </div>
+                <div style={{ padding: '0px 15px' }}>
+                  {/* Username Input */}
+                  <InputFormItem
+                    label="Username *"
+                    name="usernamewallet"
+                    placeholder="Enter your username"
+                    iname="fas fa-user"
+                    type="text"
+                    externalErrorMessage={null}
+                  />
 
-                  <div className="wallet-input-group">
-                    <div className="wallet-input-label">
-                      <span className="required-asterisk">*</span>
-                      <span className="label-text">Wallet Name</span>
-                    </div>
-                    <div className="wallet-input-container">
-                      <InputFormItem
-                        type="text"
-                        name="walletname"
-                        placeholder="Enter wallet name"
-                        className="wallet-input-field"
-                      />
-                    </div>
-                  </div>
+                  {/* Wallet Name Input */}
+                  <InputFormItem
+                    label="Wallet Name *"
+                    name="walletname"
+                    placeholder="Enter wallet name"
+                    iname="fas fa-wallet"
+                    type="text"
+                    externalErrorMessage={null}
+                  />
 
-                  <div className="wallet-input-group">
-                    <div className="wallet-input-label">
-                      <span className="required-asterisk">*</span>
-                      <span className="label-text">Wallet Address</span>
-                    </div>
-                    <div className="wallet-input-container">
-                      <InputFormItem
-                        type="text"
-                        name="trc20"
-                        placeholder="Enter your wallet address"
-                        className="wallet-input-field"
-                      />
-                    </div>
-                  </div>
+                  {/* Wallet Address Input */}
+                  <InputFormItem
+                    label="Wallet Address *"
+                    name="trc20"
+                    placeholder="Enter your wallet address"
+                    iname="fas fa-address-card"
+                    type="text"
+                    externalErrorMessage={null}
+                  />
                 </div>
 
                 {/* Submit Button */}
@@ -170,7 +155,7 @@ function Wallet() {
         .wallet-settings-card {
           background: white;
           border-radius: 20px;
-          padding: 25px 20px;
+          padding: 25px 0px;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
 
@@ -180,7 +165,7 @@ function Wallet() {
           align-items: center;
           gap: 15px;
           margin-bottom: 25px;
-          padding-bottom: 20px;
+          padding: 0px 20px 20px;
           border-bottom: 1px solid #f0f4ff;
         }
 
@@ -221,62 +206,7 @@ function Wallet() {
         .wallet-form-content {
           display: flex;
           flex-direction: column;
-          gap: 25px;
-        }
-
-        .wallet-form-group {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .wallet-input-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .wallet-input-label {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .required-asterisk {
-          color: #e81f1f;
-          font-weight: bold;
-        }
-
-        .label-text {
-          color: #0f2161;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .wallet-input-container {
-          width: 100%;
-        }
-
-        .wallet-input-field {
-          width: 100%;
-          padding: 14px 16px;
-          border: 2px solid #f0f4ff;
-          border-radius: 12px;
-          background: #fafbfc;
-          font-size: 14px;
-          transition: all 0.2s ease;
-          color: #0f2161;
-        }
-
-        .wallet-input-field:focus {
-          outline: none;
-          border-color: #0f2161;
-          background: white;
-          box-shadow: 0 0 0 3px rgba(15, 33, 97, 0.1);
-        }
-
-        .wallet-input-field::placeholder {
-          color: #a8b5c4;
+          gap: 0px;
         }
 
         /* Button Styles */
@@ -285,6 +215,8 @@ function Wallet() {
           flex-direction: column;
           gap: 20px;
           align-items: center;
+          padding: 0px 20px;
+          margin-top: 10px;
         }
 
         .wallet-submit-btn {
@@ -394,6 +326,14 @@ function Wallet() {
 
           .wallet-settings-card {
             padding: 20px 0px;
+          }
+
+          .wallet-settings-header {
+            padding: 0px 15px 20px;
+          }
+
+          .wallet-actions {
+            padding: 0px 15px;
           }
 
           .wallet-main-title {

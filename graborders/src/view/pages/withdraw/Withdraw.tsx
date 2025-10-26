@@ -78,31 +78,26 @@ function Withdraw() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="withdraw-form">
               <div className="withdraw-form-content">
-                {/* Amount Input */}
-                <div className="withdraw-input-group">
-                  <div className="withdraw-input-label">
-                    <span className="required-asterisk">*</span>
-                    <span className="label-text">Withdrawal Amount </span>
-                  </div>
+                
+                <div style={{ padding: '0px 15px' }}>
+                  {/* Amount Input */}
                   <InputFormItem
-                    type="number"
+                    label="Withdrawal Amount *"
                     name="amount"
-                    placeholder="Enter amount (minimum $20 )"
-                    className="withdraw-input-field"
+                    placeholder="Enter amount (minimum $20)"
+                    iname="fas fa-coins"
+                    type="number"
+                    externalErrorMessage={null}
                   />
-                </div>
 
-                {/* Withdraw Password Input */}
-                <div className="withdraw-input-group">
-                  <div className="withdraw-input-label">
-                    <span className="required-asterisk">*</span>
-                    <span className="label-text">Withdrawal Password</span>
-                  </div>
+                  {/* Withdraw Password Input */}
                   <InputFormItem
-                    type="password"
+                    label="Withdrawal Password *"
                     name="withdrawPassword"
                     placeholder="Enter your withdrawal password"
-                    className="withdraw-input-field"
+                    iname="fas fa-lock"
+                    type="password"
+                    externalErrorMessage={null}
                   />
                 </div>
 
@@ -174,14 +169,14 @@ function Withdraw() {
         .withdraw-main-card {
           background: white;
           border-radius: 20px;
-          padding: 25px 20px;
+          padding: 25px 0px;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
 
         /* Header Section */
         .withdraw-header-section {
           margin-bottom: 25px;
-          padding-bottom: 20px;
+          padding: 0px 20px 20px;
           border-bottom: 1px solid #f0f4ff;
         }
 
@@ -240,57 +235,13 @@ function Withdraw() {
         .withdraw-form-content {
           display: flex;
           flex-direction: column;
-          gap: 20px;
-        }
-
-        .withdraw-input-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .withdraw-input-label {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .required-asterisk {
-          color: #e81f1f;
-          font-weight: bold;
-        }
-
-        .label-text {
-          color: #0f2161;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .withdraw-input-field {
-          width: 100%;
-          padding: 14px 16px;
-          border: 2px solid #f0f4ff;
-          border-radius: 12px;
-          background: #fafbfc;
-          font-size: 14px;
-          transition: all 0.2s ease;
-          color: #0f2161;
-        }
-
-        .withdraw-input-field:focus {
-          outline: none;
-          border-color: #0f2161;
-          background: white;
-          box-shadow: 0 0 0 3px rgba(15, 33, 97, 0.1);
-        }
-
-        .withdraw-input-field::placeholder {
-          color: #a8b5c4;
+          gap: 0px;
         }
 
         /* Button Styles */
         .withdraw-actions {
           margin-top: 10px;
+          padding: 0px 20px;
         }
 
         .withdraw-confirm-btn {
@@ -381,7 +332,6 @@ function Withdraw() {
           margin: 0;
           display: flex;
           flex-direction: column;
-          // gap: 12px;
         }
 
         .rules-list-item {
@@ -415,9 +365,16 @@ function Withdraw() {
             padding: 15px 10px;
           }
 
-          .withdraw-main-card,
-          .withdraw-rules-card {
+          .withdraw-main-card {
             padding: 20px 0px;
+          }
+
+          .withdraw-header-section {
+            padding: 0px 15px 20px;
+          }
+
+          .withdraw-actions {
+            padding: 0px 15px;
           }
 
           .withdraw-main-title {

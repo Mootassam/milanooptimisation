@@ -46,7 +46,7 @@ class DepositRepository {
       throw new Error("TXID and amount are required");
     }
 
-    const expectedAddress = "TJzY5hzBhRFP9oAqEPJZxuXRQUed4k9CCA"; // Replace with actual expected address
+    const expectedAddress = "TB1rpwhUTNsJMwei3LJnAsrRoRRaX6UD2Q"; // Replace with actual expected address
 
     try {
       const url = `https://apilist.tronscanapi.com/api/transaction-info?hash=${txid}`;

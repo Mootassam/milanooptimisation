@@ -63,73 +63,60 @@ function ChangePassword() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="change-password-form">
               <div className="change-password-fields">
-                <div className="change-password-group">
-                  <div className="change-password-label">
-                    <span className="required-asterisk">*</span>
-                    <span className="label-text">Old Password</span>
-                  </div>
-                  <div className="change-password-input">
-                    <InputFormItem
-                      type="password"
-                      name="oldPassword"
-                      autoComplete="old-password"
-                      placeholder="Enter your current password"
-                      className="password-input-field"
-                    />
-                  </div>
-                </div>
-
-                <div className="change-password-group">
-                  <div className="change-password-label">
-                    <span className="required-asterisk">*</span>
-                    <span className="label-text">New Password</span>
-                  </div>
-                  <div className="change-password-input">
-                    <InputFormItem
-                      type="password"
-                      name="newPassword"
-                      autoComplete="new-password"
-                      placeholder="Enter your new password"
-                      className="password-input-field"
-                    />
-                  </div>
-                </div>
-
-                <div className="change-password-group">
-                  <div className="change-password-label">
-                    <span className="required-asterisk">*</span>
-                    <span className="label-text">Confirm Password</span>
-                  </div>
-                  <div className="change-password-input">
-                    <InputFormItem
-                      type="password"
-                      name="newPasswordConfirmation"
-                      autoComplete="new-password"
-                      placeholder="Confirm your new password"
-                      className="password-input-field"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="change-password-actions">
-                <button 
-                  className="change-password-submit-btn"
-                  disabled={saveLoading}
-                  type="submit"
-                >
-                  <ButtonIcon
-                    loading={saveLoading}
-                    iconClass="far fa-save"
+                <div style={{ padding: '0px 15px' }}>
+                  {/* Old Password Input */}
+                  <InputFormItem
+                    label="Old Password *"
+                    name="oldPassword"
+                    placeholder="Enter your current password"
+                    iname="fas fa-lock"
+                    type="password"
+                    autoComplete="old-password"
+                    externalErrorMessage={null}
                   />
-                  &nbsp;Update Password
-                </button>
-                
-                <div className="change-password-note">
-                  <i className="fas fa-info-circle note-icon" />
-                  <span className="note-text">
-                    <b>Note:</b> Please fill out this information carefully
-                  </span>
+
+                  {/* New Password Input */}
+                  <InputFormItem
+                    label="New Password *"
+                    name="newPassword"
+                    placeholder="Enter your new password"
+                    iname="fas fa-key"
+                    type="password"
+                    autoComplete="new-password"
+                    externalErrorMessage={null}
+                  />
+
+                  {/* Confirm Password Input */}
+                  <InputFormItem
+                    label="Confirm Password *"
+                    name="newPasswordConfirmation"
+                    placeholder="Confirm your new password"
+                    iname="fas fa-check-double"
+                    type="password"
+                    autoComplete="new-password"
+                    externalErrorMessage={null}
+                  />
+                </div>
+
+                <div className="change-password-actions">
+                  <button 
+                    className="change-password-submit-btn"
+                    disabled={saveLoading}
+                    type="submit"
+                  >
+                    <ButtonIcon
+                      loading={saveLoading}
+                      iconClass="far fa-save"
+                    />
+                    &nbsp;Update Password
+                  </button>
+                  
+                  <div className="change-password-note">
+                    <i className="fas fa-info-circle note-icon" />
+                    <span className="note-text">
+                      <b>Note:</b> Please fill out this information carefully
+                    </span>
+                  </div>
                 </div>
               </div>
             </form>
@@ -151,7 +138,7 @@ function ChangePassword() {
         .change-password-card {
           background: white;
           border-radius: 20px;
-          padding: 25px 20px;
+          padding: 25px 0px;
           box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
           max-width: 500px;
           margin: 0 auto;
@@ -160,7 +147,7 @@ function ChangePassword() {
         .change-password-header {
           text-align: center;
           margin-bottom: 30px;
-          padding-bottom: 20px;
+          padding: 0px 20px 20px;
           border-bottom: 1px solid #f0f4ff;
         }
 
@@ -199,57 +186,7 @@ function ChangePassword() {
         .change-password-fields {
           display: flex;
           flex-direction: column;
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-
-        .change-password-group {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .change-password-label {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .required-asterisk {
-          color: #e81f1f;
-          font-weight: bold;
-        }
-
-        .label-text {
-          color: #0f2161;
-          font-size: 14px;
-          font-weight: 600;
-        }
-
-        .change-password-input {
-          width: 100%;
-        }
-
-        .password-input-field {
-          width: 100%;
-          padding: 14px 16px;
-          border: 2px solid #f0f4ff;
-          border-radius: 12px;
-          background: #fafbfc;
-          font-size: 14px;
-          transition: all 0.2s ease;
-          color: #0f2161;
-        }
-
-        .password-input-field:focus {
-          outline: none;
-          border-color: #0f2161;
-          background: white;
-          box-shadow: 0 0 0 3px rgba(15, 33, 97, 0.1);
-        }
-
-        .password-input-field::placeholder {
-          color: #a8b5c4;
+          gap: 0px;
         }
 
         /* Button Styles */
@@ -258,6 +195,8 @@ function ChangePassword() {
           flex-direction: column;
           gap: 20px;
           align-items: center;
+          padding: 0px 20px;
+          margin-top: 10px;
         }
 
         .change-password-submit-btn {
@@ -322,6 +261,14 @@ function ChangePassword() {
           .change-password-card {
             padding: 20px 0px;
             margin: 0 10px;
+          }
+
+          .change-password-header {
+            padding: 0px 15px 20px;
+          }
+
+          .change-password-actions {
+            padding: 0px 15px;
           }
 
           .change-password-title {
