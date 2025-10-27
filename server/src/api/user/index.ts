@@ -35,6 +35,11 @@ export default (app) => {
     `/tenant/:tenantId/dashboard`,
     require('./userDashboard').default,
   );
+      app.get(
+    `/tenant/:tenantId/resetTasks`,
+    require('./userResetTasks').default,
+  );
+
   app.get(
     `/tenant/:tenantId/user/autocomplete`,
     require('./userAutocomplete').default,

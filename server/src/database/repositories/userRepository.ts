@@ -70,192 +70,287 @@ export default class UserRepository {
     });
   }
 
-// statics for the dahboard
+  // statics for the dahboard
 
-static async mapUserForTenantMobile(options: IRepositoryOptions) {
-  
-  const tenantId = MongooseRepository.getCurrentTenant(options);
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  static async mapUserForTenantMobile(options: IRepositoryOptions) {
 
-  try {
-    // User metrics in single aggregation
-    const userMetrics = await User(options.database)
-      .aggregate([
-        {
-          $match: {
-            'tenants.status': 'active',
-            $or: [
-              { 'tenants.roles': 'member' },
-              { 'tenants.roles': { $in: ['member'] } }
-            ]
-          }
-        },
-        {
-          $lookup: {
-            from: 'vips',
-            localField: 'vip',
-            foreignField: '_id',
-            as: 'vipInfo'
-          }
-        },
-        {
-          $addFields: {
-            vipData: { $arrayElemAt: ['$vipInfo', 0] },
-            isNewUser: { $gte: ['$createdAt', sevenDaysAgo] },
-            hasCompletedTasks: {
-              $cond: {
-                if: {
-                  $and: [
-                    { $ne: [{ $arrayElemAt: ['$vipInfo.dailyorder', 0] }, null] },
-                    { $gte: ['$tasksDone', { $toInt: { $arrayElemAt: ['$vipInfo.dailyorder', 0] } }] }
-                  ]
-                },
-                then: true,
-                else: false
-              }
+    const tenantId = MongooseRepository.getCurrentTenant(options);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    try {
+      // User metrics in single aggregation
+      const userMetrics = await User(options.database)
+        .aggregate([
+          {
+            $match: {
+              'tenants.status': 'active',
+              $or: [
+                { 'tenants.roles': 'member' },
+                { 'tenants.roles': { $in: ['member'] } }
+              ]
             }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            totalUsers: { $sum: 1 },
-            newUsersLast7Days: {
-              $sum: {
-                $cond: ['$isNewUser', 1, 0]
-              }
-            },
-            completedTasksCount: {
-              $sum: {
-                $cond: ['$hasCompletedTasks', 1, 0]
-              }
-            },
-            completedTasksUsers: {
-              $push: {
-                $cond: [
-                  '$hasCompletedTasks',
-                  {
-                    id: '$_id',
-                    username: '$username',
-                    email: '$email',
-                    tasksDone: '$tasksDone',
-                    dailyOrder: '$vipData.dailyorder'
+          },
+          {
+            $lookup: {
+              from: 'vips',
+              localField: 'vip',
+              foreignField: '_id',
+              as: 'vipInfo'
+            }
+          },
+          {
+            $addFields: {
+              vipData: { $arrayElemAt: ['$vipInfo', 0] },
+              isNewUser: { $gte: ['$createdAt', sevenDaysAgo] },
+              hasCompletedTasks: {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $ne: [{ $arrayElemAt: ['$vipInfo.dailyorder', 0] }, null] },
+                      { $gte: ['$tasksDone', { $toInt: { $arrayElemAt: ['$vipInfo.dailyorder', 0] } }] }
+                    ]
                   },
-                  '$$REMOVE'
-                ]
-              }
-            }
-          }
-        }
-      ]);
-
-    // Transaction, Deposit, Withdrawal metrics in parallel
-    const [transactionStats, depositStats, withdrawStats] = await Promise.all([
-      // Transaction stats
-      transaction(options.database).aggregate([
-        {
-          $facet: {
-            totalCount: [{ $count: 'count' }],
-            lastFive: [
-              { $sort: { createdAt: -1 } },
-              { $limit: 5 },
-              {
-                $lookup: {
-                  from: 'users',
-                  localField: 'user',
-                  foreignField: '_id',
-                  as: 'userInfo'
+                  then: true,
+                  else: false
                 }
               }
-            ]
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalUsers: { $sum: 1 },
+              newUsersLast7Days: {
+                $sum: {
+                  $cond: ['$isNewUser', 1, 0]
+                }
+              },
+              completedTasksCount: {
+                $sum: {
+                  $cond: ['$hasCompletedTasks', 1, 0]
+                }
+              },
+              completedTasksUsers: {
+                $push: {
+                  $cond: [
+                    '$hasCompletedTasks',
+                    {
+                      id: '$_id',
+                      username: '$username',
+                      email: '$email',
+                      tasksDone: '$tasksDone',
+                      dailyOrder: '$vipData.dailyorder'
+                    },
+                    '$$REMOVE'
+                  ]
+                }
+              }
+            }
           }
-        }
-      ]),
-      // Deposit stats
-      deposit(options.database).aggregate([
-        {
-          $match: {
-            status: 'completed'
+        ]);
+
+      // Transaction, Deposit, Withdrawal metrics in parallel
+      const [transactionStats, depositStats, withdrawStats] = await Promise.all([
+        // Transaction stats
+        transaction(options.database).aggregate([
+          {
+            $facet: {
+              totalCount: [{ $count: 'count' }],
+              lastFive: [
+                { $sort: { createdAt: -1 } },
+                { $limit: 5 },
+                {
+                  $lookup: {
+                    from: 'users',
+                    localField: 'user',
+                    foreignField: '_id',
+                    as: 'userInfo'
+                  }
+                }
+              ]
+            }
+          }
+        ]),
+        // Deposit stats
+        deposit(options.database).aggregate([
+          {
+            $match: {
+              status: 'completed'
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              count: { $sum: 1 },
+              totalAmount: { $sum: '$amount' }
+            }
+          }
+        ]),
+        // Withdrawal stats
+        withdraw(options.database).aggregate([
+          {
+            $facet: {
+              pendingCount: [
+                { $match: { status: 'pending' } },
+                { $count: 'count' }
+              ],
+              totalAmount: [
+                { $group: { _id: null, amount: { $sum: '$amount' } } }
+              ]
+            }
+          }
+        ])
+      ]);
+
+      const userData = userMetrics[0] || {
+        totalUsers: 0,
+        newUsersLast7Days: 0,
+        completedTasksCount: 0,
+        completedTasksUsers: []
+      };
+
+      const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
+      const depositData = depositStats[0] || { count: 0, totalAmount: 0 };
+      const withdrawData = withdrawStats[0] || {
+        pendingCount: [{ count: 0 }],
+        totalAmount: [{ amount: 0 }]
+      };
+
+      return {
+        userMetrics: {
+          totalUsers: userData.totalUsers,
+          activeAccounts: userData.totalUsers,
+          newUsersLast7Days: userData.newUsersLast7Days,
+          completedTasks: {
+            count: userData.completedTasksCount,
+            users: userData.completedTasksUsers
           }
         },
-        {
-          $group: {
-            _id: null,
-            count: { $sum: 1 },
-            totalAmount: { $sum: '$amount' }
-          }
+        transactionMetrics: {
+          totalTransactions: transactionData.totalCount[0]?.count || 0,
+          lastTransactions: transactionData.lastFive.map(t => {
+            return {
+              id: t._id,
+              user: t.userInfo?.[0]?.email || 'Unknown',
+              amount: t.amount,
+              status: t.status,
+              date: t.createdAt
+            };
+          }),
+          depositStats: {
+            completedCount: depositData.count,
+            totalAmount: depositData.totalAmount
+          },
+          withdrawalStats: {
+            pendingCount: withdrawData?.pendingCount[0]?.count || 0,
+            totalAmount: withdrawData?.totalAmount[0]?.amount || 0
+          },
+          totalVolume: depositData.totalAmount + (withdrawData.totalAmount[0]?.amount || 0)
         }
-      ]),
-      // Withdrawal stats
-      withdraw(options.database).aggregate([
-        {
-          $facet: {
-            pendingCount: [
-              { $match: { status: 'pending' } },
-              { $count: 'count' }
-            ],
-            totalAmount: [
-              { $group: { _id: null, amount: { $sum: '$amount' } } }
-            ]
-          }
-        }
-      ])
-    ]);
+      };
 
-    const userData = userMetrics[0] || {
-      totalUsers: 0,
-      newUsersLast7Days: 0,
-      completedTasksCount: 0,
-      completedTasksUsers: []
-    };
-
-    const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
-    const depositData = depositStats[0] || { count: 0, totalAmount: 0 };
-    const withdrawData = withdrawStats[0] || { 
-      pendingCount: [{ count: 0 }], 
-      totalAmount: [{ amount: 0 }] 
-    };
-
-    return {
-      userMetrics: {
-        totalUsers: userData.totalUsers,
-        activeAccounts: userData.totalUsers,
-        newUsersLast7Days: userData.newUsersLast7Days,
-        completedTasks: {
-          count: userData.completedTasksCount,
-          users: userData.completedTasksUsers
-        }
-      },
-      transactionMetrics: {
-        totalTransactions: transactionData.totalCount[0]?.count || 0,
-        lastTransactions: transactionData.lastFive.map(t => {
-          return {
-          id: t._id,
-          user: t.userInfo?.[0]?.email || 'Unknown',
-          amount: t.amount,
-          status: t.status,
-          date: t.createdAt
-        };
-        }),
-        depositStats: {
-          completedCount: depositData.count,
-          totalAmount: depositData.totalAmount
-        },
-        withdrawalStats: {
-          pendingCount: withdrawData?.pendingCount[0]?.count || 0,
-          totalAmount: withdrawData?.totalAmount[0]?.amount || 0
-        },
-        totalVolume: depositData.totalAmount + (withdrawData.totalAmount[0]?.amount || 0)
-      }
-    };
-
-  } catch (error) {
-    console.error('Error in mapUserForTenantMobile:', error);
-    throw error;
+    } catch (error) {
+      console.error('Error in mapUserForTenantMobile:', error);
+      throw error;
+    }
   }
-}
 
+
+
+  static async resetCompletedTasksUsers(options: IRepositoryOptions) {
+    const currentUser = MongooseRepository.getCurrentUser(options);
+    const tenantId = MongooseRepository.getCurrentTenant(options);
+
+    try {
+      // Find all users with role 'member' who have completed their daily tasks
+      const users = await User(options.database)
+        .find({
+          tenants: {
+            $elemMatch: {
+
+              status: 'active',
+              $or: [
+                { roles: 'member' },
+                { roles: { $in: ['member'] } }
+              ]
+            }
+          }
+        })
+        .populate('vip')
+        .lean();
+
+      // Filter users who completed their tasks (tasksDone >= dailyorder)
+      const usersToReset = users.filter(user => {
+        if (!user.vip || !user.vip.dailyorder) return false;
+
+        const dailyOrder = parseInt(user.vip.dailyorder) || 0;
+        const tasksDone = user.tasksDone || 0;
+
+        return tasksDone >= dailyOrder;
+      });
+
+      // Get the user IDs to reset
+      const userIdsToReset = usersToReset.map(user => user._id);
+
+      if (userIdsToReset.length === 0) {
+        return {
+          success: true,
+          message: 'No users found with completed tasks to reset',
+          resetCount: 0,
+          resetUsers: []
+        };
+      }
+
+      // Reset tasksDone to 0 for all qualified users
+      const updateResult = await User(options.database)
+        .updateMany(
+          {
+            _id: { $in: userIdsToReset },
+            tenants: {
+              $elemMatch: {
+                tenant: tenantId,
+                status: 'active'
+              }
+            }
+          },
+          {
+            $set: {
+              tasksDone: 0,
+              updatedBy: currentUser.id
+            }
+          }
+        );
+
+      // Get updated users for response
+      const updatedUsers = await User(options.database)
+        .find({
+          _id: { $in: userIdsToReset }
+        })
+        .select('username email tasksDone vip')
+        .populate('vip', 'title dailyorder')
+        .lean();
+
+      return {
+        success: true,
+        message: `Successfully reset tasks for ${updateResult.modifiedCount} users`,
+        resetCount: updateResult.modifiedCount,
+        resetUsers: updatedUsers.map(user => ({
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          previousTasksDone: usersToReset.find(u => u._id.toString() === user._id.toString())?.tasksDone || 0,
+          currentTasksDone: user.tasksDone,
+          vipLevel: user.vip?.title || 'No VIP',
+          dailyOrder: user.vip?.dailyorder || '0'
+        }))
+      };
+
+    } catch (error) {
+      console.error('Error in resetCompletedTasksUsers:', error);
+      throw error;
+    }
+  }
 
 
 

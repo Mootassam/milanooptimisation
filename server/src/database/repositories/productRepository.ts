@@ -5,9 +5,6 @@ import Error404 from "../../errors/Error404";
 import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Product from "../models/product";
-import UserRepository from "./userRepository";
-import RecordRepository from "./recordRepository";
-import Error405 from "../../errors/Error405";
 import Error400 from "../../errors/Error400";
 import axios from "axios";
 class ProductRepository {

@@ -2877,6 +2877,8 @@ const en = {
   },
 
   user: {
+
+    doResetSuccess: 'Tasks successfully reset',
     sections: {
       basicInfo: 'Basic Info',
       accountSettings: 'Account Settings',

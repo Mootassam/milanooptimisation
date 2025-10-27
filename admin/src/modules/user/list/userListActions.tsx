@@ -13,6 +13,12 @@ const userListActions = {
   FETCH_SUCCESS: `${prefix}_FETCH_SUCCESS`,
   FETCH_ERROR: `${prefix}_FETCH_ERROR`,
 
+
+  RESET_STARTED: `${prefix}_ RESET_STARTED`,
+  RESET_SUCCESS: `${prefix}_ RESET_SUCCESS`,
+  RESET_ERROR: `${prefix}_ RESET_ERROR`,
+
+
   DASHBOARD_STARTED: `${prefix}_DASHBOARD_STARTED`,
   DASHBOARD_SUCCESS: `${prefix}_DASHBOARD_SUCCESS`,
   DASHBOARD_ERROR: `${prefix}_DASHBOARD_ERROR`,
@@ -119,6 +125,34 @@ const userListActions = {
 
     dispatch(userListActions.doFetchCurrentFilter());
   },
+
+
+ resetAllTasks: () => async (dispatch) => {
+    try {
+      dispatch({
+        type: userListActions.RESET_STARTED,
+      });
+
+      await UserService.resetTasks();
+
+      dispatch({
+        type: userListActions.RESET_SUCCESS,
+      });
+
+      Message.success(i18n('user.doResetSuccess'));
+      dispatch(userListActions
+        .dashboard()
+      )
+
+    } catch (error) {
+      Errors.handle(error);
+
+      dispatch({
+        type: userListActions.RESET_ERROR,
+      });
+    }
+  },
+
 
   doFetchCurrentFilter: () => async (
     dispatch,

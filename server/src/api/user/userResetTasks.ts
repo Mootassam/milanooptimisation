@@ -1,18 +1,18 @@
-
 import PermissionChecker from '../../services/user/permissionChecker';
 import ApiResponseHandler from '../apiResponseHandler';
 import Permissions from '../../security/permissions';
-import ProductServices from '../../services/productService';
+import UserRepository from '../../database/repositories/userRepository';
 
-export default async (req, res, next) => {
+export default async (req, res) => {
   try {
-    // new PermissionChecker(req).validateHas(
-    //   Permissions.values.categoryRead,
-    // );
+    new PermissionChecker(req).validateHas(
+      Permissions.values.userRead,
+    );
 
-    const payload = await new ProductServices(
-      req,
-    ).grapOrders(req.query);
+    const payload = await UserRepository.resetCompletedTasksUsers
+      (
+        req
+      );
 
     await ApiResponseHandler.success(req, res, payload);
   } catch (error) {

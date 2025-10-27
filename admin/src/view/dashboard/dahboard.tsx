@@ -57,37 +57,12 @@ function Dashboard() {
 
   // Reset tasks for all users
   const handleResetAllTasks = () => {
-    if (window.confirm('Are you sure you want to reset ALL tasks for ALL users? This action cannot be undone!')) {
-      setLoading(true);
-      // API call to reset all tasks would go here
-      console.log('Resetting ALL tasks for all users');
+    dispatch
+      (userListActions.resetAllTasks());
 
-      // Simulate API call
-      setTimeout(() => {
-        setLoading(false);
-        alert('All tasks have been reset successfully!');
-        // Refresh dashboard data
-        dispatch(userListActions.dashboard());
-      }, 2000);
-    }
   };
 
-  // Reset tasks for top performers
-  const handleResetTopPerformerTasks = () => {
-    if (window.confirm('Are you sure you want to reset tasks for top performers? This will clear their completed tasks count.')) {
-      setLoading(true);
-      // API call to reset top performer tasks would go here
-      console.log('Resetting tasks for top performers');
 
-      // Simulate API call
-      setTimeout(() => {
-        setLoading(false);
-        alert('Top performer tasks have been reset successfully!');
-        // Refresh dashboard data
-        dispatch(userListActions.dashboard());
-      }, 1500);
-    }
-  };
 
   // Loading state
   if (loadingDashboard) {
@@ -354,13 +329,11 @@ function Dashboard() {
                 <div className="user-info">
                   <div className="user-main">
                     <span className="username">{user.email}</span>
-                    <span className="user-email">{user.tasksDone} tasks completed</span>
                   </div>
                   <div className="user-meta">
                     <span className="user-status success">
-                      Rank #{user.dailyOrder}
+                      {user.tasksDone} tasks completed
                     </span>
-                    <span className="last-login">High Performer</span>
                   </div>
                 </div>
               </div>

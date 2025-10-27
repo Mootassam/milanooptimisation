@@ -175,6 +175,16 @@ export default class UserService {
     return response.data;
 
   }
+    static async resetTasks() {
+    const tenantId = AuthCurrentTenant.get();
+
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/resetTasks`,
+    );
+
+    return response.data;
+
+  }
 
 
 
