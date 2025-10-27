@@ -28,7 +28,7 @@ function TransactionListPage(props) {
         </PageTitle>
         </Col>
             <Col md="auto">
-        <CouponsListToolbar />
+        {/* <CouponsListToolbar /> */}
         </Col>
           </Row>
         </Container>

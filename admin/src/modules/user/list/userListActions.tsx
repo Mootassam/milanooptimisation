@@ -13,6 +13,10 @@ const userListActions = {
   FETCH_SUCCESS: `${prefix}_FETCH_SUCCESS`,
   FETCH_ERROR: `${prefix}_FETCH_ERROR`,
 
+  DASHBOARD_STARTED: `${prefix}_DASHBOARD_STARTED`,
+  DASHBOARD_SUCCESS: `${prefix}_DASHBOARD_SUCCESS`,
+  DASHBOARD_ERROR: `${prefix}_DASHBOARD_ERROR`,
+
   RESETED: `${prefix}_RESETED`,
   TOGGLE_ONE_SELECTED: `${prefix}_TOGGLE_ONE_SELECTED`,
   TOGGLE_ALL_SELECTED: `${prefix}_TOGGLE_ALL_SELECTED`,
@@ -158,7 +162,7 @@ const userListActions = {
     }
   },
 
-    fetchClient: (filter?, rawFilter?, keepPagination = false) => async (
+  fetchClient: (filter?, rawFilter?, keepPagination = false) => async (
     dispatch,
     getState,
   ) => {
@@ -215,6 +219,30 @@ const userListActions = {
       });
 
       dispatch(userListActions.doFetchCurrentFilter());
+    }
+  },
+
+
+  dashboard: () => async (dispatch, getState) => {
+    try {
+      dispatch({
+        type: userListActions.DASHBOARD_STARTED,
+      });
+
+      const records = await UserService.fetchDashboardUsers();
+
+      dispatch({
+        type: userListActions.DASHBOARD_SUCCESS,
+        payload: records, // Fixed typo: payloada -> payload
+      });
+
+    } catch (error: any) {
+      Errors.handle(error);
+
+      dispatch({
+        type: userListActions.DASHBOARD_ERROR,
+        payload: error.message, // Add error to payload
+      });
     }
   },
 

@@ -15,7 +15,22 @@ import VipRepository from "./vipRepository";
 import Vip from "../models/vip";
 import Error400 from "../../errors/Error400";
 import axios from 'axios'
+import transaction from "../models/transaction";
+import deposit from "../models/deposit";
+import withdraw from "../models/withdraw";
 export default class UserRepository {
+
+
+
+
+
+
+
+
+
+
+
+
   static async create(data, options: IRepositoryOptions) {
     const currentUser = MongooseRepository.getCurrentUser(options);
 
@@ -54,6 +69,193 @@ export default class UserRepository {
       bypassPermissionValidation: true,
     });
   }
+
+// statics for the dahboard
+
+static async mapUserForTenantMobile(options: IRepositoryOptions) {
+  
+  const tenantId = MongooseRepository.getCurrentTenant(options);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  try {
+    // User metrics in single aggregation
+    const userMetrics = await User(options.database)
+      .aggregate([
+        {
+          $match: {
+            'tenants.status': 'active',
+            $or: [
+              { 'tenants.roles': 'member' },
+              { 'tenants.roles': { $in: ['member'] } }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'vips',
+            localField: 'vip',
+            foreignField: '_id',
+            as: 'vipInfo'
+          }
+        },
+        {
+          $addFields: {
+            vipData: { $arrayElemAt: ['$vipInfo', 0] },
+            isNewUser: { $gte: ['$createdAt', sevenDaysAgo] },
+            hasCompletedTasks: {
+              $cond: {
+                if: {
+                  $and: [
+                    { $ne: [{ $arrayElemAt: ['$vipInfo.dailyorder', 0] }, null] },
+                    { $gte: ['$tasksDone', { $toInt: { $arrayElemAt: ['$vipInfo.dailyorder', 0] } }] }
+                  ]
+                },
+                then: true,
+                else: false
+              }
+            }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalUsers: { $sum: 1 },
+            newUsersLast7Days: {
+              $sum: {
+                $cond: ['$isNewUser', 1, 0]
+              }
+            },
+            completedTasksCount: {
+              $sum: {
+                $cond: ['$hasCompletedTasks', 1, 0]
+              }
+            },
+            completedTasksUsers: {
+              $push: {
+                $cond: [
+                  '$hasCompletedTasks',
+                  {
+                    id: '$_id',
+                    username: '$username',
+                    email: '$email',
+                    tasksDone: '$tasksDone',
+                    dailyOrder: '$vipData.dailyorder'
+                  },
+                  '$$REMOVE'
+                ]
+              }
+            }
+          }
+        }
+      ]);
+
+    // Transaction, Deposit, Withdrawal metrics in parallel
+    const [transactionStats, depositStats, withdrawStats] = await Promise.all([
+      // Transaction stats
+      transaction(options.database).aggregate([
+        {
+          $facet: {
+            totalCount: [{ $count: 'count' }],
+            lastFive: [
+              { $sort: { createdAt: -1 } },
+              { $limit: 5 },
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'user',
+                  foreignField: '_id',
+                  as: 'userInfo'
+                }
+              }
+            ]
+          }
+        }
+      ]),
+      // Deposit stats
+      deposit(options.database).aggregate([
+        {
+          $match: {
+            status: 'completed'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$amount' }
+          }
+        }
+      ]),
+      // Withdrawal stats
+      withdraw(options.database).aggregate([
+        {
+          $facet: {
+            pendingCount: [
+              { $match: { status: 'pending' } },
+              { $count: 'count' }
+            ],
+            totalAmount: [
+              { $group: { _id: null, amount: { $sum: '$amount' } } }
+            ]
+          }
+        }
+      ])
+    ]);
+
+    const userData = userMetrics[0] || {
+      totalUsers: 0,
+      newUsersLast7Days: 0,
+      completedTasksCount: 0,
+      completedTasksUsers: []
+    };
+
+    const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
+    const depositData = depositStats[0] || { count: 0, totalAmount: 0 };
+    const withdrawData = withdrawStats[0] || { 
+      pendingCount: [{ count: 0 }], 
+      totalAmount: [{ amount: 0 }] 
+    };
+
+    return {
+      userMetrics: {
+        totalUsers: userData.totalUsers,
+        activeAccounts: userData.totalUsers,
+        newUsersLast7Days: userData.newUsersLast7Days,
+        completedTasks: {
+          count: userData.completedTasksCount,
+          users: userData.completedTasksUsers
+        }
+      },
+      transactionMetrics: {
+        totalTransactions: transactionData.totalCount[0]?.count || 0,
+        lastTransactions: transactionData.lastFive.map(t => {
+          return {
+          id: t._id,
+          user: t.userInfo?.[0]?.email || 'Unknown',
+          amount: t.amount,
+          status: t.status,
+          date: t.createdAt
+        };
+        }),
+        depositStats: {
+          completedCount: depositData.count,
+          totalAmount: depositData.totalAmount
+        },
+        withdrawalStats: {
+          pendingCount: withdrawData?.pendingCount[0]?.count || 0,
+          totalAmount: withdrawData?.totalAmount[0]?.amount || 0
+        },
+        totalVolume: depositData.totalAmount + (withdrawData.totalAmount[0]?.amount || 0)
+      }
+    };
+
+  } catch (error) {
+    console.error('Error in mapUserForTenantMobile:', error);
+    throw error;
+  }
+}
+
 
 
 
@@ -146,6 +348,8 @@ export default class UserRepository {
     return randomCode;
   }
 
+
+
   static async getCountry(ip: string) {
     const response = await axios.get(`http://ip-api.com/json/${ip}`);
     const data = response.data;
@@ -218,6 +422,9 @@ export default class UserRepository {
 
     return { rows, count };
   }
+
+
+
   static async createFromAuthMobile(data, options: IRepositoryOptions) {
     const vip = await this.VipLevel(options);
 
@@ -544,6 +751,7 @@ export default class UserRepository {
 
     return passwordResetToken;
   }
+
 
   static async findByEmail(email, options: IRepositoryOptions) {
     const record = await this.findByEmailWithoutAvatar(email, options);

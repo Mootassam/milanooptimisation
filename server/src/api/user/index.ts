@@ -30,6 +30,11 @@ export default (app) => {
     `/tenant/:tenantId/clients`,
     require('./findClients').default,
   );
+
+    app.get(
+    `/tenant/:tenantId/dashboard`,
+    require('./userDashboard').default,
+  );
   app.get(
     `/tenant/:tenantId/user/autocomplete`,
     require('./userAutocomplete').default,

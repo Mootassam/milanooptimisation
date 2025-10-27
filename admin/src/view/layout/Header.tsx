@@ -95,9 +95,9 @@ function Header(props) {
           </div>
         </div>
 
-        <span className="i18n-select">
+        {/* <span className="i18n-select">
           <I18nSelect />
-        </span>
+        </span> */}
 
         <div className="dropdown">
           <span

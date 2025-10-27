@@ -6,6 +6,8 @@ const initialData = {
   rows: [] as Array<any>,
   count: 0,
   loading: false,
+  loadingdashboard: false,
+  dashboard: null,
   filter: {},
   rawFilter: {},
   pagination: {
@@ -90,9 +92,9 @@ export default (state = initialData, { type, payload }) => {
         payload && payload.keepPagination
           ? state.pagination
           : {
-              current: 1,
-              pageSize: INITIAL_PAGE_SIZE,
-            },
+            current: 1,
+            pageSize: INITIAL_PAGE_SIZE,
+          },
     };
   }
 
@@ -174,6 +176,31 @@ export default (state = initialData, { type, payload }) => {
     return {
       ...state,
       selectedKeys: [],
+    };
+  }
+
+  // FIXED DASHBOARD ACTIONS
+  if (type === actions.DASHBOARD_STARTED) {
+    return {
+      ...state,
+      loadingdashboard: true,
+      dashboard: null, // Clear previous data when starting new request
+    };
+  }
+
+  if (type === actions.DASHBOARD_ERROR) {
+    return {
+      ...state,
+      loadingdashboard: false,
+      dashboard: null, // Clear dashboard data on error
+    };
+  }
+
+  if (type === actions.DASHBOARD_SUCCESS) {
+    return {
+      ...state,
+      loadingdashboard: false,
+      dashboard: payload, // THIS WAS MISSING - store the data here!
     };
   }
 

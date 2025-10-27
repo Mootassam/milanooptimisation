@@ -25,7 +25,7 @@ function UserPage() {
         <PageTitle>{i18n('user.title')}</PageTitle>
         </Col>
             <Col md="auto">
-        <UserToolbar />
+        {/* <UserToolbar /> */}
         </Col>
           </Row>
         </Container>

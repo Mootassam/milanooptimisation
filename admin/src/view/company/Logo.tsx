@@ -50,7 +50,7 @@ function Logo() {
       /> */}
 
       <ContentWrapper>
-        <PageTitle>Company Logo</PageTitle>
+        <PageTitle>Company settings</PageTitle>
         {loading && <Spinner />}
         {!loading && record && (
           <LogoForm

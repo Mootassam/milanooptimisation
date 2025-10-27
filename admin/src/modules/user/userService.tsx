@@ -164,6 +164,19 @@ export default class UserService {
   }
 
 
+  static async fetchDashboardUsers() {
+    const tenantId = AuthCurrentTenant.get();
+
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/dashboard`,
+    );
+    console.log("🚀 ~ UserService ~ fetchDashboardUsers ~ response:", response.data)
+
+    return response.data;
+
+  }
+
+
 
   static async fetchUserAutocomplete(query, limit) {
     const params = {

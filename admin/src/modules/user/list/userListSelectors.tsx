@@ -2,11 +2,113 @@ import { createSelector } from 'reselect';
 
 const selectRaw = (state) => state.user.list;
 
+// Existing selectors...
 const selectLoading = createSelector(
   [selectRaw],
   (raw) => raw.loading,
 );
 
+const dashboardLoading = createSelector(
+  [selectRaw],
+  (raw) => raw.loadingdashboard,
+);
+
+const dataDashboard = createSelector(
+  [selectRaw],
+  (raw) => raw.dashboard,
+);
+
+// NEW: Individual Dashboard Selectors
+const selectUserMetrics = createSelector(
+  [dataDashboard],
+  (dashboard) => dashboard?.userMetrics || null,
+);
+
+const selectTransactionMetrics = createSelector(
+  [dataDashboard],
+  (dashboard) => dashboard?.transactionMetrics || null,
+);
+
+// User Metrics Specific Selectors
+const selectTotalUsers = createSelector(
+  [selectUserMetrics],
+  (userMetrics) => userMetrics?.totalUsers || 0,
+);
+
+const selectActiveAccounts = createSelector(
+  [selectUserMetrics],
+  (userMetrics) => userMetrics?.activeAccounts || 0,
+);
+
+const selectNewUsersLast7Days = createSelector(
+  [selectUserMetrics],
+  (userMetrics) => userMetrics?.newUsersLast7Days || 0,
+);
+
+const selectCompletedTasks = createSelector(
+  [selectUserMetrics],
+  (userMetrics) => userMetrics?.completedTasks || null,
+);
+
+const selectCompletedTasksCount = createSelector(
+  [selectCompletedTasks],
+  (completedTasks) => completedTasks?.count || 0,
+);
+
+const selectTopPerformers = createSelector(
+  [selectCompletedTasks],
+  (completedTasks) => completedTasks?.users || [],
+);
+
+// Transaction Metrics Specific Selectors
+const selectTotalTransactions = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.totalTransactions || 0,
+);
+
+const selectTotalVolume = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.totalVolume || 0,
+);
+
+const selectLastTransactions = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.lastTransactions || [],
+);
+
+const selectDepositStats = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.depositStats || null,
+);
+
+const selectWithdrawalStats = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.withdrawalStats || null,
+);
+
+// Deposit Stats Specific Selectors
+const selectDepositCompletedCount = createSelector(
+  [selectDepositStats],
+  (depositStats) => depositStats?.completedCount || 0,
+);
+
+const selectDepositTotalAmount = createSelector(
+  [selectDepositStats],
+  (depositStats) => depositStats?.totalAmount || 0,
+);
+
+// Withdrawal Stats Specific Selectors
+const selectWithdrawalPendingCount = createSelector(
+  [selectWithdrawalStats],
+  (withdrawalStats) => withdrawalStats?.pendingCount || 0,
+);
+
+const selectWithdrawalTotalAmount = createSelector(
+  [selectWithdrawalStats],
+  (withdrawalStats) => withdrawalStats?.totalAmount || 0,
+);
+
+// Existing selectors...
 const selectExportLoading = createSelector(
   [selectRaw],
   (raw) => raw.exportLoading,
@@ -111,6 +213,7 @@ const selectIsAllSelected = createSelector(
 );
 
 const userListSelectors = {
+  // Existing selectors
   selectLoading,
   selectRows,
   selectCount,
@@ -124,8 +227,31 @@ const userListSelectors = {
   selectHasRows,
   selectExportLoading,
   selectRawFilter,
-  selectIsAllSelected,
   selectSorter,
+  selectIsAllSelected,
+  
+  // Dashboard selectors
+  dashboardLoading,
+  dataDashboard,
+  
+  // NEW: Individual dashboard selectors
+  selectUserMetrics,
+  selectTransactionMetrics,
+  selectTotalUsers,
+  selectActiveAccounts,
+  selectNewUsersLast7Days,
+  selectCompletedTasks,
+  selectCompletedTasksCount,
+  selectTopPerformers,
+  selectTotalTransactions,
+  selectTotalVolume,
+  selectLastTransactions,
+  selectDepositStats,
+  selectWithdrawalStats,
+  selectDepositCompletedCount,
+  selectDepositTotalAmount,
+  selectWithdrawalPendingCount,
+  selectWithdrawalTotalAmount,
 };
 
 export default userListSelectors;

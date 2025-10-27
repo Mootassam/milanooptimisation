@@ -25,7 +25,7 @@ function CouponsListPage(props) {
         </PageTitle>
         </Col>
             <Col md="auto">
-        <CouponsListToolbar />
+        {/* <CouponsListToolbar /> */}
         </Col>
           </Row>
         </Container>

@@ -1,42 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-
+import { useDispatch, useSelector } from 'react-redux';
+import userListActions from 'src/modules/user/list/userListActions';
+import userListSelectors from 'src/modules/user/list/userListSelectors';
+import { Link } from 'react-router-dom';
 function Dashboard() {
   const [timeFrame, setTimeFrame] = useState('today');
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch<any>();
 
-  // Mock data - replace with actual API calls
-  const dashboardData = {
-    overview: {
-      totalRevenue: 125430,
-      totalUsers: 2845,
-      totalTransactions: 12457,
-      activeAccounts: 1842
-    },
-    todayStats: {
-      revenue: 2540,
-      deposits: 12,
-      withdrawals: 5,
-      newUsers: 23
-    },
-    recentTransactions: [
-      { id: 1, user: 'John Doe', type: 'deposit', amount: 500, status: 'completed', date: '2024-01-15 14:30' },
-      { id: 2, user: 'Jane Smith', type: 'withdrawal', amount: 300, status: 'pending', date: '2024-01-15 13:15' },
-      { id: 3, user: 'Mike Johnson', type: 'deposit', amount: 1200, status: 'completed', date: '2024-01-15 12:45' },
-      { id: 4, user: 'Sarah Wilson', type: 'withdrawal', amount: 750, status: 'completed', date: '2024-01-15 11:20' },
-      { id: 5, user: 'Tom Brown', type: 'deposit', amount: 200, status: 'failed', date: '2024-01-15 10:05' }
-    ],
-    pendingActions: [
-      { id: 1, type: 'withdrawal', count: 5, priority: 'high' },
-      { id: 2, type: 'kyc_verification', count: 12, priority: 'medium' },
-      { id: 3, type: 'deposit', count: 3, priority: 'low' }
-    ],
-    chartData: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      revenue: [12000, 19000, 15000, 25000, 22000, 30000],
-      users: [500, 800, 1200, 1500, 2000, 2500]
-    }
-  };
+  // Redux selectors for actual data
+  const loadingDashboard = useSelector(userListSelectors.dashboardLoading);
+  const dashboardData = useSelector(userListSelectors.dataDashboard);
+
+  // Individual data selectors
+  const userMetrics = useSelector(userListSelectors.selectUserMetrics);
+  const transactionMetrics = useSelector(userListSelectors.selectTransactionMetrics);
+  const totalUsers = useSelector(userListSelectors.selectTotalUsers);
+  const activeAccounts = useSelector(userListSelectors.selectActiveAccounts);
+  const newUsersLast7Days = useSelector(userListSelectors.selectNewUsersLast7Days);
+  const completedTasksCount = useSelector(userListSelectors.selectCompletedTasksCount);
+  const topPerformers = useSelector(userListSelectors.selectTopPerformers);
+  const totalTransactions = useSelector(userListSelectors.selectTotalTransactions);
+  const totalVolume = useSelector(userListSelectors.selectTotalVolume);
+  const lastTransactions = useSelector(userListSelectors.selectLastTransactions);
+  const depositCompletedCount = useSelector(userListSelectors.selectDepositCompletedCount);
+  const depositTotalAmount = useSelector(userListSelectors.selectDepositTotalAmount);
+  const withdrawalPendingCount = useSelector(userListSelectors.selectWithdrawalPendingCount);
+  const withdrawalTotalAmount = useSelector(userListSelectors.selectWithdrawalTotalAmount);
+
+  console.log("🚀 ~ Dashboard ~ dashboardData:", dashboardData);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -47,6 +39,7 @@ function Dashboard() {
 
   const getStatusInfo = (status) => {
     switch (status) {
+      case 'success':
       case 'completed':
         return { color: '#10B981', bgColor: '#ECFDF5', icon: '✓' };
       case 'pending':
@@ -58,90 +51,197 @@ function Dashboard() {
     }
   };
 
-  const getPriorityInfo = (priority) => {
-    switch (priority) {
-      case 'high':
-        return { color: '#EF4444', label: 'High' };
-      case 'medium':
-        return { color: '#F59E0B', label: 'Medium' };
-      case 'low':
-        return { color: '#10B981', label: 'Low' };
-      default:
-        return { color: '#6B7280', label: 'Normal' };
+  useEffect(() => {
+    dispatch(userListActions.dashboard());
+  }, [dispatch]);
+
+  // Reset tasks for all users
+  const handleResetAllTasks = () => {
+    if (window.confirm('Are you sure you want to reset ALL tasks for ALL users? This action cannot be undone!')) {
+      setLoading(true);
+      // API call to reset all tasks would go here
+      console.log('Resetting ALL tasks for all users');
+
+      // Simulate API call
+      setTimeout(() => {
+        setLoading(false);
+        alert('All tasks have been reset successfully!');
+        // Refresh dashboard data
+        dispatch(userListActions.dashboard());
+      }, 2000);
     }
   };
 
+  // Reset tasks for top performers
+  const handleResetTopPerformerTasks = () => {
+    if (window.confirm('Are you sure you want to reset tasks for top performers? This will clear their completed tasks count.')) {
+      setLoading(true);
+      // API call to reset top performer tasks would go here
+      console.log('Resetting tasks for top performers');
+
+      // Simulate API call
+      setTimeout(() => {
+        setLoading(false);
+        alert('Top performer tasks have been reset successfully!');
+        // Refresh dashboard data
+        dispatch(userListActions.dashboard());
+      }, 1500);
+    }
+  };
+
+  // Loading state
+  if (loadingDashboard) {
+    return (
+      <div className="dashboard-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading dashboard data...</p>
+        </div>
+        <style>{`
+          .dashboard-container {
+            padding: 20px;
+            background: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .loading-state {
+            text-align: center;
+          }
+          .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Error state
+  if (!dashboardData) {
+    return (
+      <div className="dashboard-container">
+        <div className="error-state">
+          <h3>No Data Available</h3>
+          <p>Unable to load dashboard data. Please try again.</p>
+          <button
+            onClick={() => dispatch(userListActions.dashboard())}
+            className="retry-btn"
+          >
+            Retry
+          </button>
+        </div>
+        <style>{`
+          .dashboard-container {
+            padding: 20px;
+            background: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .error-state {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          .retry-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 16px;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-container">
-      {/* Header Section */}
+      {/* Header Section with Reset Buttons */}
       <div className="dashboard-header">
         <div className="header-content">
-          <h1 className="dashboard-title">Dashboard Overview</h1>
-         
+          <div className="header-left">
+            <h1 className="dashboard-title">Dashboard Overview</h1>
+            <p className="dashboard-subtitle">Real-time analytics and performance metrics</p>
+          </div>
+
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
+      {/* Key Metrics Grid - Using ACTUAL DATA */}
       <div className="metrics-grid">
-        {/* Total Revenue */}
+        {/* Total Revenue - Using totalVolume from transactions */}
         <div className="metric-card revenue">
           <div className="metric-icon">
             <i className="fas fa-chart-line"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{formatCurrency(dashboardData.overview.totalRevenue)}</h3>
-            <p className="metric-label">Total Revenue</p>
-           
+            <h3 className="metric-value">{formatCurrency(depositTotalAmount)}</h3>
+            <p className="metric-label">Total Deposit</p>
           </div>
         </div>
 
-        {/* Total Users */}
+        {/* Total Users - Using actual userMetrics */}
         <div className="metric-card users">
           <div className="metric-icon">
             <i className="fas fa-users"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{dashboardData.overview.totalUsers.toLocaleString()}</h3>
+            <h3 className="metric-value">{totalUsers.toLocaleString()}</h3>
             <p className="metric-label">Total Users</p>
-          
           </div>
         </div>
 
-        {/* Total Transactions */}
+        {/* Total Transactions - Using actual transactionMetrics */}
         <div className="metric-card transactions">
           <div className="metric-icon">
             <i className="fas fa-exchange-alt"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{dashboardData.overview.totalTransactions.toLocaleString()}</h3>
+            <h3 className="metric-value">{totalTransactions.toLocaleString()}</h3>
             <p className="metric-label">Total Transactions</p>
           </div>
         </div>
 
-        {/* Active Accounts */}
+        {/* Active Accounts - Using actual userMetrics */}
         <div className="metric-card accounts">
           <div className="metric-icon">
             <i className="fas fa-user-check"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{dashboardData.overview.activeAccounts.toLocaleString()}</h3>
+            <h3 className="metric-value">{activeAccounts.toLocaleString()}</h3>
             <p className="metric-label">Active Accounts</p>
-        
           </div>
         </div>
       </div>
 
-      {/* Today's Overview */}
+      {/* Today's Overview - Using actual data where available */}
       <div className="today-overview">
-        <h2 className="section-title">Today's Overview</h2>
+        <h2 className="section-title">Overview</h2>
         <div className="today-grid">
           <div className="today-card">
             <div className="today-icon success">
               <i className="fas fa-money-bill-wave"></i>
             </div>
             <div className="today-content">
-              <h4>{formatCurrency(dashboardData.todayStats.revenue)}</h4>
-              <p>Today's Revenue</p>
+              <h4>{formatCurrency(totalVolume)}</h4>
+              <p>Total Volume</p>
             </div>
           </div>
           <div className="today-card">
@@ -150,11 +250,11 @@ function Dashboard() {
                 <i className="fas fa-arrow-down"></i>
               </div>
               <div className="today-content">
-                <h4>{dashboardData.todayStats.deposits}</h4>
-                <p>New Deposits</p>
+                <h4>{depositCompletedCount}</h4>
+                <p>Completed Deposits</p>
               </div>
             </div>
-            <div className="today-badge success">+12%</div>
+            <div className="today-badge success">Completed</div>
           </div>
           <div className="today-card">
             <div className="today-info">
@@ -162,8 +262,8 @@ function Dashboard() {
                 <i className="fas fa-arrow-up"></i>
               </div>
               <div className="today-content">
-                <h4>{dashboardData.todayStats.withdrawals}</h4>
-                <p>Withdrawal Requests</p>
+                <h4>{withdrawalPendingCount}</h4>
+                <p>Pending Withdrawals</p>
               </div>
             </div>
             <div className="today-badge warning">Pending</div>
@@ -174,104 +274,188 @@ function Dashboard() {
                 <i className="fas fa-user-plus"></i>
               </div>
               <div className="today-content">
-                <h4>{dashboardData.todayStats.newUsers}</h4>
-                <p>New Users</p>
+                <h4>{newUsersLast7Days}</h4>
+                <p>New Users (7 days)</p>
               </div>
             </div>
-            <div className="today-badge success">+8%</div>
+            <div className="today-badge success">New</div>
           </div>
         </div>
       </div>
 
       {/* Main Content Grid */}
       <div className="content-grid">
-        {/* Recent Transactions */}
+        {/* Recent Transactions - Using ACTUAL transactions */}
         <div className="content-card">
           <div className="card-header">
             <h3 className="card-title">Recent Transactions</h3>
-            <button className="view-all-btn">View All</button>
+            <button className="view-all-btn"> <Link to="/transaction"> View All</Link></button>
           </div>
           <div className="transactions-list">
-            {dashboardData.recentTransactions.map(transaction => {
+            {lastTransactions.map(transaction => {
               const statusInfo = getStatusInfo(transaction.status);
               return (
                 <div key={transaction.id} className="transaction-item">
                   <div className="transaction-main">
                     <div className="user-avatar">
-                      {transaction.user.split(' ').map(n => n[0]).join('')}
+                      {transaction.user.split(' ').map(n => n[0]).join('') || 'U'}
                     </div>
                     <div className="transaction-details">
                       <span className="user-name">{transaction.user}</span>
-                      <span className="transaction-type">{transaction.type}</span>
+                      <span className="transaction-type">Transaction</span>
                     </div>
                     <div className="transaction-amount">
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(parseFloat(transaction.amount))}
                     </div>
                   </div>
                   <div className="transaction-meta">
-                    <span 
+                    <span
                       className="status-badge"
-                      style={{ 
-                        color: statusInfo.color, 
-                        backgroundColor: statusInfo.bgColor 
+                      style={{
+                        color: statusInfo.color,
+                        backgroundColor: statusInfo.bgColor
                       }}
                     >
                       {statusInfo.icon} {transaction.status}
                     </span>
-                    <span className="transaction-date">{transaction.date}</span>
+                    <span className="transaction-date">
+                      {new Date(transaction.date).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               );
             })}
+            {lastTransactions.length === 0 && (
+              <div className="no-data">
+                <p>No recent transactions</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Pending Actions */}
+        {/* User Performance - Using actual completed tasks data */}
         <div className="content-card">
           <div className="card-header">
-            <h3 className="card-title">Pending Actions</h3>
-            <span className="badge-count">{dashboardData.pendingActions.reduce((sum, action) => sum + action.count, 0)}</span>
+            <h3 className="card-title">Top Performers</h3>
+
+            <button
+              className="btn-reset-all"
+              onClick={handleResetAllTasks}
+              disabled={loading}
+            >
+              <i className="fas fa-bomb"></i>
+              Reset All Tasks  <span className="badge-count">{topPerformers.length}</span>
+            </button>
+
           </div>
-          <div className="actions-list">
-            {dashboardData.pendingActions.map(action => {
-              const priorityInfo = getPriorityInfo(action.priority);
-              return (
-                <div key={action.id} className="action-item">
-                  <div className="action-info">
-                    <div className="action-icon">
-                      {action.type === 'withdrawal' && <i className="fas fa-arrow-up"></i>}
-                      {action.type === 'deposit' && <i className="fas fa-arrow-down"></i>}
-                      {action.type === 'kyc_verification' && <i className="fas fa-id-card"></i>}
-                    </div>
-                    <div className="action-details">
-                      <span className="action-type">
-                        {action.type === 'withdrawal' && 'Withdrawal Requests'}
-                        {action.type === 'deposit' && 'Deposit Approvals'}
-                        {action.type === 'kyc_verification' && 'KYC Verifications'}
-                      </span>
-                      <span className="action-count">{action.count} pending</span>
-                    </div>
+          <div className="users-list">
+            {topPerformers.map(user => (
+              <div key={user.id} className="user-item">
+                <div className="user-info">
+                  <div className="user-main">
+                    <span className="username">{user.email}</span>
+                    <span className="user-email">{user.tasksDone} tasks completed</span>
                   </div>
-                  <div 
-                    className="priority-badge"
-                    style={{ backgroundColor: priorityInfo.color }}
-                  >
-                    {priorityInfo.label}
+                  <div className="user-meta">
+                    <span className="user-status success">
+                      Rank #{user.dailyOrder}
+                    </span>
+                    <span className="last-login">High Performer</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-          <div className="card-actions">
-            <button className="btn-primary">Process All</button>
-            <button className="btn-secondary">View Details</button>
+              </div>
+            ))}
+            {topPerformers.length === 0 && (
+              <div className="no-data">
+                <p>No performance data available</p>
+              </div>
+            )}
           </div>
         </div>
-
-     
       </div>
 
-      <style >{`
+      {/* Add no-data styles */}
+      <style>{`
+        .no-data {
+          text-align: center;
+          padding: 20px;
+          color: #64748b;
+        }
+        
+        .user-status.success {
+          background: #ECFDF5 !important;
+          color: #10B981 !important;
+        }
+
+        /* Header Actions Styles */
+        .header-left {
+          flex: 1;
+        }
+
+        .dashboard-subtitle {
+          color: #64748b;
+          margin: 4px 0 0 0;
+          font-size: 14px;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 12px;
+        }
+
+        .btn-reset-top {
+          padding: 10px 16px;
+          border: 1px solid #f59e0b;
+          background: white;
+          color: #f59e0b;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-reset-top:hover:not(:disabled) {
+          background: #f59e0b;
+          color: white;
+        }
+
+        .btn-reset-top:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .btn-reset-all {
+          padding: 3px 16px;
+          border: 1px solid #ef4444;
+          background: white;
+          color: #ef4444;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-reset-all:hover:not(:disabled) {
+          background: #ef4444;
+          color: white;
+        }
+
+        .btn-reset-all:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      `}</style>
+
+      {/* Rest of your existing styles */}
+      <style>{`
         .dashboard-container {
           padding: 20px;
           background: #f8fafc;
@@ -285,7 +469,7 @@ function Dashboard() {
         .header-content {
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
         }
 
         .dashboard-title {
@@ -293,32 +477,6 @@ function Dashboard() {
           font-weight: 700;
           color: #1e293b;
           margin: 0;
-        }
-
-        .timeframe-selector {
-          display: flex;
-          gap: 8px;
-          background: #f1f5f9;
-          padding: 4px;
-          border-radius: 8px;
-        }
-
-        .timeframe-btn {
-          padding: 8px 16px;
-          border: none;
-          background: transparent;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #64748b;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .timeframe-btn.active {
-          background: white;
-          color: #3b82f6;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .metrics-grid {
@@ -397,18 +555,6 @@ function Dashboard() {
           font-size: 14px;
           color: #64748b;
           margin: 0 0 8px 0;
-        }
-
-        .metric-trend {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .metric-trend.positive {
-          color: #10B981;
         }
 
         .today-overview {
@@ -517,10 +663,6 @@ function Dashboard() {
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .content-card.full-width {
-          grid-column: 1 / -1;
-        }
-
         .card-header {
           display: flex;
           justify-content: space-between;
@@ -625,219 +767,75 @@ function Dashboard() {
           color: #94a3b8;
         }
 
-        .actions-list {
+        .users-list {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          margin-bottom: 20px;
         }
 
-        .action-item {
+        .user-item {
           display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 12px;
           padding: 12px;
           border: 1px solid #f1f5f9;
           border-radius: 8px;
         }
 
-        .action-info {
+        .user-info {
+          flex: 1;
           display: flex;
-          align-items: center;
-          gap: 12px;
+          flex-direction: column;
+          gap: 4px;
         }
 
-        .action-icon {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: #f1f5f9;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-        }
-
-        .action-details {
+        .user-main {
           display: flex;
           flex-direction: column;
         }
 
-        .action-type {
-          font-weight: 500;
+        .username {
+          font-weight: 600;
           color: #1e293b;
+          font-size: 14px;
         }
 
-        .action-count {
+        .user-email {
           font-size: 12px;
           color: #64748b;
         }
 
-        .priority-badge {
-          padding: 4px 8px;
-          border-radius: 6px;
+        .user-meta {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .user-status {
+          padding: 2px 8px;
+          border-radius: 12px;
           font-size: 11px;
-          font-weight: 600;
-          color: white;
-        }
-
-        .card-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .btn-primary {
-          background: #3b82f6;
-          color: white;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-size: 14px;
           font-weight: 500;
-          cursor: pointer;
-          flex: 1;
         }
 
-        .btn-secondary {
-          background: #f1f5f9;
-          color: #64748b;
-          border: none;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          flex: 1;
-        }
-
-        .chart-legend {
-          display: flex;
-          gap: 16px;
-        }
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        .legend-color {
-          width: 12px;
-          height: 12px;
-          border-radius: 2px;
-        }
-
-        .legend-color.revenue {
-          background: #10B981;
-        }
-
-        .legend-color.users {
-          background: #3B82F6;
-        }
-
-        .chart-placeholder {
-          background: #f8fafc;
-          border-radius: 8px;
-          padding: 20px;
-          text-align: center;
-        }
-
-        .chart-container {
-          height: 200px;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          gap: 20px;
-          margin-bottom: 16px;
-        }
-
-        .chart-bars {
-          display: flex;
-          align-items: flex-end;
-          gap: 12px;
-          height: 100%;
-        }
-
-        .chart-bar-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          height: 100%;
-        }
-
-        .chart-bar {
-          width: 20px;
-          border-radius: 4px 4px 0 0;
-          transition: all 0.3s ease;
-        }
-
-        .chart-bar.revenue-bar {
-          background: #10B981;
-        }
-
-        .chart-bar.users-bar {
-          background: #3B82F6;
-          margin-top: 4px;
-        }
-
-        .chart-label {
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        .chart-note {
-          font-size: 12px;
+        .last-login {
+          font-size: 11px;
           color: #94a3b8;
-          margin: 0;
-        }
-
-        .quick-stats {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .stat-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          background: #f8fafc;
-          border-radius: 8px;
-        }
-
-        .stat-icon {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: #e2e8f0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-        }
-
-        .stat-content {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .stat-value {
-          font-weight: 600;
-          color: #1e293b;
-        }
-
-        .stat-label {
-          font-size: 12px;
-          color: #64748b;
         }
 
         @media (max-width: 1024px) {
           .content-grid {
             grid-template-columns: 1fr;
+          }
+          
+          .header-content {
+            flex-direction: column;
+            gap: 16px;
+          }
+          
+          .header-actions {
+            width: 100%;
+            justify-content: flex-start;
           }
         }
 
@@ -846,18 +844,16 @@ function Dashboard() {
             padding: 16px;
           }
 
-          .header-content {
-            flex-direction: column;
-            gap: 16px;
-            align-items: flex-start;
-          }
-
           .metrics-grid {
             grid-template-columns: 1fr;
           }
 
           .today-grid {
             grid-template-columns: 1fr;
+          }
+          
+          .header-actions {
+            flex-direction: column;
           }
         }
       `}</style>

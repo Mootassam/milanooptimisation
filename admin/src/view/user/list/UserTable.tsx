@@ -241,6 +241,7 @@ function UserTable() {
                           </Link>
                         )}
 
+
                         {hasPermissionToDestroy && (
                           <button
                             className="user-table-action-btn danger"
