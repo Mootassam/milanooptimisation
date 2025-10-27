@@ -118,16 +118,9 @@ function UserTable() {
                   </span>
                 )}
               </th>
-              <th className="sortable-header" onClick={() => doChangeSort('couponcode')}>
-                {i18n('user.fields.couponcode')}
-                {sorter.field === 'couponcode' && (
-                  <span className="sort-icon">
-                    {sorter.order === 'ascend' ? '↑' : '↓'}
-                  </span>
-                )}
-              </th>
+           
               <th className="table-header">
-                {i18n('user.fields.roles')}
+                {i18n('user.fields.balance')}
               </th>
               <th className="table-header text-center">
                 {i18n('user.fields.status')}
@@ -178,13 +171,8 @@ function UserTable() {
                   <td className="table-cell">{row.phoneNumber}</td>
                   <td className="table-cell">{row.invitationcode}</td>
                   <td className="table-cell">{row.refcode}</td>
-                  <td className="table-cell">{row.couponcode}</td>
                   <td className="table-cell">
-                    {row.roles.map((roleId) => (
-                      <div key={roleId}>
-                        <span>{Roles.labelOf(roleId)}</span>
-                      </div>
-                    ))}
+                  ${row.balance.toFixed(2)}
                   </td>
                   <td className="table-cell text-center">
                     <UserStatusView value={row.status} />

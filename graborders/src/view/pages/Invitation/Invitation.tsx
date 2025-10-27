@@ -2,45 +2,38 @@ import React, { useRef, useEffect, useState } from "react";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import authSelectors from "src/modules/auth/authSelectors";
 import Message from "src/view/shared/message";
-import selectors from "src/modules/company/list/companyListSelectors";
-import listactions from "src/modules/company/list/companyListActions";
 import { useDispatch, useSelector } from "react-redux";
+import userFormActions from "src/modules/user/form/userFormActions";
+import userFormSelectors from "src/modules/user/form/userFormSelectors";
 
 function Invitation() {
   const dispatch = useDispatch();
+  const selectRefLoading = useSelector(userFormSelectors.selectRefLoading);
+  const selectRefUsers = useSelector(userFormSelectors.selectRefUsers);
+  const currentUser = useSelector(authSelectors.selectCurrentUser);
+  
+  const referenceCodeRef = useRef<any>(null);
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
 
-  const currentUser = useSelector(authSelectors.selectCurrentUser);
-  const referenceCodeRef = useRef<any>(null);
+  // Extract data from selectRefUsers
+  const targetUser = selectRefUsers?.targetUser;
+  const teamSummary = selectRefUsers?.teamSummary;
   
-  // Static team data for demonstration
-  const staticTeamData = {
-    level1: [
-      { id: 1, name: "John Smith", joinDate: "2024-01-15", earnings: "$12.50", status: "Active" },
-      { id: 2, name: "Sarah Johnson", joinDate: "2024-01-20", earnings: "$8.75", status: "Active" },
-      { id: 3, name: "Mike Wilson", joinDate: "2024-02-01", earnings: "$15.20", status: "Active" },
-      { id: 4, name: "Emily Brown", joinDate: "2024-02-05", earnings: "$6.05", status: "Active" },
-      { id: 5, name: "David Lee", joinDate: "2024-02-10", earnings: "$0.00", status: "Inactive" }
-    ],
-    level2: [
-      { id: 6, name: "Alex Chen", joinDate: "2024-01-25", earnings: "$5.25", status: "Active" },
-      { id: 7, name: "Maria Garcia", joinDate: "2024-02-02", earnings: "$7.80", status: "Active" },
-      { id: 8, name: "James Miller", joinDate: "2024-02-08", earnings: "$3.45", status: "Active" },
-      { id: 9, name: "Lisa Taylor", joinDate: "2024-02-12", earnings: "$9.10", status: "Active" }
-    ],
-    level3: [
-      { id: 10, name: "Robert Davis", joinDate: "2024-02-03", earnings: "$2.15", status: "Active" },
-      { id: 11, name: "Jennifer White", joinDate: "2024-02-09", earnings: "$4.30", status: "Active" }
-    ],
-    level4: [
-      { id: 12, name: "Thomas Moore", joinDate: "2024-02-14", earnings: "$1.25", status: "Active" }
-    ]
+  const totalMembers = teamSummary?.totalMembers || 0;
+  const levels = teamSummary?.levels || { 1: [], 2: [], 3: [], 4: [] };
+
+  // Calculate member counts for each level
+  const levelCounts = {
+    1: levels[1]?.length || 0,
+    2: levels[2]?.length || 0,
+    3: levels[3]?.length || 0,
+    4: levels[4]?.length || 0
   };
 
   const copyToClipboard = () => {
-    const referenceCode = referenceCodeRef.current.innerText;
+    const referenceCode = targetUser?.refcode || currentUser?.refcode || "NOCODE";
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
@@ -65,19 +58,19 @@ function Invitation() {
 
   // Social Sharing Functions
   const shareOnWhatsApp = () => {
-    const message = `Join me on ManoMano! Use my referral code: MANO1234\nGet started now and earn together!`;
+    const message = `Join me on our platform! Use my referral code: ${targetUser?.refcode || currentUser?.refcode}\nGet started now and earn together!`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
   const shareOnTelegram = () => {
-    const message = `Join me on ManoMano! Use my referral code: MANO1234\nGet started now and earn together!`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://manomano.com')}&text=${encodeURIComponent(message)}`;
+    const message = `Join me on our platform! Use my referral code: ${targetUser?.refcode || currentUser?.refcode}\nGet started now and earn together!`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
   const copyReferralLink = () => {
-    const link = "https://manomano.com/signup?ref=MANO1234";
+    const link = `${window.location.origin}/signup?ref=${targetUser?.refcode || currentUser?.refcode}`;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(link)
         .then(() => {
@@ -100,7 +93,7 @@ function Invitation() {
 
   const openTeamModal = (level) => {
     setSelectedLevel(level);
-    setTeamMembers(staticTeamData[`level${level}`] || []);
+    setTeamMembers(levels[level] || []);
     setShowTeamModal(true);
   };
 
@@ -110,22 +103,28 @@ function Invitation() {
     setTeamMembers([]);
   };
 
-  const dolistCompany = () => {
-    dispatch(listactions.doFetch());
-  };
-
-  const logorecord = useSelector(selectors.selectRows);
-  const loadingImage = useSelector(selectors?.selectLoading);
-  
   useEffect(() => {
-    dolistCompany();
-  }, [dispatch]);
+    if (currentUser?.id) {
+      dispatch(userFormActions.doRef(currentUser.id));
+    }
+  }, [dispatch, currentUser?.id]);
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <>
       {/* Header Section */}
       <SubHeader title="Invitation" detail="Invite Friends & Earn" />
-      
+
       {/* Team Members Modal */}
       {showTeamModal && (
         <div className="modal-overlay">
@@ -136,35 +135,46 @@ function Invitation() {
                 <i className="fas fa-times" />
               </button>
             </div>
-            
+
             <div className="modal-content">
-              <div className="team-members-list">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="team-member-card">
-                    <div className="member-avatar">
-                      <i className="fas fa-user" />
-                    </div>
-                    <div className="member-info">
-                      <div className="member-name">{member.name}</div>
-                      <div className="member-details">
-                        <span className="member-join-date">Joined: {member.joinDate}</span>
-                      </div>
-                    </div>
-                    <div className={`member-status ${member.status.toLowerCase()}`}>
-                      {member.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {teamMembers.length === 0 && (
-                <div className="no-members">
-                  <i className="fas fa-users" />
-                  <p>No members in this level yet</p>
+              {selectRefLoading ? (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>Loading team members...</p>
                 </div>
+              ) : (
+                <>
+                  <div className="team-members-list">
+                    {teamMembers.map((member) => (
+                      <div key={member.id} className="team-member-card">
+                        <div className="member-avatar">
+                          <i className="fas fa-user" />
+                        </div>
+                        <div className="member-info">
+                          <div className="member-name">{member.email}</div>
+                          <div className="member-details">
+                            <span className="member-join-date">Joined: {formatDate(member.joinDate)}</span>
+                            <span className="member-earnings">Balance: ${member.balance || 0}</span>
+                          </div>
+                        </div>
+                        <div className="member-status active">
+                          {member.vipLevel || 'Member'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {teamMembers.length === 0 && (
+                    <div className="no-members">
+                      <i className="fas fa-users" />
+                      <p>No members in this level yet</p>
+                      <span>Start inviting friends to build your team!</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
-            
+
             <div className="modal-actions">
               <button className="modal-btn primary" onClick={closeTeamModal}>
                 Close
@@ -174,170 +184,233 @@ function Invitation() {
         </div>
       )}
 
-      {/* Invite Card */}
-      <div className="invite-card">
-        <h2 className="invite-title">Your Referral Code</h2>
-        <div className="referral-code">
-          <span ref={referenceCodeRef} className="code-text">MANO1234</span>
-          <button className="copy-btn" onClick={copyToClipboard}>
-            <i className="fas fa-copy" />
-            Copy
-          </button>
+      {/* Loading State for Main Content */}
+      {selectRefLoading ? (
+        <div className="loading-section">
+          <div className="loading-spinner large"></div>
+          <p>Loading your referral data...</p>
         </div>
-        <p style={{ color: "#7b8796", fontSize: 14, margin: "10px 0" }}>
-          Share this code with your friends
-        </p>
-        <div className="share-buttons">
-          <button className="share-btn btn-whatsapp" onClick={shareOnWhatsApp}>
-            <i className="fab fa-whatsapp" />
-            WhatsApp
-          </button>
-          <button className="share-btn btn-telegram" onClick={shareOnTelegram}>
-            <i className="fab fa-telegram" />
-            Telegram
-          </button>
-          <button className="share-btn btn-link" onClick={copyReferralLink}>
-            <i className="fas fa-link" />
-            Copy Link
-          </button>
-        </div>
-      </div>
+      ) : (
+        <>
+          {/* Invite Card */}
+          <div className="invite-card">
+            <h2 className="invite-title">Your Referral Code</h2>
+            <div className="referral-code">
+              <span ref={referenceCodeRef} className="code-text">
+                {targetUser?.refcode || currentUser?.refcode || "NOCODE"}
+              </span>
+              <button className="copy-btn" onClick={copyToClipboard}>
+                <i className="fas fa-copy" />
+                Copy
+              </button>
+            </div>
+            <p style={{ color: "#7b8796", fontSize: 14, margin: "10px 0" }}>
+              Share this code with your friends
+            </p>
+            <div className="share-buttons">
+              <button className="share-btn btn-whatsapp" onClick={shareOnWhatsApp}>
+                <i className="fab fa-whatsapp" />
+                WhatsApp
+              </button>
+              <button className="share-btn btn-telegram" onClick={shareOnTelegram}>
+                <i className="fab fa-telegram" />
+                Telegram
+              </button>
+              <button className="share-btn btn-link" onClick={copyReferralLink}>
+                <i className="fas fa-link" />
+                Copy Link
+              </button>
+            </div>
+          </div>
 
-      {/* Commission Structure */}
-      <div className="commission-section">
-        <h2 className="section-title">Commission Structure</h2>
-        <div className="commission-levels">
-          <div className="level-card level-1">
-            <div className="level-header">
-              <span className="level-name">Level 1 (Direct Referrals)</span>
-              <span className="level-percentage">10%</span>
+          {/* Commission Structure */}
+          <div className="commission-section">
+            <h2 className="section-title">Commission Structure</h2>
+            <div className="commission-levels">
+              <div className="level-card level-1">
+                <div className="level-header">
+                  <span className="level-name">Level 1 (Direct Referrals)</span>
+                  <span className="level-percentage">10%</span>
+                </div>
+                <p className="level-description">
+                  Earn 10% of your direct referrals' daily earnings
+                </p>
+              </div>
+              <div className="level-card level-2">
+                <div className="level-header">
+                  <span className="level-name">Level 2</span>
+                  <span className="level-percentage">7%</span>
+                </div>
+                <p className="level-description">
+                  Earn 7% of the earnings from your Level 1 referrals' referrals
+                </p>
+              </div>
+              <div className="level-card level-3">
+                <div className="level-header">
+                  <span className="level-name">Level 3</span>
+                  <span className="level-percentage">4%</span>
+                </div>
+                <p className="level-description">
+                  Earn 4% of the earnings from your Level 2 referrals' referrals
+                </p>
+              </div>
+              <div className="level-card level-4">
+                <div className="level-header">
+                  <span className="level-name">Level 4</span>
+                  <span className="level-percentage">2%</span>
+                </div>
+                <p className="level-description">
+                  Earn 2% of the earnings from your Level 3 referrals' referrals
+                </p>
+              </div>
             </div>
-            <p className="level-description">
-              Earn 10% of your direct referrals' daily earnings
-            </p>
           </div>
-          <div className="level-card level-2">
-            <div className="level-header">
-              <span className="level-name">Level 2</span>
-              <span className="level-percentage">7%</span>
-            </div>
-            <p className="level-description">
-              Earn 7% of the earnings from your Level 1 referrals' referrals
-            </p>
-          </div>
-          <div className="level-card level-3">
-            <div className="level-header">
-              <span className="level-name">Level 3</span>
-              <span className="level-percentage">4%</span>
-            </div>
-            <p className="level-description">
-              Earn 4% of the earnings from your Level 2 referrals' referrals
-            </p>
-          </div>
-          <div className="level-card level-4">
-            <div className="level-header">
-              <span className="level-name">Level 4</span>
-              <span className="level-percentage">2%</span>
-            </div>
-            <p className="level-description">
-              Earn 2% of the earnings from your Level 3 referrals' referrals
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Team Structure */}
-      <div className="team-section">
-        <h2 className="section-title">Your Team</h2>
-        <div className="team-stats">
-          <div className="stat-card">
-            <div className="stat-value">12</div>
-            <div className="stat-label">Total Members</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">$42.50</div>
-            <div className="stat-label">Total Earned</div>
-          </div>
-        </div>
-        <div className="team-levels">
-          <div className="team-level" onClick={() => openTeamModal(1)}>
-            <div className="team-level-info">
-              <div className="team-level-badge badge-1">1</div>
-              <span className="team-level-name">Level 1</span>
+          {/* Team Structure */}
+          <div className="team-section">
+            <h2 className="section-title">Your Team</h2>
+            <div className="team-stats">
+              <div className="stat-card">
+                <div className="stat-value">{totalMembers}</div>
+                <div className="stat-label">Total Members</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">$300</div>
+                <div className="stat-label">Total Earned</div>
+              </div>
             </div>
-            <div className="team-level-count">5 members <i className="fas fa-chevron-right" /></div>
-          </div>
-          <div className="team-level" onClick={() => openTeamModal(2)}>
-            <div className="team-level-info">
-              <div className="team-level-badge badge-2">2</div>
-              <span className="team-level-name">Level 2</span>
+            <div className="team-levels">
+              <div className="team-level" onClick={() => openTeamModal(1)}>
+                <div className="team-level-info">
+                  <div className="team-level-badge badge-1">1</div>
+                  <span className="team-level-name">Level 1</span>
+                </div>
+                <div className="team-level-count">
+                  {levelCounts[1]} {levelCounts[1] === 1 ? 'member' : 'members'} 
+                  <i className="fas fa-chevron-right" />
+                </div>
+              </div>
+              <div className="team-level" onClick={() => openTeamModal(2)}>
+                <div className="team-level-info">
+                  <div className="team-level-badge badge-2">2</div>
+                  <span className="team-level-name">Level 2</span>
+                </div>
+                <div className="team-level-count">
+                  {levelCounts[2]} {levelCounts[2] === 1 ? 'member' : 'members'} 
+                  <i className="fas fa-chevron-right" />
+                </div>
+              </div>
+              <div className="team-level" onClick={() => openTeamModal(3)}>
+                <div className="team-level-info">
+                  <div className="team-level-badge badge-3">3</div>
+                  <span className="team-level-name">Level 3</span>
+                </div>
+                <div className="team-level-count">
+                  {levelCounts[3]} {levelCounts[3] === 1 ? 'member' : 'members'} 
+                  <i className="fas fa-chevron-right" />
+                </div>
+              </div>
+              <div className="team-level" onClick={() => openTeamModal(4)}>
+                <div className="team-level-info">
+                  <div className="team-level-badge badge-4">4</div>
+                  <span className="team-level-name">Level 4</span>
+                </div>
+                <div className="team-level-count">
+                  {levelCounts[4]} {levelCounts[4] === 1 ? 'member' : 'members'} 
+                  <i className="fas fa-chevron-right" />
+                </div>
+              </div>
             </div>
-            <div className="team-level-count">4 members <i className="fas fa-chevron-right" /></div>
           </div>
-          <div className="team-level" onClick={() => openTeamModal(3)}>
-            <div className="team-level-info">
-              <div className="team-level-badge badge-3">3</div>
-              <span className="team-level-name">Level 3</span>
-            </div>
-            <div className="team-level-count">2 members <i className="fas fa-chevron-right" /></div>
-          </div>
-          <div className="team-level" onClick={() => openTeamModal(4)}>
-            <div className="team-level-info">
-              <div className="team-level-badge badge-4">4</div>
-              <span className="team-level-name">Level 4</span>
-            </div>
-            <div className="team-level-count">1 member <i className="fas fa-chevron-right" /></div>
-          </div>
-        </div>
-      </div>
 
-      {/* How It Works */}
-      <div className="how-it-works">
-        <h2 className="section-title">How It Works</h2>
-        <div className="steps">
-          <div className="step">
-            <div className="step-number">1</div>
-            <div className="step-content">
-              <h3 className="step-title">Share Your Referral Code</h3>
-              <p className="step-description">
-                Share your unique code with friends via social media, messaging
-                apps, or directly.
-              </p>
+          {/* How It Works */}
+          <div className="how-it-works">
+            <h2 className="section-title">How It Works</h2>
+            <div className="steps">
+              <div className="step">
+                <div className="step-number">1</div>
+                <div className="step-content">
+                  <h3 className="step-title">Share Your Referral Code</h3>
+                  <p className="step-description">
+                    Share your unique code with friends via social media, messaging
+                    apps, or directly.
+                  </p>
+                </div>
+              </div>
+              <div className="step">
+                <div className="step-number">2</div>
+                <div className="step-content">
+                  <h3 className="step-title">Friends Sign Up</h3>
+                  <p className="step-description">
+                    Your friends use your code when registering for their account.
+                  </p>
+                </div>
+              </div>
+              <div className="step">
+                <div className="step-number">3</div>
+                <div className="step-content">
+                  <h3 className="step-title">Start Earning</h3>
+                  <p className="step-description">
+                    Earn commissions from your friends' activities based on our
+                    multi-level structure.
+                  </p>
+                </div>
+              </div>
+              <div className="step">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <h3 className="step-title">Track Your Earnings</h3>
+                  <p className="step-description">
+                    Monitor your commissions and team growth right from your dashboard.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="step">
-            <div className="step-number">2</div>
-            <div className="step-content">
-              <h3 className="step-title">Friends Sign Up</h3>
-              <p className="step-description">
-                Your friends use your code when registering for their ManoMano
-                account.
-              </p>
-            </div>
-          </div>
-          <div className="step">
-            <div className="step-number">3</div>
-            <div className="step-content">
-              <h3 className="step-title">Start Earning</h3>
-              <p className="step-description">
-                Earn commissions from your friends' activities based on our
-                multi-level structure.
-              </p>
-            </div>
-          </div>
-          <div className="step">
-            <div className="step-number">4</div>
-            <div className="step-content">
-              <h3 className="step-title">Track Your Earnings</h3>
-              <p className="step-description">
-                Monitor your commissions and team growth right from your dashboard.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       <style>{`
+        /* Loading Styles */
+        .loading-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 20px;
+          text-align: center;
+        }
+
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+          text-align: center;
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f4f6;
+          border-top: 4px solid #0f2161;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 16px;
+        }
+
+        .loading-spinner.large {
+          width: 60px;
+          height: 60px;
+          border-width: 5px;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
         /* Modal Styles */
         .modal-overlay {
           position: fixed;
@@ -470,16 +543,8 @@ function Invitation() {
           border-radius: 20px;
           font-size: 12px;
           font-weight: 600;
-        }
-        
-        .member-status.active {
           background: #e8f5e8;
           color: #26a17b;
-        }
-        
-        .member-status.inactive {
-          background: #ffe8e8;
-          color: #e74c3c;
         }
         
         .no-members {
@@ -492,6 +557,11 @@ function Invitation() {
           font-size: 48px;
           margin-bottom: 15px;
           color: #f0f4ff;
+        }
+        
+        .no-members span {
+          font-size: 14px;
+          color: #a0a4ab;
         }
         
         .modal-actions {
@@ -568,24 +638,6 @@ function Invitation() {
           transform: scale(0.95);
         }
 
-        /* Page Title */
-        .page-title {
-            padding: 20px 15px 10px;
-            text-align: center;
-            color: #0f2161;
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        .page-subtitle {
-            text-align: center;
-            color: #7b8796;
-            font-size: 16px;
-            margin-bottom: 20px;
-            padding: 0 20px;
-            line-height: 1.5;
-        }
-        
         /* Invite Card */
         .invite-card {
             background: white;

@@ -352,6 +352,149 @@ export default class UserRepository {
     }
   }
 
+  static async getUserReferralLevelsOptimized(options: IRepositoryOptions, targetUserId: string) {
+ 
+    const tenantId = MongooseRepository.getCurrentTenant(options);
+
+  try {
+    // Get target user's refcode
+    const targetUser = await User(options.database)
+      .findOne({
+        _id: targetUserId,
+        tenants: {
+          $elemMatch: {
+            tenant: tenantId,
+            status: 'active'
+          }
+        }
+      })
+      .select('refcode username email')
+      .lean();
+
+    if (!targetUser) {
+      throw new Error('User not found');
+    }
+
+    const levels: Record<number, any[]> = {
+      1: [],
+      2: [],
+      3: [],
+      4: []
+    };
+
+    let totalMembers = 0;
+
+    // Level 1: Direct referrals
+    levels[1] = await User(options.database)
+      .find({
+        invitationcode: targetUser.refcode,
+        tenants: {
+          $elemMatch: {
+            tenant: tenantId,
+            status: 'active'
+          }
+        }
+      })
+      .select('username email refcode invitationcode createdAt balance tasksDone vip')
+      .populate('vip', 'title')
+      .lean();
+
+    totalMembers += levels[1].length;
+
+    // Level 2: Referrals of Level 1 users
+    if (levels[1].length > 0) {
+      const level1RefCodes = levels[1].map(user => user.refcode);
+      levels[2] = await User(options.database)
+        .find({
+          invitationcode: { $in: level1RefCodes },
+          tenants: {
+            $elemMatch: {
+              tenant: tenantId,
+              status: 'active'
+            }
+          }
+        })
+        .select('username email refcode invitationcode createdAt balance tasksDone vip')
+        .populate('vip', 'title')
+        .lean();
+
+      totalMembers += levels[2].length;
+    }
+
+    // Level 3: Referrals of Level 2 users
+    if (levels[2].length > 0) {
+      const level2RefCodes = levels[2].map(user => user.refcode);
+      levels[3] = await User(options.database)
+        .find({
+          invitationcode: { $in: level2RefCodes },
+          tenants: {
+            $elemMatch: {
+              tenant: tenantId,
+              status: 'active'
+            }
+          }
+        })
+        .select('username email refcode invitationcode createdAt balance tasksDone vip')
+        .populate('vip', 'title')
+        .lean();
+
+      totalMembers += levels[3].length;
+    }
+
+    // Level 4: Referrals of Level 3 users
+    if (levels[3].length > 0) {
+      const level3RefCodes = levels[3].map(user => user.refcode);
+      levels[4] = await User(options.database)
+        .find({
+          invitationcode: { $in: level3RefCodes },
+          tenants: {
+            $elemMatch: {
+              tenant: tenantId,
+              status: 'active'
+            }
+          }
+        })
+        .select('username email refcode invitationcode createdAt balance tasksDone vip')
+        .populate('vip', 'title')
+        .lean();
+
+      totalMembers += levels[4].length;
+    }
+
+    // Format the response
+    const formattedLevels = {};
+    for (let level = 1; level <= 4; level++) {
+      formattedLevels[level] = levels[level].map(user => ({
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        refcode: user.refcode,
+        invitationcode: user.invitationcode,
+        joinDate: user.createdAt,
+        balance: user.balance,
+        tasksDone: user.tasksDone,
+        vipLevel: user.vip?.title || 'No VIP'
+      }));
+    }
+
+    return {
+      targetUser: {
+        id: targetUserId,
+        username: targetUser.username,
+        email: targetUser.email,
+        refcode: targetUser.refcode
+      },
+      teamSummary: {
+        totalMembers,
+        levels: formattedLevels
+      }
+    };
+
+  } catch (error) {
+    console.error('Error in getUserReferralLevelsOptimized:', error);
+    throw error;
+  }
+}
 
 
   static async createUniqueRefCode(options: IRepositoryOptions) {

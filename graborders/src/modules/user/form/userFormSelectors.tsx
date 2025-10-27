@@ -7,6 +7,20 @@ const selectUser = createSelector(
   (raw) => raw.user,
 );
 
+const selectRefLoading = createSelector(
+  [selectRaw],
+  (raw) => raw.refLoading,
+);
+
+
+
+
+const selectRefUsers = createSelector(
+  [selectRaw],
+  (raw) => raw.invitedUsers,
+);
+
+
 const selectInitLoading = createSelector(
   [selectRaw],
   (raw) => Boolean(raw.initLoading),
@@ -21,6 +35,8 @@ const userFormSelectors = {
   selectInitLoading,
   selectSaveLoading,
   selectUser,
+  selectRefLoading,
+  selectRefUsers,
   selectRaw,
 };
 
