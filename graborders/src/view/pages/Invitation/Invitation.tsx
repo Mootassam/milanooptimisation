@@ -20,6 +20,8 @@ function Invitation() {
   // Extract data from selectRefUsers
   const targetUser = selectRefUsers?.targetUser;
   const teamSummary = selectRefUsers?.teamSummary;
+
+  const totalCommissions = teamSummary?.totalCommissions || 0;
   
   const totalMembers = teamSummary?.totalMembers || 0;
   const levels = teamSummary?.levels || { 1: [], 2: [], 3: [], 4: [] };
@@ -275,7 +277,7 @@ function Invitation() {
                 <div className="stat-label">Total Members</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">$300</div>
+                <div className="stat-value">${totalCommissions}</div>
                 <div className="stat-label">Total Earned</div>
               </div>
             </div>
