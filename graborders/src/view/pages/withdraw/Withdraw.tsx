@@ -12,6 +12,7 @@ import actions from "src/modules/transaction/form/transactionFormActions";
 import authActions from "src/modules/auth/authActions";
 import selector from "src/modules/transaction/form/transactionFormSelectors";
 import transactionFormActions from "src/modules/transaction/form/transactionFormActions";
+import Header from "src/view/layout/Header";
 
 const schema = yup.object().shape({
   amount: yupFormSchemas.integer(i18n("entities.transaction.fields.amount"), {
@@ -38,14 +39,14 @@ function Withdraw() {
 
   useEffect(() => { }, [currentUser]);
 
-  
+
 
   const [initialValues] = useState({
     amount: "",
     withdrawPassword: "",
   });
 
- 
+
 
   const form = useForm({
     resolver: yupResolver(schema),
@@ -54,7 +55,7 @@ function Withdraw() {
   });
 
 
-   const onSubmit = async ({ amount, withdrawPassword }) => {
+  const onSubmit = async ({ amount, withdrawPassword }) => {
     setWithdrawalAmount(amount);
     const values = {
       status: "pending",
@@ -79,8 +80,12 @@ function Withdraw() {
 
   return (
     <div className="withdraw-page-container">
-      <SubHeader title="Withdraw" path="/" />
-
+      <Header
+        title="Withdraw"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="withdraw-content-section">
         <div className="withdraw-main-card">
           {/* Header Section */}

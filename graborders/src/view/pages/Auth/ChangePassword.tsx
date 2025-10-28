@@ -10,6 +10,7 @@ import actions from 'src/modules/auth/authActions';
 import InputFormItem from "src/shared/form/InputFormItem";
 import selectors from "src/modules/auth/authSelectors";
 import ButtonIcon from "src/shared/ButtonIcon";
+import Header from "src/view/layout/Header";
 
 const schema = yup.object().shape({
   oldPassword: yupFormSchemas.string(i18n("user.fields.oldPassword"), {
@@ -50,7 +51,14 @@ function ChangePassword() {
 
   return (
     <div className="change-password-container">
-      <SubHeader title="Change password" path="/profile" />
+      
+
+       <Header
+        title="Change password"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       
       <div className="change-password-section">
         <div className="change-password-card">

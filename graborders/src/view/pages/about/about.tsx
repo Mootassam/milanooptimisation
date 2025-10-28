@@ -1,11 +1,18 @@
 import React from 'react'
+import Header from 'src/view/layout/Header'
 import SubHeader from 'src/view/shared/Header/SubHeader'
 
 function about() {
   return (
     <>
 
-  <SubHeader title="About"  />
+ <Header
+        title="About"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
+
   {/* Page Title */}
   <div className="page-title"></div>
  

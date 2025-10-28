@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import authSelectors from "src/modules/auth/authSelectors";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 function Deposit() {
@@ -35,7 +36,13 @@ function Deposit() {
     <>
       {/* Header */}
 
-      <SubHeader title="Deposit Funds" />
+
+      <Header
+        title="Deposit Funds"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
 
       {/* Balance Overview */}
       <div className="balance-overview">

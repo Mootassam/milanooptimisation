@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import actions from "src/modules/transaction/list/transactionListActions";
 import selectors from "src/modules/transaction/list/transactionListSelectors";
+import Header from "src/view/layout/Header";
 
 function TransactionHistory() {
   const dispatch = useDispatch();
@@ -124,8 +125,12 @@ function TransactionHistory() {
 
   return (
     <>
-      <SubHeader title="Transaction History" />
-
+  <Header
+        title="Transaction History"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       {/* Quick Type Filter */}
       <div className="quick-filter-section">
         <div className="filter-buttons">

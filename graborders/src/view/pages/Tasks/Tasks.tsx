@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 export default function Tasks() {
@@ -6,7 +7,13 @@ export default function Tasks() {
 
   return (
     <div>
-      <SubHeader title="Tasks" path="/profile" />
+
+         <Header
+        title="Tasks"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="order__list">
         <div className="list__actions">
           <div

@@ -5,13 +5,14 @@ import Message from "src/view/shared/message";
 import { useDispatch, useSelector } from "react-redux";
 import userFormActions from "src/modules/user/form/userFormActions";
 import userFormSelectors from "src/modules/user/form/userFormSelectors";
+import Header from "src/view/layout/Header";
 
 function Invitation() {
   const dispatch = useDispatch();
   const selectRefLoading = useSelector(userFormSelectors.selectRefLoading);
   const selectRefUsers = useSelector(userFormSelectors.selectRefUsers);
   const currentUser = useSelector(authSelectors.selectCurrentUser);
-  
+
   const referenceCodeRef = useRef<any>(null);
   const [showTeamModal, setShowTeamModal] = useState<boolean>(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -31,7 +32,7 @@ function Invitation() {
   const teamSummary = selectRefUsers?.teamSummary;
 
   const totalCommissions = selectRefUsers?.totalCommissions || 0;
-  
+
   const totalMembers = teamSummary?.totalMembers || 0;
   const levels = teamSummary?.levels || { 1: [], 2: [], 3: [], 4: [] };
 
@@ -93,11 +94,11 @@ function Invitation() {
         });
     } else {
       const textArea = document.createElement("textarea");
-  const openTeamModal = (level: number) => {
-    setSelectedLevel(level);
-    setTeamMembers(levels[level] || []);
-    setShowTeamModal(true);
-  };
+      const openTeamModal = (level: number) => {
+        setSelectedLevel(level);
+        setTeamMembers(levels[level] || []);
+        setShowTeamModal(true);
+      };
       Message.success("Referral link copied to clipboard!");
     }
   };
@@ -134,7 +135,12 @@ function Invitation() {
   return (
     <>
       {/* Header Section */}
-      <SubHeader title="Invitation"  />
+      <Header
+        title="Invitation"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
 
       {/* Team Members Modal */}
       {showTeamModal && (
@@ -297,7 +303,7 @@ function Invitation() {
                   <span className="team-level-name">Level 1</span>
                 </div>
                 <div className="team-level-count">
-                  {levelCounts[1]} {levelCounts[1] === 1 ? 'member' : 'members'} 
+                  {levelCounts[1]} {levelCounts[1] === 1 ? 'member' : 'members'}
                   <i className="fas fa-chevron-right" />
                 </div>
               </div>
@@ -307,7 +313,7 @@ function Invitation() {
                   <span className="team-level-name">Level 2</span>
                 </div>
                 <div className="team-level-count">
-                  {levelCounts[2]} {levelCounts[2] === 1 ? 'member' : 'members'} 
+                  {levelCounts[2]} {levelCounts[2] === 1 ? 'member' : 'members'}
                   <i className="fas fa-chevron-right" />
                 </div>
               </div>
@@ -317,7 +323,7 @@ function Invitation() {
                   <span className="team-level-name">Level 3</span>
                 </div>
                 <div className="team-level-count">
-                  {levelCounts[3]} {levelCounts[3] === 1 ? 'member' : 'members'} 
+                  {levelCounts[3]} {levelCounts[3] === 1 ? 'member' : 'members'}
                   <i className="fas fa-chevron-right" />
                 </div>
               </div>
@@ -327,7 +333,7 @@ function Invitation() {
                   <span className="team-level-name">Level 4</span>
                 </div>
                 <div className="team-level-count">
-                  {levelCounts[4]} {levelCounts[4] === 1 ? 'member' : 'members'} 
+                  {levelCounts[4]} {levelCounts[4] === 1 ? 'member' : 'members'}
                   <i className="fas fa-chevron-right" />
                 </div>
               </div>

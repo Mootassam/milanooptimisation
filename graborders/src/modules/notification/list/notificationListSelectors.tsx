@@ -7,6 +7,19 @@ const selectLoading = createSelector(
   (raw) => raw.loading,
 );
 
+
+const selectCountUnread = createSelector(
+  [selectRaw],
+  (raw) => raw.countUnread,
+);
+
+
+const selectLoadingCount = createSelector(
+  [selectRaw],
+  (raw) => raw.loadingCount,
+);
+
+
 const selectExportLoading = createSelector(
   [selectRaw],
   (raw) => raw.exportLoading,
@@ -126,6 +139,8 @@ const notificationListSelectors = {
   selectRawFilter,
   selectIsAllSelected,
   selectSorter,
+  selectCountUnread,
+selectLoadingCount
 };
 
 export default notificationListSelectors;

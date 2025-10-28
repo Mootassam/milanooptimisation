@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Dates from "src/view/shared/utils/Dates";
 import LoadingModal from "src/shared/LoadingModal";
 import Nodata from "src/view/shared/Nodata";
+import Header from "src/view/layout/Header";
 
 function Transaction() {
   const [active, setActive] = useState("withdraw");
@@ -58,7 +59,13 @@ function Transaction() {
 
   return (
     <div>
-      <SubHeader title="Transaction" path="/profile" />
+
+      <Header
+        title="Transaction"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="order__list">
         <div className="list__transaction">
           <div

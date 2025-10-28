@@ -53,6 +53,31 @@ class NotificationRepository {
   );
 }
 
+  static async countUnread(options: IRepositoryOptions): Promise<{ unread: number }> {
+    const currentUser = MongooseRepository.getCurrentUser(options);
+
+    const count = await MongooseRepository.wrapWithSessionIfExists(
+      Notification(options.database).countDocuments({
+        user: currentUser.id,
+        status: "unread",
+      }),
+      options
+    );
+
+    return { unread: count };
+  }
+
+  static async count(filter, options: IRepositoryOptions) {
+    const currentTenant = MongooseRepository.getCurrentTenant(options);
+
+    return MongooseRepository.wrapWithSessionIfExists(
+      Notification(options.database).countDocuments({
+        ...filter,
+        tenant: currentTenant.id,
+      }),
+      options
+    );
+  }
 
 
 
@@ -98,32 +123,9 @@ class NotificationRepository {
     await this._createAuditLog(AuditLogRepository.DELETE, id, record, options);
   }
 
-  static async count(filter, options: IRepositoryOptions) {
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-
-    return MongooseRepository.wrapWithSessionIfExists(
-      Notification(options.database).countDocuments({
-        ...filter,
-        tenant: currentTenant.id,
-      }),
-      options
-    );
-  }
 
 
-  static async countUnread(options: IRepositoryOptions): Promise<{ unread: number }> {
-    const currentUser = MongooseRepository.getCurrentUser(options);
 
-    const count = await MongooseRepository.wrapWithSessionIfExists(
-      Notification(options.database).countDocuments({
-        user: currentUser.id,
-        status: "unread",
-      }),
-      options
-    );
-
-    return { unread: count };
-  }
   static async findById(id, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
 

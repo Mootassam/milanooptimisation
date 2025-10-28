@@ -4,6 +4,7 @@ import actions from 'src/modules/company/list/companyListActions'
 import selectors from 'src/modules/company/list/companyListSelectors' 
 import { useDispatch, useSelector } from "react-redux";
 import LoadingModal from "src/shared/LoadingModal";
+import Header from "src/view/layout/Header";
 
 function Company() {
   const dispatch = useDispatch();
@@ -21,7 +22,13 @@ function Company() {
 
   return (
     <div>
-      <SubHeader title="Company" path="/" />
+
+        <Header
+        title="Company"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="detaill__company" style={{ whiteSpace: 'pre-line' }}>
       {loading && <LoadingModal />}
         {record && record[0]?.companydetails && (

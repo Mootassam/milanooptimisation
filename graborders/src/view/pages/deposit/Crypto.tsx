@@ -11,6 +11,7 @@ import InputFormItem from "src/shared/form/InputFormItem";
 import { i18n } from "../../../i18n";
 import yupFormSchemas from "src/modules/shared/yup/yupFormSchemas";
 import QRCode from "react-qr-code";
+import Header from "src/view/layout/Header";
 // Validation Schema
 const schema = yup.object().shape({
   amount: yupFormSchemas.decimal(
@@ -123,8 +124,12 @@ function CryptoDeposit() {
   return (
     <>
       {/* Header */}
-      <SubHeader title="USDT Deposit" />
-
+   <Header
+        title="USDT Deposit"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       {/* Success Modal */}
       {showModal && record && (
         <div className="modal-overlay">

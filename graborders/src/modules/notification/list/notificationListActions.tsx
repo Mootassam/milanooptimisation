@@ -1,98 +1,81 @@
 import NotificationService from 'src/modules/notification/notificationService';
 import selectors from 'src/modules/notification/list/notificationListSelectors';
 import Errors from 'src/modules/shared/error/errors';
-
-const prefix = 'CATEGORY_LIST';
+import types from 'src/modules/notification/list/notificationListActionTypes';
+import { Dispatch } from 'redux';
 
 const notificationListActions = {
-  FETCH_STARTED: `${prefix}_FETCH_STARTED`,
-  FETCH_SUCCESS: `${prefix}_FETCH_SUCCESS`,
-  FETCH_ERROR: `${prefix}_FETCH_ERROR`,
-
-  RESETED: `${prefix}_RESETED`,
-  TOGGLE_ONE_SELECTED: `${prefix}_TOGGLE_ONE_SELECTED`,
-  TOGGLE_ALL_SELECTED: `${prefix}_TOGGLE_ALL_SELECTED`,
-  CLEAR_ALL_SELECTED: `${prefix}_CLEAR_ALL_SELECTED`,
-
-  PAGINATION_CHANGED: `${prefix}_PAGINATION_CHANGED`,
-  SORTER_CHANGED: `${prefix}_SORTER_CHANGED`,
-
-  EXPORT_STARTED: `${prefix}_EXPORT_STARTED`,
-  EXPORT_SUCCESS: `${prefix}_EXPORT_SUCCESS`,
-  EXPORT_ERROR: `${prefix}_EXPORT_ERROR`,
-
-  
-
-  doReset: () => async (dispatch) => {
-    dispatch({
-      type: notificationListActions.RESETED,
-    });
-
-    dispatch(notificationListActions.doFetch());
+  doReset: () => async (dispatch: Dispatch) => {
+    dispatch({ type: types.RESETED });
+    dispatch<any>(notificationListActions.doFetch());
   },
 
+  doChangePagination:
+    (pagination: any) => async (dispatch: Dispatch) => {
+      dispatch({
+        type: types.PAGINATION_CHANGED,
+        payload: pagination,
+      });
+      dispatch<any>(notificationListActions.doFetchCurrentFilter());
+    },
 
+  doChangeSort:
+    (sorter: any) => async (dispatch: Dispatch) => {
+      dispatch({
+        type: types.SORTER_CHANGED,
+        payload: sorter,
+      });
+      dispatch<any>(notificationListActions.doFetchCurrentFilter());
+    },
 
-  doChangePagination: (pagination) => async (
-    dispatch,
-    getState,
-  ) => {
-    dispatch({
-      type: notificationListActions.PAGINATION_CHANGED,
-      payload: pagination,
-    });
-
-    dispatch(notificationListActions.doFetchCurrentFilter());
-  },
-
-  doChangeSort: (sorter) => async (dispatch, getState) => {
-    dispatch({
-      type: notificationListActions.SORTER_CHANGED,
-      payload: sorter,
-    });
-
-    dispatch(notificationListActions.doFetchCurrentFilter());
-  },
-
-  doFetchCurrentFilter: () => async (
-    dispatch,
-    getState,
-  ) => {
+  doFetchCurrentFilter: () => async (dispatch: Dispatch, getState: any) => {
     const filter = selectors.selectFilter(getState());
     const rawFilter = selectors.selectRawFilter(getState());
-    dispatch(notificationListActions.doFetch(filter, rawFilter, true));
+    dispatch<any>(notificationListActions.doFetch(filter, rawFilter, true));
   },
 
-  doFetch: (filter?, rawFilter?, keepPagination = false) => async (
-    dispatch,
-    getState,
-  ) => {
+  doFetch:
+    (filter?: any, rawFilter?: any, keepPagination = false) =>
+    async (dispatch: Dispatch, getState: any) => {
+      try {
+        dispatch({
+          type: types.FETCH_STARTED,
+          payload: { filter, rawFilter, keepPagination },
+        });
+
+        const response = await NotificationService.list(
+          filter,
+          selectors.selectOrderBy(getState()),
+          selectors.selectLimit(getState()),
+          selectors.selectOffset(getState()),
+        );
+
+        dispatch({
+          type: types.FETCH_SUCCESS,
+          payload: {
+            rows: response.rows,
+            count: response.count,
+          },
+        });
+      } catch (error) {
+        Errors.handle(error);
+        dispatch({ type: types.FETCH_ERROR });
+      }
+    },
+
+  doCountUnread: () => async (dispatch: Dispatch) => {
     try {
-      dispatch({
-        type: notificationListActions.FETCH_STARTED,
-        payload: { filter, rawFilter, keepPagination },
-      });
+      dispatch({ type: types.COUNT_STARTED });
 
-      const response = await NotificationService.list(
-        filter,
-        selectors.selectOrderBy(getState()),
-        selectors.selectLimit(getState()),
-        selectors.selectOffset(getState()),
-      );
+      const response = await NotificationService.countUnreadByUser();
 
       dispatch({
-        type: notificationListActions.FETCH_SUCCESS,
-        payload: {
-          rows: response.rows,
-          count: response.count,
-        },
+        type: types.COUNT_SUCCESS,
+        payload: response,
       });
     } catch (error) {
       Errors.handle(error);
-
-      dispatch({
-        type: notificationListActions.FETCH_ERROR,
-      });
+      dispatch({ type: types.COUNT_ERROR });
     }
   },
 };

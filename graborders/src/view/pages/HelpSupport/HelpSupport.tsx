@@ -1,11 +1,17 @@
 import React from "react";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 function HelpSupport() {
   return (
     <div className="help-support-container">
-      <SubHeader title="Help & Support" path="/profile" />
       
+       <Header
+        title="Help & Support"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="help-support-section">
         {/* Main Help Card */}
         <div className="help-main-card">

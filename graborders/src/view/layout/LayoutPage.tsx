@@ -5,7 +5,11 @@ import "./styles/style.css";
 function LayoutPage(props) {
   return (
     <div className="">
-      <Header />
+      <Header
+        showLogo={true}
+        showBackButton={false}
+        showNotification={true}
+      />
       <div className="children__content">{props.children}</div>
       <TabBottomNavigator />
     </div>

@@ -2,14 +2,19 @@ import React from "react";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import { useDispatch, useSelector } from "react-redux";
 import authSelectors from "src/modules/auth/authSelectors";
+import Header from "src/view/layout/Header";
 
 function Team() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
 
   return (
     <div className="team-profile-container">
-      <SubHeader title="Profile" path="/profile" />
-
+  <Header
+        title="Profile"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="team-profile-section">
         <div className="team-profile-header">
           <div className="team-profile-avatar">

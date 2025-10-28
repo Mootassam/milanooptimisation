@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import actions from "src/modules/auth/authActions";
 import { i18n } from "../../../i18n";
 import I18nSelect from "src/view/layout/I18nSelect";
+import Header from "src/view/layout/Header";
 
 function Language() {
   const dispatch = useDispatch();
@@ -11,8 +12,12 @@ function Language() {
 
   return (
     <div className="language-settings-container">
-      <SubHeader title="Language Settings" path="/profile" />
-      
+      <Header
+        title="Language Settings"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
 <I18nSelect />
 
       <style>{`

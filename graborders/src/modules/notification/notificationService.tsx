@@ -76,6 +76,19 @@ export default class notificationService {
     return response.data;
   }
 
+
+    static async countUnreadByUser() {
+    const tenantId = AuthCurrentTenant.get();
+
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/countUnreadByUser`,
+    );
+
+    return response.data;
+  }
+
+  
+
   static async list(filter, orderBy, limit, offset) {
     const params = {
       filter,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 import Message from "src/view/shared/message";
 
@@ -88,8 +89,13 @@ function MobileMoneyDeposit() {
     return (
         <>
 
-
-            <SubHeader title="Mobile Money Deposit" />
+ <Header
+        title="Mobile Money Deposit"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
+        
 
             {/* Provider Selection */}
             <div className="provider-section">

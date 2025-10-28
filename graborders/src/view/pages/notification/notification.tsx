@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import notificationListActions from "src/modules/notification/list/notificationListActions";
 import selectors from 'src/modules/notification/list/notificationListSelectors'
+import notificationService from "src/modules/notification/notificationService";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 function Notification() {
@@ -13,6 +15,8 @@ function Notification() {
 
   useEffect(() => {
     dispatch(notificationListActions.doFetch());
+
+
   }, [dispatch]);
 
   // Filter notifications based on status
@@ -145,8 +149,12 @@ const getNotificationInfo = (type) => {
   return (
     <>
       {/* Header Section */}
-      <SubHeader title="Notifications"  />
-      
+        <Header
+        title="Notifications"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       {/* Filter Tabs */}
       <div className="filter-tabs">
         <div 

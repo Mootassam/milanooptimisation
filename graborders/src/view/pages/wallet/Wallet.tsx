@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import actions from "src/modules/auth/authActions";
 import InputFormItem from "src/shared/form/InputFormItem";
 import selector from "src/modules/auth/authSelectors";
+import Header from "src/view/layout/Header";
 
 const schema = yup.object().shape({
   trc20: yupFormSchemas.string(i18n("user.fields.trc20"), {
@@ -49,8 +50,12 @@ function Wallet() {
 
   return (
     <div className="wallet-settings-container">
-      <SubHeader title="Wallet" path="/profile" />
-      
+       <Header
+        title="Wallet"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="wallet-settings-section">
         <div className="wallet-settings-card">
           {/* Header Section */}

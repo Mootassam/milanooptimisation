@@ -4,6 +4,7 @@ import actions from 'src/modules/company/list/companyListActions'
 import selectors from 'src/modules/company/list/companyListSelectors' 
 import { useDispatch, useSelector } from "react-redux";
 import {Link} from 'react-router-dom'
+import Header from "src/view/layout/Header";
 
 function Tc() {
   const dispatch = useDispatch();
@@ -21,8 +22,13 @@ function Tc() {
 
   return (
     <>
-      <SubHeader title="Terms & Conditions"  />
       
+          <Header
+        title="Terms & Conditions"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="tc-container">
         {/* Table of Contents */}
         <div className="tc-section">

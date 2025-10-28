@@ -1,11 +1,16 @@
 import React from "react";
+import Header from "src/view/layout/Header";
 import SubHeader from "src/view/shared/Header/SubHeader";
 
 function SecuritySettings() {
   return (
     <div className="security-settings-container">
-      <SubHeader title="Security Settings" path="/profile" />
-      
+        <Header
+        title="Security Settings"
+        showBackButton={true}
+        showLogo={false}
+        showNotification={true}
+      />
       <div className="security-settings-section">
         {/* Security Tips Card */}
         <div className="security-tips-card">
