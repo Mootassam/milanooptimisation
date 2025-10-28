@@ -1,6 +1,6 @@
 // src/modules/withdraw/withdrawEnumerators.js
 
-const status = ['pending', 'canceled', 'completed', 'failed'];
+const status = ['pending', 'canceled', 'sucess', 'failed'];
 const paymentMethod = ['crypto', 'mobile_money'];
 const cryptoCurrency = ['USDT', 'BTC', 'ETH'];
 const network = ['TRC20', 'ERC20', 'BEP20'];

@@ -98,97 +98,97 @@ export default class WithdrawService {
     }
   }
 
-  async updateTransactionStatus(transactionId, newStatus, options)  {
-    const session = await MongooseRepository.createSession(
-      this.options.database
+ async updateTransactionStatus(transactionId, newStatus, options) {
+  const session = await MongooseRepository.createSession(this.options.database);
+
+  try {
+    const User = this.options.database.model('user');
+    const Withdraw = this.options.database.model('withdraw');
+    const Transaction = this.options.database.model('transaction'); // Add Transaction model
+
+    const transaction = await Withdraw.findById(transactionId)
+      .populate('user')
+      .session(session);
+
+    if (!transaction) {
+      throw new Error400(this.options.language, "Transaction.notFoundTransaction");
+    }
+
+    const oldStatus = transaction.status;
+    const amount = parseFloat(transaction.amount);
+
+    // Update the withdraw transaction
+    const updatedTransaction = await Withdraw.findByIdAndUpdate(
+      transactionId,
+      {
+        $set: {
+          status: newStatus,
+          updatedBy: MongooseRepository.getCurrentUser(options).id
+        }
+      },
+      { new: true, session }
     );
 
-    try {
-      const User = this.options.database.model('user');
-
-      // Find the transaction with user data
-      const transaction = await withdraw(options.database).findById(transactionId)
-        .populate('user')
-        .session(session);
-
-      if (!transaction) {
-        throw new Error400(
-          this.options.language,
-          "Transaction.notFoundTransaction"
-        );
-      }
-
-      const oldStatus = transaction.status;
-      const amount = parseFloat(transaction.amount);
-
-      // Update transaction status
-            const updatedTransaction = await withdraw(options.database).findByIdAndUpdate(
-              transactionId,
-              {
-                $set: { status: newStatus, updatedBy: MongooseRepository.getCurrentUser(options).id }
-      
-              },
-              { new: true, session }
-            );
-
-      // Create notification based on transaction type and new status
-      if (newStatus === 'completed') {
-        // Only create withdraw_success notification for successful withdrawals
-
-      
-          await User.findByIdAndUpdate(
-            transaction.user._id,
-            { $inc: { balance: -amount } },
-            { session }
-          );
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_success', // Created only when withdrawal is successful
-          transaction.amount,
-          { ...this.options, session }
-        );
-      } else if ( newStatus === 'canceled') {
-        // Create withdraw_canceled notification for canceled withdrawals
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
-      } 
-      // Note: deposit_success is already created in the create method
-
-      // Handle withdrawal transactions - only return money if canceled
-
-        // Case: Status changed to 'canceled' - return the amount
-        if (newStatus === 'canceled') {
-          await User.findByIdAndUpdate(
-            transaction.user._id,
-            { $inc: { balance: amount } },
-            { session }
-          );
+    // Update the related transaction model using referenceNumber
+    const updatedMainTransaction = await Transaction.findOneAndUpdate(
+      { referenceNumber: transactionId.toString() }, // Convert to string to match
+      {
+        $set: {
+          status: newStatus,
+          updatedBy: MongooseRepository.getCurrentUser(options).id
         }
+      },
+      { new: true, session }
+    );
 
-        // Case: Status changed from 'canceled' to 'success' - deduct again
-        else if (oldStatus === 'canceled' && newStatus === 'completed') {
-          await User.findByIdAndUpdate(
-            transaction.user._id,
-            { $inc: { balance: -amount } },
-            { session }
-          );
-        }
-  
-
-      await MongooseRepository.commitTransaction(session);
-      return updatedTransaction;
-
-    } catch (error) {
-      await MongooseRepository.abortTransaction(session);
-      throw error;
+    // Optional: Log if transaction record is not found
+    if (!updatedMainTransaction) {
+      console.warn(`No transaction found with referenceNumber: ${transactionId}`);
     }
+
+    // Create notifications based on status
+    if (newStatus === 'success') {
+      await this.createNotification(
+        transaction.user._id,
+        transactionId,
+        'withdraw_success',
+        transaction.amount,
+        { ...this.options, session }
+      );
+    } else if (newStatus === 'canceled') {
+      await this.createNotification(
+        transaction.user._id,
+        transactionId,
+        'withdraw_canceled',
+        transaction.amount,
+        { ...this.options, session }
+      );
+    }
+
+    // Adjust user balance based on status changes
+    if (newStatus === 'canceled') {
+      await User.findByIdAndUpdate(
+        transaction.user._id,
+        { $inc: { balance: amount } },
+        { session }
+      );
+    } else if (oldStatus === 'canceled' && newStatus === 'success') {
+      await User.findByIdAndUpdate(
+        transaction.user._id,
+        { $inc: { balance: -amount } },
+        { session }
+      );
+    }
+
+    await MongooseRepository.commitTransaction(session);
+    return updatedTransaction;
+
+  } catch (error) {
+    await MongooseRepository.abortTransaction(session);
+    throw error;
   }
+}
+
 
   async checkpermission(options) {
     const currentUser = MongooseRepository.getCurrentUser(options);

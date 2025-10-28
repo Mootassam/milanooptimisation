@@ -107,7 +107,7 @@ function WithdrawListTable(props) {
   // Get status color and display text
   const getStatusInfo = (status) => {
     switch (status) {
-      case 'completed':
+      case 'success':
         return {
           color: '#48BB78',
           bgColor: '#F0FFF4',
@@ -339,7 +339,7 @@ function WithdrawListTable(props) {
                       <div className="status-buttons">
                         <button
                           className="btn-action success"
-                          onClick={() => handleStatusChange(row.id, 'completed')}
+                          onClick={() => handleStatusChange(row.id, 'success')}
                         >
                           <i className="fa-solid fa-check"></i>
                           Complete

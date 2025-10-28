@@ -8,8 +8,7 @@ import Transaction from "../models/transaction";
 
 
 class TransactionRepository {
-  static async create(data, options: IRepositoryOptions) {
-    console.log("🚀 ~ TransactionRepository ~ create ~ data:", data)
+  static async create(data, id , options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
     const [record] = await Transaction(options.database).create(
@@ -19,6 +18,7 @@ class TransactionRepository {
           tenant: currentTenant.id,
           createdBy: currentUser.id,
           updatedBy: currentUser.id,
+          referenceNumber: id
         },
       ],
       options
@@ -34,7 +34,26 @@ class TransactionRepository {
     return this.findById(record.id, options);
   }
 
-  
+static async referenceNumber() {
+  const prefix = "MONO";
+  const now = new Date();
+
+  // Format date and time as YYYYMMDDHHMMSS
+  const timestamp = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0") +
+    String(now.getHours()).padStart(2, "0") +
+    String(now.getMinutes()).padStart(2, "0") +
+    String(now.getSeconds()).padStart(2, "0");
+
+  // Add a short random 4-digit number for extra uniqueness
+  const random = Math.floor(1000 + Math.random() * 9000);
+
+  return `${prefix}-${timestamp}-${random}`;
+}
+
+
+
 
 
   static async update(id, data, options: IRepositoryOptions) {
@@ -92,7 +111,7 @@ class TransactionRepository {
   }
 
 
-  
+
 
   static async findById(id, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);

@@ -22,6 +22,7 @@ export default (database) => {
         enum: ["crypto", "mtn", "airtel", "telecel", "orange"],
         required: true,
       },
+      
 
       status: {
         type: String,
