@@ -7,8 +7,7 @@ import selectors from "src/modules/transaction/list/transactionListSelectors";
 
 function TransactionHistory() {
   const dispatch = useDispatch();
-  const [typeFilter, setTypeFilter] = useState("all"); // all, deposit, withdraw
-  const [statusFilter, setStatusFilter] = useState("all"); // all, success, pending, canceled
+  const [typeFilter, setTypeFilter] = useState("all");
   
   const records = useSelector(selectors.selectRows);
   const loading = useSelector(selectors.selectLoading);
@@ -17,142 +16,220 @@ function TransactionHistory() {
     dispatch(actions.doFetch());
   }, [dispatch]);
 
-  // Filter transactions based on selected filters
+  // Filter transactions based on selected type
   const filteredTransactions = records.filter(transaction => {
-    const typeMatch = typeFilter === "all" || transaction.type === typeFilter;
-    const statusMatch = statusFilter === "all" || transaction.status === statusFilter;
-    return typeMatch && statusMatch;
+    return typeFilter === "all" || transaction.type === typeFilter;
   });
 
-  // Get payment method icon and color
-  const getPaymentMethodInfo = (method) => {
+  // Get transaction type icon and color
+  const getTransactionTypeInfo = (type) => {
+    switch (type) {
+      case "deposit":
+        return { 
+          icon: "fas fa-arrow-down", 
+          color: "#27ae60", 
+          bgColor: "#e8f5e9",
+          label: "Deposit"
+        };
+      case "withdraw":
+        return { 
+          icon: "fas fa-arrow-up", 
+          color: "#e74c3c", 
+          bgColor: "#ffebee",
+          label: "Withdraw"
+        };
+      default:
+        return { 
+          icon: "fas fa-exchange-alt", 
+          color: "#7b8796", 
+          bgColor: "#f5f6f7",
+          label: "Transaction"
+        };
+    }
+  };
+
+  // Get payment method icon
+  const getPaymentMethodIcon = (method) => {
     switch (method) {
       case "trc20":
-        return { icon: "fas fa-coins", color: "#f7931a", label: "USDT TRC20" };
+        return "fab fa-bitcoin";
       case "mtn":
-        return { icon: "fas fa-sim-card", color: "#ffcc00", label: "MTN Mobile Money" };
+        return "fas fa-sim-card";
       case "airtel":
-        return { icon: "fas fa-wifi", color: "#e60000", label: "Airtel Money" };
+        return "fas fa-wifi";
       case "telecel":
-        return { icon: "fas fa-broadcast-tower", color: "#00aaff", label: "Telecel Money" };
+        return "fas fa-broadcast-tower";
       case "orange":
-        return { icon: "fas fa-bolt", color: "#ff6600", label: "Orange Money" };
+        return "fas fa-bolt";
       default:
-        return { icon: "fas fa-money-bill", color: "#7b8796", label: "Payment" };
+        return "fas fa-money-bill";
     }
   };
 
-  // Get status badge color
-  const getStatusColor = (status) => {
+  // Get status badge color and icon
+  const getStatusInfo = (status) => {
     switch (status) {
-      case "success": return "#27ae60";
-      case "pending": return "#f39c12";
-      case "canceled": return "#e74c3c";
-      default: return "#7b8796";
+      case "success": 
+        return { 
+          color: "#27ae60", 
+          icon: "fas fa-check-circle",
+          label: "Completed"
+        };
+      case "pending": 
+        return { 
+          color: "#f39c12", 
+          icon: "fas fa-clock",
+          label: "Processing"
+        };
+      case "canceled": 
+        return { 
+          color: "#e74c3c", 
+          icon: "fas fa-times-circle",
+          label: "Canceled"
+        };
+      default: 
+        return { 
+          color: "#7b8796", 
+          icon: "fas fa-info-circle",
+          label: "Unknown"
+        };
     }
   };
 
-  // Get status icon
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "success": return "fas fa-check-circle";
-      case "pending": return "fas fa-clock";
-      case "canceled": return "fas fa-times-circle";
-      default: return "fas fa-info-circle";
-    }
-  };
-
-  // Format date
+  // Format date to relative time or absolute
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
+    
     const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return "Just now";
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else if (diffInHours < 168) {
+      const days = Math.floor(diffInHours / 24);
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
   };
 
-  // Calculate summary data
-  const summaryData = {
-    deposit: filteredTransactions
-      .filter(t => t.type === "deposit" && t.status === "success")
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0),
-    withdraw: filteredTransactions
-      .filter(t => t.type === "withdraw" && t.status === "success")
-      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  // Format amount with proper sign
+  const formatAmount = (type, amount) => {
+    const sign = type === "deposit" ? "+" : "-";
+    return `${sign}$${parseFloat(amount).toFixed(2)}`;
   };
 
   return (
     <>
       <SubHeader title="Transaction History" />
 
-   
- 
+      {/* Quick Type Filter */}
+      <div className="quick-filter-section">
+        <div className="filter-buttons">
+          <button
+            className={`filter-btn ${typeFilter === "all" ? "active" : ""}`}
+            onClick={() => setTypeFilter("all")}
+          >
+            <i className="fas fa-list" />
+            All
+          </button>
+          <button
+            className={`filter-btn ${typeFilter === "deposit" ? "active" : ""}`}
+            onClick={() => setTypeFilter("deposit")}
+          >
+            <i className="fas fa-arrow-down" />
+            Deposits
+          </button>
+          <button
+            className={`filter-btn ${typeFilter === "withdraw" ? "active" : ""}`}
+            onClick={() => setTypeFilter("withdraw")}
+          >
+            <i className="fas fa-arrow-up" />
+            Withdrawals
+          </button>
+        </div>
+      </div>
 
       {/* Transactions List */}
       <div className="transactions-section">
         <div className="section-header">
           <div className="section-title">
-            <i className="fas fa-history" />
+            <i className="fas fa-receipt" />
             Recent Transactions
           </div>
           <div className="transaction-count">
-            {filteredTransactions.length} transactions
+            {filteredTransactions.length} {filteredTransactions.length === 1 ? 'item' : 'items'}
           </div>
         </div>
 
         {loading ? (
           <div className="loading-state">
-            <i className="fas fa-spinner fa-spin" />
-            <p>Loading transactions...</p>
+            <div className="loading-spinner">
+              <i className="fas fa-spinner fa-spin" />
+            </div>
+            <p>Loading your transactions...</p>
+            <span>Please wait a moment</span>
           </div>
         ) : filteredTransactions.length === 0 ? (
           <div className="empty-state">
-            <i className="fas fa-receipt" />
+            <div className="empty-icon">
+              <i className="fas fa-receipt" />
+            </div>
             <p>No transactions found</p>
-            <span>Try adjusting your filters</span>
+            <span>When you make transactions, they'll appear here</span>
           </div>
         ) : (
           <div className="transactions-list">
             {filteredTransactions.map((transaction) => {
-              const methodInfo = getPaymentMethodInfo(transaction.paymentMethod);
+              const typeInfo = getTransactionTypeInfo(transaction.type);
+              const statusInfo = getStatusInfo(transaction.status);
+              
               return (
                 <div key={transaction._id || transaction.id} className="transaction-item">
                   <div
-                    className="transaction-icon"
+                    className="transaction-type-icon"
                     style={{ 
-                      backgroundColor: `${methodInfo.color}20`, 
-                      color: methodInfo.color 
+                      backgroundColor: typeInfo.bgColor, 
+                      color: typeInfo.color 
                     }}
                   >
-                    <i className={methodInfo.icon} />
+                    <i className={typeInfo.icon} />
                   </div>
 
-                  <div className="transaction-details">
-                    <div className="transaction-main">
+                  <div className="transaction-content">
+                    <div className="transaction-header">
                       <div className="transaction-info">
-                        <div className="transaction-description">
-                          {methodInfo.label}
+                        <div className="transaction-title">
+                          {typeInfo.label}
                         </div>
-                        <div className="transaction-type">
-                          {transaction.type} • {transaction.referenceNumber}
+                        <div className="transaction-meta">
+                          <div className="payment-method">
+                            <i className={getPaymentMethodIcon(transaction.paymentMethod)} />
+                            {transaction.paymentMethod}
+                          </div>
+                          <div className="transaction-date">
+                            {formatDate(transaction.datetransaction || transaction.createdAt)}
+                          </div>
                         </div>
                       </div>
                       <div className={`transaction-amount ${transaction.type}`}>
-                        {transaction.type === "deposit" ? "+" : "-"}${transaction.amount}
+                        {formatAmount(transaction.type, transaction.amount)}
                       </div>
                     </div>
 
-                    <div className="transaction-meta">
-                      <div className="transaction-date">
-                        {formatDate(transaction.datetransaction || transaction.createdAt)}
+                    <div className="transaction-footer">
+                      <div className="transaction-reference">
+                        Ref: {transaction.referenceNumber}
                       </div>
                       <div
                         className="transaction-status"
-                        style={{ color: getStatusColor(transaction.status) }}
+                        style={{ color: statusInfo.color }}
                       >
-                        <i className={getStatusIcon(transaction.status)} />
-                        {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                        <i className={statusInfo.icon} />
+                        {statusInfo.label}
                       </div>
                     </div>
                   </div>
@@ -164,118 +241,53 @@ function TransactionHistory() {
       </div>
 
       <style>{`
-        /* Summary Cards */
-        .summary-cards {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 15px;
-          padding: 20px 15px;
-        }
-        
-        .summary-card {
-          background: white;
-          border-radius: 16px;
-          padding: 20px;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .summary-icon {
-          width: 50px;
-          height: 50px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-        }
-        
-        .summary-icon.deposit {
-          background: #e8f5e9;
-          color: #2e7d32;
-        }
-        
-        .summary-icon.withdraw {
-          background: #ffebee;
-          color: #c62828;
-        }
-        
-        .summary-label {
-          font-size: 12px;
-          color: #7b8796;
-          margin-bottom: 5px;
-        }
-        
-        .summary-amount {
-          font-size: 18px;
-          font-weight: 700;
-          color: #0f2161;
-        }
-        
-        /* Filter Section */
-        .filter-section {
-          background: white;
-          margin: 0 15px 20px;
-          padding: 20px;
-          border-radius: 20px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .filter-group {
-          margin-bottom: 20px;
-        }
-        
-        .filter-group:last-child {
-          margin-bottom: 0;
-        }
-        
-        .filter-label {
-          font-size: 14px;
-          font-weight: 600;
-          color: #0f2161;
-          margin-bottom: 12px;
+        /* Quick Filter Section */
+        .quick-filter-section {
+          padding: 20px 0px 0;
         }
         
         .filter-buttons {
           display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
+          gap: 8px;
+          background: #f8f9fa;
+          padding: 6px;
+          border-radius: 16px;
         }
         
         .filter-btn {
-          padding: 10px 16px;
-          border: 2px solid #f0f4ff;
-          background: white;
+          flex: 1;
+          padding: 12px 16px;
+          border: none;
+          background: transparent;
           border-radius: 12px;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 600;
           color: #7b8796;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 6px;
-          transition: all 0.2s ease;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
         }
         
         .filter-btn.active {
-          background: #0f2161;
-          color: white;
-          border-color: #0f2161;
+          background: white;
+          color: #0f2161;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
-        .filter-btn:active {
-          transform: scale(0.95);
+        .filter-btn i {
+          font-size: 12px;
         }
         
         /* Transactions Section */
         .transactions-section {
           background: white;
-          margin: 25px 0px 80px;
-          border-radius: 20px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+          margin: 15px 0px 80px;
+          border-radius: 20px 20px 0 0;
           overflow: hidden;
+          min-height: 60vh;
         }
         
         .section-header {
@@ -304,8 +316,9 @@ function TransactionHistory() {
           font-size: 12px;
           color: #7b8796;
           background: #f8f9fa;
-          padding: 4px 10px;
+          padding: 6px 12px;
           border-radius: 12px;
+          font-weight: 600;
         }
         
         .transactions-list {
@@ -314,10 +327,11 @@ function TransactionHistory() {
         
         .transaction-item {
           display: flex;
-          align-items: center;
-          padding: 18px 20px;
+          align-items: flex-start;
+          padding: 20px;
           border-bottom: 1px solid #f5f6f7;
           transition: all 0.2s ease;
+          gap: 15px;
         }
         
         .transaction-item:active {
@@ -328,140 +342,214 @@ function TransactionHistory() {
           border-bottom: none;
         }
         
-        .transaction-icon {
-          width: 45px;
-          height: 45px;
-          border-radius: 12px;
+        .transaction-type-icon {
+          width: 50px;
+          height: 50px;
+          border-radius: 14px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18px;
-          margin-right: 15px;
           flex-shrink: 0;
+          transition: all 0.3s ease;
         }
         
-        .transaction-details {
+        .transaction-item:active .transaction-type-icon {
+          transform: scale(0.95);
+        }
+        
+        .transaction-content {
           flex: 1;
+          min-width: 0;
         }
         
-        .transaction-main {
+        .transaction-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          margin-bottom: 8px;
+          margin-bottom: 12px;
+          gap: 10px;
         }
         
         .transaction-info {
           flex: 1;
+          min-width: 0;
         }
         
-        .transaction-description {
-          font-weight: 600;
-          color: #0f2161;
-          font-size: 15px;
-          margin-bottom: 4px;
-        }
-        
-        .transaction-type {
-          font-size: 12px;
-          color: #7b8796;
-          text-transform: capitalize;
-        }
-        
-        .transaction-amount {
+        .transaction-title {
           font-weight: 700;
+          color: #0f2161;
           font-size: 16px;
-          margin-left: 10px;
-        }
-        
-        .transaction-amount.deposit {
-          color: #2e7d32;
-        }
-        
-        .transaction-amount.withdraw {
-          color: #c62828;
+          margin-bottom: 6px;
         }
         
         .transaction-meta {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 12px;
+          color: #7b8796;
+        }
+        
+        .payment-method {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          text-transform: capitalize;
+        }
+        
+        .payment-method i {
+          font-size: 10px;
+        }
+        
+        .transaction-amount {
+          font-weight: 800;
+          font-size: 17px;
+          flex-shrink: 0;
+        }
+        
+        .transaction-amount.deposit {
+          color: #27ae60;
+        }
+        
+        .transaction-amount.withdraw {
+          color: #e74c3c;
+        }
+        
+        .transaction-footer {
           display: flex;
           justify-content: space-between;
           align-items: center;
         }
         
-        .transaction-date {
-          font-size: 12px;
-          color: #7b8796;
+        .transaction-reference {
+          font-size: 11px;
+          color: #a0a4ab;
+          font-family: monospace;
         }
         
         .transaction-status {
-          font-size: 11px;
-          font-weight: 600;
+          font-size: 12px;
+          font-weight: 700;
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .transaction-status i {
+          font-size: 10px;
         }
         
         /* Loading State */
         .loading-state {
-          padding: 60px 20px;
+          padding: 80px 20px;
           text-align: center;
           color: #7b8796;
         }
         
-        .loading-state i {
-          font-size: 30px;
-          margin-bottom: 15px;
+        .loading-spinner {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 20px;
+          background: #f0f4ff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .loading-spinner i {
+          font-size: 24px;
           color: #0f2161;
         }
         
         .loading-state p {
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #0f2161;
+        }
+        
+        .loading-state span {
           font-size: 14px;
           color: #7b8796;
         }
         
         /* Empty State */
         .empty-state {
-          padding: 60px 20px;
+          padding: 80px 20px;
           text-align: center;
           color: #7b8796;
         }
         
-        .empty-state i {
-          font-size: 50px;
-          margin-bottom: 15px;
-          opacity: 0.5;
+        .empty-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 20px;
+          background: #f8f9fa;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .empty-icon i {
+          font-size: 32px;
+          color: #a0a4ab;
         }
         
         .empty-state p {
-          font-size: 16px;
-          font-weight: 600;
+          font-size: 18px;
+          font-weight: 700;
           margin-bottom: 8px;
           color: #0f2161;
         }
         
         .empty-state span {
           font-size: 14px;
+          line-height: 1.4;
+        }
+        
+        /* Enhanced animations */
+        .transaction-item {
+          animation: fadeInUp 0.5s ease forwards;
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        
+        @keyframes fadeInUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         /* Responsive Design */
         @media (max-width: 340px) {
-          .summary-cards {
-            grid-template-columns: 1fr;
+          .transaction-item {
+            padding: 15px;
+            gap: 12px;
           }
           
-          .filter-buttons {
-            gap: 8px;
+          .transaction-type-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 16px;
+          }
+          
+          .transaction-title {
+            font-size: 15px;
+          }
+          
+          .transaction-amount {
+            font-size: 16px;
           }
           
           .filter-btn {
-            padding: 8px 12px;
-            font-size: 12px;
-          }
-          
-          .transaction-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
+            padding: 10px 12px;
+            font-size: 13px;
           }
         }
       `}</style>
