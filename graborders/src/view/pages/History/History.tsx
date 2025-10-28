@@ -1,248 +1,169 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import SubHeader from "src/view/shared/Header/SubHeader";
+import actions from "src/modules/transaction/list/transactionListActions";
+import selectors from "src/modules/transaction/list/transactionListSelectors";
 
 function TransactionHistory() {
-    const [filter, setFilter] = useState("all"); // all, deposit, withdraw
-    const [statusFilter, setStatusFilter] = useState("all"); // all, completed, pending, failed
+  const dispatch = useDispatch();
+  const [typeFilter, setTypeFilter] = useState("all"); // all, deposit, withdraw
+  const [statusFilter, setStatusFilter] = useState("all"); // all, success, pending, canceled
+  
+  const records = useSelector(selectors.selectRows);
+  const loading = useSelector(selectors.selectLoading);
 
-    // Sample transaction data
-    const transactions = [
-        {
-            id: 1,
-            type: "deposit",
-            method: "crypto",
-            amount: 250.75,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-15 14:30:25",
-            description: "USDT Deposit",
-            icon: "fas fa-coins",
-            color: "#f7931a"
-        },
-        {
-            id: 2,
-            type: "deposit",
-            method: "mtn",
-            amount: 100.00,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-14 10:15:42",
-            description: "MTN Mobile Money",
-            icon: "fas fa-sim-card",
-            color: "#ffcc00"
-        },
-        {
-            id: 3,
-            type: "withdraw",
-            method: "bank",
-            amount: 150.50,
-            currency: "USD",
-            status: "pending",
-            date: "2024-01-14 09:20:15",
-            description: "Bank Transfer",
-            icon: "fas fa-university",
-            color: "#0f2161"
-        },
-        {
-            id: 4,
-            type: "deposit",
-            method: "orange",
-            amount: 75.25,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-13 16:45:30",
-            description: "Orange Money",
-            icon: "fas fa-bolt",
-            color: "#ff6600"
-        },
-        {
-            id: 5,
-            type: "withdraw",
-            method: "crypto",
-            amount: 200.00,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-12 11:30:18",
-            description: "USDT Withdrawal",
-            icon: "fas fa-coins",
-            color: "#f7931a"
-        },
-        {
-            id: 6,
-            type: "deposit",
-            method: "airtel",
-            amount: 50.00,
-            currency: "USD",
-            status: "failed",
-            date: "2024-01-12 08:15:55",
-            description: "Airtel Money",
-            icon: "fas fa-wifi",
-            color: "#e60000"
-        },
-        {
-            id: 7,
-            type: "deposit",
-            method: "telecel",
-            amount: 125.80,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-11 13:20:33",
-            description: "Telecel Money",
-            icon: "fas fa-broadcast-tower",
-            color: "#00aaff"
-        },
-        {
-            id: 8,
-            type: "withdraw",
-            method: "mtn",
-            amount: 80.00,
-            currency: "USD",
-            status: "completed",
-            date: "2024-01-10 15:40:12",
-            description: "MTN Mobile Money",
-            icon: "fas fa-sim-card",
-            color: "#ffcc00"
-        }
-    ];
+  useEffect(() => {
+    dispatch(actions.doFetch());
+  }, [dispatch]);
 
-    // Filter transactions based on selected filters
-    const filteredTransactions = transactions.filter(transaction => {
-        const typeMatch = filter === "all" || transaction.type === filter;
-        const statusMatch = statusFilter === "all" || transaction.status === statusFilter;
-        return typeMatch && statusMatch;
+  // Filter transactions based on selected filters
+  const filteredTransactions = records.filter(transaction => {
+    const typeMatch = typeFilter === "all" || transaction.type === typeFilter;
+    const statusMatch = statusFilter === "all" || transaction.status === statusFilter;
+    return typeMatch && statusMatch;
+  });
+
+  // Get payment method icon and color
+  const getPaymentMethodInfo = (method) => {
+    switch (method) {
+      case "trc20":
+        return { icon: "fas fa-coins", color: "#f7931a", label: "USDT TRC20" };
+      case "mtn":
+        return { icon: "fas fa-sim-card", color: "#ffcc00", label: "MTN Mobile Money" };
+      case "airtel":
+        return { icon: "fas fa-wifi", color: "#e60000", label: "Airtel Money" };
+      case "telecel":
+        return { icon: "fas fa-broadcast-tower", color: "#00aaff", label: "Telecel Money" };
+      case "orange":
+        return { icon: "fas fa-bolt", color: "#ff6600", label: "Orange Money" };
+      default:
+        return { icon: "fas fa-money-bill", color: "#7b8796", label: "Payment" };
+    }
+  };
+
+  // Get status badge color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "success": return "#27ae60";
+      case "pending": return "#f39c12";
+      case "canceled": return "#e74c3c";
+      default: return "#7b8796";
+    }
+  };
+
+  // Get status icon
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "success": return "fas fa-check-circle";
+      case "pending": return "fas fa-clock";
+      case "canceled": return "fas fa-times-circle";
+      default: return "fas fa-info-circle";
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
     });
+  };
 
-    // Get status badge color
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "completed": return "#27ae60";
-            case "pending": return "#f39c12";
-            case "failed": return "#e74c3c";
-            default: return "#7b8796";
-        }
-    };
+  // Calculate summary data
+  const summaryData = {
+    deposit: filteredTransactions
+      .filter(t => t.type === "deposit" && t.status === "success")
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0),
+    withdraw: filteredTransactions
+      .filter(t => t.type === "withdraw" && t.status === "success")
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
+  };
 
-    // Get status icon
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case "completed": return "fas fa-check-circle";
-            case "pending": return "fas fa-clock";
-            case "failed": return "fas fa-times-circle";
-            default: return "fas fa-info-circle";
-        }
-    };
+  return (
+    <>
+      <SubHeader title="Transaction History" />
 
-    // Format date
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
+   
+ 
 
+      {/* Transactions List */}
+      <div className="transactions-section">
+        <div className="section-header">
+          <div className="section-title">
+            <i className="fas fa-history" />
+            Recent Transactions
+          </div>
+          <div className="transaction-count">
+            {filteredTransactions.length} transactions
+          </div>
+        </div>
 
+        {loading ? (
+          <div className="loading-state">
+            <i className="fas fa-spinner fa-spin" />
+            <p>Loading transactions...</p>
+          </div>
+        ) : filteredTransactions.length === 0 ? (
+          <div className="empty-state">
+            <i className="fas fa-receipt" />
+            <p>No transactions found</p>
+            <span>Try adjusting your filters</span>
+          </div>
+        ) : (
+          <div className="transactions-list">
+            {filteredTransactions.map((transaction) => {
+              const methodInfo = getPaymentMethodInfo(transaction.paymentMethod);
+              return (
+                <div key={transaction._id || transaction.id} className="transaction-item">
+                  <div
+                    className="transaction-icon"
+                    style={{ 
+                      backgroundColor: `${methodInfo.color}20`, 
+                      color: methodInfo.color 
+                    }}
+                  >
+                    <i className={methodInfo.icon} />
+                  </div>
 
-    return (
-        <>
-
-            <SubHeader title="Transaction History" />
-
-         
-
-            {/* Transactions List */}
-            <div className="transactions-section">
-                <div className="section-header">
-                    <div className="section-title">
-                        <i className="fas fa-history" />
-                        Recent Transactions
+                  <div className="transaction-details">
+                    <div className="transaction-main">
+                      <div className="transaction-info">
+                        <div className="transaction-description">
+                          {methodInfo.label}
+                        </div>
+                        <div className="transaction-type">
+                          {transaction.type} • {transaction.referenceNumber}
+                        </div>
+                      </div>
+                      <div className={`transaction-amount ${transaction.type}`}>
+                        {transaction.type === "deposit" ? "+" : "-"}${transaction.amount}
+                      </div>
                     </div>
-                    <div className="transaction-count">
-                        {filteredTransactions.length} transactions
+
+                    <div className="transaction-meta">
+                      <div className="transaction-date">
+                        {formatDate(transaction.datetransaction || transaction.createdAt)}
+                      </div>
+                      <div
+                        className="transaction-status"
+                        style={{ color: getStatusColor(transaction.status) }}
+                      >
+                        <i className={getStatusIcon(transaction.status)} />
+                        {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                      </div>
                     </div>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-                {filteredTransactions.length === 0 ? (
-                    <div className="empty-state">
-                        <i className="fas fa-receipt" />
-                        <p>No transactions found</p>
-                        <span>Try adjusting your filters</span>
-                    </div>
-                ) : (
-                    <div className="transactions-list">
-                        {filteredTransactions.map((transaction) => (
-                            <div key={transaction.id} className="transaction-item">
-                                <div
-                                    className="transaction-icon"
-                                    style={{ backgroundColor: `${transaction.color}20`, color: transaction.color }}
-                                >
-                                    <i className={transaction.icon} />
-                                </div>
-
-                                <div className="transaction-details">
-                                    <div className="transaction-main">
-                                        <div className="transaction-description">
-                                            {transaction.description}
-                                        </div>
-                                        <div className={`transaction-amount ${transaction.type}`}>
-                                            {transaction.type === "deposit" ? "+" : "-"}${transaction.amount}
-                                        </div>
-                                    </div>
-
-                                    <div className="transaction-meta">
-                                        <div className="transaction-date">
-                                            {formatDate(transaction.date)}
-                                        </div>
-                                        <div
-                                            className="transaction-status"
-                                            style={{ color: getStatusColor(transaction.status) }}
-                                        >
-                                            <i className={getStatusIcon(transaction.status)} />
-                                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-
-
-            <style>{`
-        /* Header Styles */
-        .history-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 15px 10px;
-          background: white;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .back-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #f8f9fa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #0f2161;
-          text-decoration: none;
-          font-size: 18px;
-        }
-        
-        .history-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #0f2161;
-          margin: 0;
-        }
-        
-        .header-placeholder {
-          width: 40px;
-        }
-        
+      <style>{`
         /* Summary Cards */
         .summary-cards {
           display: grid;
@@ -388,7 +309,6 @@ function TransactionHistory() {
         }
         
         .transactions-list {
-        //   max-height: 500px;
           overflow-y: auto;
         }
         
@@ -431,15 +351,27 @@ function TransactionHistory() {
           margin-bottom: 8px;
         }
         
+        .transaction-info {
+          flex: 1;
+        }
+        
         .transaction-description {
           font-weight: 600;
           color: #0f2161;
           font-size: 15px;
+          margin-bottom: 4px;
+        }
+        
+        .transaction-type {
+          font-size: 12px;
+          color: #7b8796;
+          text-transform: capitalize;
         }
         
         .transaction-amount {
           font-weight: 700;
           font-size: 16px;
+          margin-left: 10px;
         }
         
         .transaction-amount.deposit {
@@ -469,6 +401,24 @@ function TransactionHistory() {
           gap: 4px;
         }
         
+        /* Loading State */
+        .loading-state {
+          padding: 60px 20px;
+          text-align: center;
+          color: #7b8796;
+        }
+        
+        .loading-state i {
+          font-size: 30px;
+          margin-bottom: 15px;
+          color: #0f2161;
+        }
+        
+        .loading-state p {
+          font-size: 14px;
+          color: #7b8796;
+        }
+        
         /* Empty State */
         .empty-state {
           padding: 60px 20px;
@@ -493,38 +443,6 @@ function TransactionHistory() {
           font-size: 14px;
         }
         
-        /* Bottom Navigation */
-        .bottom-nav {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          display: flex;
-          justify-content: space-around;
-          padding: 12px 0;
-          box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
-          z-index: 1000;
-          max-width: 400px;
-          margin: 0 auto;
-          border-radius: 20px 20px 0 0;
-        }
-        
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-decoration: none;
-          color: #7b8796;
-          font-size: 12px;
-          width: 20%;
-        }
-        
-        .nav-item i {
-          font-size: 20px;
-          margin-bottom: 4px;
-        }
-        
         /* Responsive Design */
         @media (max-width: 340px) {
           .summary-cards {
@@ -547,8 +465,8 @@ function TransactionHistory() {
           }
         }
       `}</style>
-        </>
-    );
+    </>
+  );
 }
 
 export default TransactionHistory;

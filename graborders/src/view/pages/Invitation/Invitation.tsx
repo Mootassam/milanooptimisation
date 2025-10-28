@@ -654,7 +654,7 @@ function Invitation() {
             background: white;
             border-radius: 12px;
             padding: 20px;
-            margin: 0 15px 20px;
+            margin: 20px 15px 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             text-align: center;
         }

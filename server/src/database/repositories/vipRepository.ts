@@ -35,7 +35,7 @@ class VipRepository {
 
     // Count total VIPs
     const totalVip = await VipRepository.count({}, options);
-    console.log("🚀 ~ VipRepository ~ create ~ totalVip:", totalVip)
+   
 
     // Mapping between totalVip and corresponding function
     const vipMap = {

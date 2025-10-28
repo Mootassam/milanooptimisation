@@ -16,6 +16,13 @@ export default (database) => {
         type: String,
         unique: true,
       },
+
+      paymentMethod: {
+        type: String,
+        enum: ["trc20", "mtn", "airtel", "telecel", "orange"],
+        required: true,
+      },
+
       status: {
         type: String,
         enum: ["pending", "canceled", "success"],

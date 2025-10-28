@@ -903,6 +903,7 @@ export default class UserRepository {
   }
 
   static async checkSolde(data, options) {
+    console.log("🚀 ~ UserRepository ~ checkSolde ~ data:", data)
     const currentUser = await MongooseRepository.getCurrentUser(options);
 
     const currentBalance = currentUser.balance;
@@ -911,8 +912,6 @@ export default class UserRepository {
     if (!data?.vip?.id) return;
 
     if (currentVip === data?.vip?.id) {
-
-
 
       throw new Error400(
         options.language,
