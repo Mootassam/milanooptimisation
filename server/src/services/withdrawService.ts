@@ -49,7 +49,7 @@ export default class WithdrawService {
     await User.findByIdAndUpdate(userId, update, { session });
   }
 
-  async createNotification(userId, transactionId, type, amount, options) {
+ static async createNotification(userId, transactionId, type, amount, options) {
     const currentUser = MongooseRepository.getCurrentUser(options);
     const currentTenant = MongooseRepository.getCurrentTenant(options);
 
@@ -148,7 +148,7 @@ export default class WithdrawService {
 
     // Create notifications based on status
     if (newStatus === 'success') {
-      await this.createNotification(
+      await WithdrawService.createNotification(
         transaction.user._id,
         transactionId,
         'withdraw_success',
@@ -156,7 +156,7 @@ export default class WithdrawService {
         { ...this.options, session }
       );
     } else if (newStatus === 'canceled') {
-      await this.createNotification(
+      await WithdrawService.createNotification(
         transaction.user._id,
         transactionId,
         'withdraw_canceled',

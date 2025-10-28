@@ -24,34 +24,66 @@ function Notification() {
   });
 
   // Get notification type info based on your data
-  const getNotificationInfo = (type) => {
-    switch (type) {
-      case "withdraw_success":
-        return {
-          icon: "fas fa-check-circle",
-          color: "#27ae60",
-          bgColor: "#e8f5e9",
-          title: "Withdrawal Successful",
-          description: (amount) => `Your withdrawal of $${amount} has been processed successfully`
-        };
-      case "withdraw_canceled":
-        return {
-          icon: "fas fa-times-circle",
-          color: "#e74c3c",
-          bgColor: "#ffebee",
-          title: "Withdrawal Canceled",
-          description: (amount) => `Your withdrawal of $${amount} has been canceled`
-        };
-      default:
-        return {
-          icon: "fas fa-bell",
-          color: "#7b8796",
-          bgColor: "#f5f6f7",
-          title: "Notification",
-          description: () => "You have a new notification"
-        };
-    }
-  };
+const getNotificationInfo = (type) => {
+  switch (type) {
+    case "withdraw_success":
+      return {
+        icon: "fas fa-check-circle",
+        color: "#27ae60",
+        bgColor: "#e8f5e9",
+        title: "Withdrawal Successful",
+        description: (amount) => `Your withdrawal of $${amount} has been processed successfully`
+      };
+    case "withdraw_canceled":
+      return {
+        icon: "fas fa-times-circle",
+        color: "#e74c3c",
+        bgColor: "#ffebee",
+        title: "Withdrawal Canceled",
+        description: (amount) => `Your withdrawal of $${amount} has been canceled`
+      };
+    case "deposit_success":
+      return {
+        icon: "fas fa-arrow-down",
+        color: "#2e86de",
+        bgColor: "#e3f2fd",
+        title: "Deposit Successful",
+        description: (amount) => `Your deposit of $${amount} has been received successfully`
+      };
+    case "deposit_canceled":
+      return {
+        icon: "fas fa-ban",
+        color: "#e67e22",
+        bgColor: "#fff3e0",
+        title: "Deposit Canceled",
+        description: (amount) => `Your deposit of $${amount} has been canceled`
+      };
+    case "system":
+      return {
+        icon: "fas fa-cog",
+        color: "#9b59b6",
+        bgColor: "#f3e5f5",
+        title: "System Update",
+        description: () => "System maintenance or update notification"
+      };
+    case "alert":
+      return {
+        icon: "fas fa-exclamation-triangle",
+        color: "#f39c12",
+        bgColor: "#fff8e1",
+        title: "Important Alert",
+        description: () => "Important security or account alert"
+      };
+    default:
+      return {
+        icon: "fas fa-bell",
+        color: "#7b8796",
+        bgColor: "#f5f6f7",
+        title: "Notification",
+        description: () => "You have a new notification"
+      };
+  }
+};
 
   // Format date to relative time
   const formatDate = (dateString?: string | null) => {

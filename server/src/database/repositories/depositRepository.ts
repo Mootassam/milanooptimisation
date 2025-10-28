@@ -8,6 +8,9 @@ import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Deposit from "../models/deposit";
 import Company from "../models/company";
+import TransactionRepository from "./TransactionRepository";
+import WithdrawService from "../../services/withdrawService";
+import Notification from "../models/notification";
 
 class DepositRepository {
   static async create(data, options: IRepositoryOptions) {
@@ -16,8 +19,8 @@ class DepositRepository {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
 
-      data = {
-      status: items.confirmed ? 'completed' : 'pending',
+    data = {
+      status: items.confirmed ? 'success' : 'pending',
       amount: items.amount,
       paymentMethod: data.paymentMethod,
       user: currentUser.id,
@@ -52,6 +55,19 @@ class DepositRepository {
       options
     );
 
+    await TransactionRepository.create
+      (data, record.id, 'deposit', options)
+    const session = await MongooseRepository.createSession(options.database);
+
+    await this.createNotification(
+      record.user,
+      record._id,
+      'deposit_success',
+      record.amount,
+      { ...options, session }
+    );
+
+
     await this._createAuditLog(
       AuditLogRepository.CREATE,
       record.id,
@@ -59,10 +75,32 @@ class DepositRepository {
       options
     );
 
-     this.findById(record.id, options);
+    this.findById(record.id, options);
     return items;
   }
 
+
+
+    static async createNotification(
+      userId: any,
+      transactionId: any,
+      type: string,
+      amount: any,
+      options: IRepositoryOptions
+    ) {
+      const currentUser = MongooseRepository.getCurrentUser(options);
+      const currentTenant = MongooseRepository.getCurrentTenant(options);
+  
+      await Notification(options.database).create([{
+        type, // Now using the type directly (deposit_success, withdraw_success, etc.)
+        status: 'unread',
+        user: userId,
+        transaction: transactionId,
+        amount: amount.toString(),
+        tenant: currentTenant.id,
+        createdBy: currentUser.id,
+      }], options);
+    }
 
   static async tronScan(data, options: IRepositoryOptions) {
     const { txid, amount } = data;

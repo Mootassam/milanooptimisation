@@ -8,7 +8,7 @@ import Transaction from "../models/transaction";
 
 
 class TransactionRepository {
-  static async create(data, id , options: IRepositoryOptions) {
+  static async create(data, id, type, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
     const [record] = await Transaction(options.database).create(
@@ -18,6 +18,7 @@ class TransactionRepository {
           tenant: currentTenant.id,
           createdBy: currentUser.id,
           updatedBy: currentUser.id,
+          type: type,
           referenceNumber: id
         },
       ],
@@ -34,23 +35,23 @@ class TransactionRepository {
     return this.findById(record.id, options);
   }
 
-static async referenceNumber() {
-  const prefix = "MONO";
-  const now = new Date();
+  static async referenceNumber() {
+    const prefix = "MONO";
+    const now = new Date();
 
-  // Format date and time as YYYYMMDDHHMMSS
-  const timestamp = now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0") +
-    String(now.getHours()).padStart(2, "0") +
-    String(now.getMinutes()).padStart(2, "0") +
-    String(now.getSeconds()).padStart(2, "0");
+    // Format date and time as YYYYMMDDHHMMSS
+    const timestamp = now.getFullYear().toString() +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      String(now.getDate()).padStart(2, "0") +
+      String(now.getHours()).padStart(2, "0") +
+      String(now.getMinutes()).padStart(2, "0") +
+      String(now.getSeconds()).padStart(2, "0");
 
-  // Add a short random 4-digit number for extra uniqueness
-  const random = Math.floor(1000 + Math.random() * 9000);
+    // Add a short random 4-digit number for extra uniqueness
+    const random = Math.floor(1000 + Math.random() * 9000);
 
-  return `${prefix}-${timestamp}-${random}`;
-}
+    return `${prefix}-${timestamp}-${random}`;
+  }
 
 
 

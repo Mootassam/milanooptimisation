@@ -78,7 +78,7 @@ class WithdrawRepository {
 
 
       await TransactionRepository.create
-        (data, record.id , options)
+        (data, record.id, 'withdraw', options)
 
       // Create audit log
       await this._createAuditLog(

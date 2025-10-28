@@ -12,7 +12,7 @@ export default (database) => {
     {
       status: {
         type: String,
-        enum: ["pending", "canceled", "sucess", "failed"],
+        enum: ["pending", "canceled", "success", "failed"],
         default: "pending",
       },
       amount: {
