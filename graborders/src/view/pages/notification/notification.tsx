@@ -1,286 +1,448 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import notificationListActions from "src/modules/notification/list/notificationListActions";
+import selectors from 'src/modules/notification/list/notificationListSelectors'
 import SubHeader from "src/view/shared/Header/SubHeader";
 
-function notification() {
+function Notification() {
+  const dispatch = useDispatch();
+  const records = useSelector(selectors.selectRows) as any[];
+  const loading = useSelector(selectors.selectLoading);
+  
+  const [statusFilter, setStatusFilter] = useState("all"); // all, unread, read
+
+  useEffect(() => {
+    dispatch(notificationListActions.doFetch());
+  }, [dispatch]);
+
+  // Filter notifications based on status
+  const filteredNotifications = records.filter(notification => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "unread") return notification.status === "unread";
+    if (statusFilter === "read") return notification.status === "read";
+    return true;
+  });
+
+  // Get notification type info based on your data
+  const getNotificationInfo = (type) => {
+    switch (type) {
+      case "withdraw_success":
+        return {
+          icon: "fas fa-check-circle",
+          color: "#27ae60",
+          bgColor: "#e8f5e9",
+          title: "Withdrawal Successful",
+          description: (amount) => `Your withdrawal of $${amount} has been processed successfully`
+        };
+      case "withdraw_canceled":
+        return {
+          icon: "fas fa-times-circle",
+          color: "#e74c3c",
+          bgColor: "#ffebee",
+          title: "Withdrawal Canceled",
+          description: (amount) => `Your withdrawal of $${amount} has been canceled`
+        };
+      default:
+        return {
+          icon: "fas fa-bell",
+          color: "#7b8796",
+          bgColor: "#f5f6f7",
+          title: "Notification",
+          description: () => "You have a new notification"
+        };
+    }
+  };
+
+  // Format date to relative time
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "Recently";
+    
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      if (diffInMinutes < 1) return "Just now";
+      return `${diffInMinutes}m ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  // Group notifications by date
+  const groupNotificationsByDate = (notifications: any[] = []): Record<string, any[]> => {
+    const groups: Record<string, any[]> = {};
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    
+    notifications.forEach(notification => {
+      const notificationDate = new Date(notification.createdAt).toDateString();
+      let groupKey;
+      
+      if (notificationDate === today) {
+        groupKey = "Today";
+      } else if (notificationDate === yesterday) {
+        groupKey = "Yesterday";
+      } else {
+        groupKey = new Date(notification.createdAt).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(notification);
+    });
+    
+    return groups;
+  };
+
+  const groupedNotifications = groupNotificationsByDate(filteredNotifications);
+
   return (
     <>
       {/* Header Section */}
- <SubHeader title="Notification" detail="Your activity alerts" />
+      <SubHeader title="Notifications" detail="Your activity alerts" />
+      
       {/* Filter Tabs */}
       <div className="filter-tabs">
-        <div className="filter-tab active" data-filter="all">
+        <div 
+          className={`filter-tab ${statusFilter === "all" ? "active" : ""}`}
+          onClick={() => setStatusFilter("all")}
+        >
           All
         </div>
-        <div className="filter-tab" data-filter="unread">
+        <div 
+          className={`filter-tab ${statusFilter === "unread" ? "active" : ""}`}
+          onClick={() => setStatusFilter("unread")}
+        >
           Unread
         </div>
-        <div className="filter-tab" data-filter="read">
+        <div 
+          className={`filter-tab ${statusFilter === "read" ? "active" : ""}`}
+          onClick={() => setStatusFilter("read")}
+        >
           Read
         </div>
       </div>
+
       {/* Notifications Container */}
       <div className="notifications-container">
-        <div className="notification-date">Today</div>
-        {/* Notification Items */}
-        <div className="notification-item " data-type="deposit">
-          <div className="notification-icon icon-deposit">
-            <i className="fas fa-money-bill-wave" />
-          </div>
-          <div className="notification-content">
-            <div className="notification-title">Deposit Successful</div>
-            <div className="notification-desc">
-              Your deposit of $500 has been processed successfully
+        {loading ? (
+          <div className="loading-state">
+            <div className="loading-spinner">
+              <i className="fas fa-spinner fa-spin" />
             </div>
-            <div className="notification-time">10:30 AM</div>
+            <p>Loading notifications...</p>
           </div>
-          <div className="notification-badge" />
-        </div>
-        <div className="notification-item " data-type="usdt">
-          <div className="notification-icon icon-usdt">
-            <i className="fab fa-usdt" />
-          </div>
-          <div className="notification-content">
-            <div className="notification-title">USDT Received</div>
-            <div className="notification-desc">
-              You've received 50 USDT from user @crypto_trader
+        ) : filteredNotifications.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <i className="fas fa-bell-slash" />
             </div>
-            <div className="notification-time">9:45 AM</div>
+            <p>No notifications found</p>
+            <span>When you have new notifications, they'll appear here</span>
           </div>
-          <div className="notification-badge" />
-        </div>
-        <div className="notification-item" data-type="verification">
-          <div className="notification-icon icon-verification">
-            <i className="fas fa-check-circle" />
-          </div>
-          <div className="notification-content">
-            <div className="notification-title">Account Verified</div>
-            <div className="notification-desc">
-              Your account verification has been completed successfully
+        ) : (
+          Object.entries(groupedNotifications).map(([date, notifications]) => (
+            <div key={date}>
+              <div className="notification-date">{date}</div>
+              {notifications.map((notification) => {
+                const notificationInfo = getNotificationInfo(notification.type);
+                
+                return (
+                  <div 
+                    key={notification._id || notification.id} 
+                    className={`notification-item ${notification.status === "unread" ? "unread" : ""}`}
+                  >
+                    <div 
+                      className="notification-icon"
+                      style={{ 
+                        backgroundColor: notificationInfo.bgColor, 
+                        color: notificationInfo.color 
+                      }}
+                    >
+                      <i className={notificationInfo.icon} />
+                    </div>
+                    <div className="notification-content">
+                      <div className="notification-title">
+                        {notificationInfo.title}
+                      </div>
+                      <div className="notification-desc">
+                        {notificationInfo.description(notification.amount)}
+                      </div>
+                      <div className="notification-time">
+                        {formatDate(notification.createdAt)}
+                      </div>
+                    </div>
+                    {notification.status === "unread" && (
+                      <div className="notification-badge" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div className="notification-time">Yesterday</div>
-          </div>
-        </div>
+          ))
+        )}
       </div>
-  
-   
 
-      <style>{`    /* Header Styles */
-     
-        
+      <style>{`
         /* Filter Tabs */
         .filter-tabs {
-            display: flex;
-            background: white;
-            padding: 15px;
-            border-bottom: 1px solid #f0f4ff;
+          display: flex;
+          background: white;
+          padding: 15px;
+          border-bottom: 1px solid #f0f4ff;
+          gap: 0;
         }
         
         .filter-tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            font-weight: 600;
-            color: #7b8796;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
+          flex: 1;
+          text-align: center;
+          padding: 12px;
+          font-weight: 600;
+          color: #7b8796;
+          border-bottom: 3px solid transparent;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 14px;
         }
         
         .filter-tab.active {
-            color: #0f2161;
-            border-bottom: 2px solid #0f2161;
+          color: #0f2161;
+          border-bottom: 3px solid #0f2161;
+          background: #f8f9ff;
+        }
+        
+        .filter-tab:active {
+          transform: scale(0.98);
         }
         
         /* Notifications Container */
         .notifications-container {
-            padding: 15px;
+          padding: 0;
+          min-height: 60vh;
         }
         
         .notification-date {
-            color: #7b8796;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 15px 0 10px;
-            padding-left: 10px;
+          color: #7b8796;
+          font-size: 14px;
+          font-weight: 600;
+          margin: 20px 15px 10px;
+          padding: 8px 0;
+          border-bottom: 1px solid #f0f4ff;
         }
         
         /* Notification Item */
         .notification-item {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: flex-start;
-            position: relative;
+          background: white;
+          border-radius: 0;
+          padding: 18px 15px;
+          margin-bottom: 0;
+          display: flex;
+          align-items: flex-start;
+          position: relative;
+          border-bottom: 1px solid #f5f6f7;
+          transition: all 0.2s ease;
+        }
+        
+        .notification-item:active {
+          background: #f9f9f9;
         }
         
         .notification-item.unread {
-            border-left: 4px solid #0f2161;
+          background: #f8fbff;
+          border-left: 4px solid #0f2161;
         }
         
         .notification-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 18px;
-            flex-shrink: 0;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 15px;
+          font-size: 18px;
+          flex-shrink: 0;
+          transition: all 0.3s ease;
         }
         
-        .icon-deposit {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .icon-withdraw {
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .icon-usdt {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-        
-        .icon-verification {
-            background: #fff8e1;
-            color: #e65100;
-        }
-        
-        .icon-bonus {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-        
-        .icon-security {
-            background: #e8eaf6;
-            color: #283593;
+        .notification-item:active .notification-icon {
+          transform: scale(0.95);
         }
         
         .notification-content {
-            flex: 1;
+          flex: 1;
+          min-width: 0;
         }
         
         .notification-title {
-            font-weight: 600;
-            color: #0f2161;
-            margin-bottom: 5px;
-            font-size: 15px;
+          font-weight: 700;
+          color: #0f2161;
+          margin-bottom: 6px;
+          font-size: 16px;
+          line-height: 1.3;
         }
         
         .notification-desc {
-            font-size: 14px;
-            color: #7b8796;
-            margin-bottom: 5px;
+          font-size: 14px;
+          color: #7b8796;
+          margin-bottom: 8px;
+          line-height: 1.4;
         }
         
         .notification-time {
-            font-size: 12px;
-            color: #7b8796;
+          font-size: 12px;
+          color: #a0a4ab;
+          font-weight: 500;
         }
         
         .notification-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #0f2161;
+          position: absolute;
+          top: 20px;
+          right: 15px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #0f2161;
+          animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(15, 33, 97, 0.7);
+          }
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(15, 33, 97, 0);
+          }
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(15, 33, 97, 0);
+          }
+        }
+        
+        /* Loading State */
+        .loading-state {
+          padding: 80px 20px;
+          text-align: center;
+          color: #7b8796;
+        }
+        
+        .loading-spinner {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 20px;
+          background: #f0f4ff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .loading-spinner i {
+          font-size: 24px;
+          color: #0f2161;
+        }
+        
+        .loading-state p {
+          font-size: 16px;
+          font-weight: 600;
+          color: #0f2161;
         }
         
         /* Empty State */
         .empty-state {
-            text-align: center;
-            padding: 40px 20px;
+          padding: 80px 20px;
+          text-align: center;
+          color: #7b8796;
         }
         
         .empty-icon {
-            font-size: 60px;
-            color: #f0f4ff;
-            margin-bottom: 15px;
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 20px;
+          background: #f8f9fa;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         
-        .empty-title {
-            color: #0f2161;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
+        .empty-icon i {
+          font-size: 32px;
+          color: #a0a4ab;
         }
         
-        .empty-desc {
-            color: #7b8796;
-            font-size: 14px;
+        .empty-state p {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 8px;
+          color: #0f2161;
         }
         
-        /* Action Buttons */
-        .action-buttons {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .empty-state span {
+          font-size: 14px;
+          line-height: 1.4;
+          color: #7b8796;
         }
         
-        .action-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 4px 10px rgba(15, 33, 97, 0.3);
-            border: none;
-            cursor: pointer;
-        }
-       
-        
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #7b8796;
-            font-size: 12px;
-            width: 20%;
+        /* Enhanced animations */
+        .notification-item {
+          animation: slideInUp 0.4s ease forwards;
+          opacity: 0;
+          transform: translateY(10px);
         }
         
-        .nav-item.active {
-            color: #0f2161;
-        }
-        
-        .nav-item i {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-        
-        .nav-item.active i {
-            color: #0f2161;
+        @keyframes slideInUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         /* Responsive adjustments */
         @media (max-width: 340px) {
-            .notification-item {
-                padding: 12px;
-            }
-            
-            .notification-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-                margin-right: 12px;
-            }
-        }`}</style>
-  </>
+          .notification-item {
+            padding: 15px 12px;
+          }
+          
+          .notification-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            margin-right: 12px;
+          }
+          
+          .notification-title {
+            font-size: 15px;
+          }
+          
+          .notification-desc {
+            font-size: 13px;
+          }
+          
+          .filter-tab {
+            padding: 10px;
+            font-size: 13px;
+          }
+        }
+      `}</style>
+    </>
   );
 }
 
-export default notification;
+export default Notification;

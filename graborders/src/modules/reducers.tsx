@@ -10,6 +10,7 @@ import record from 'src/modules/record/recordReducers'
 import product from 'src/modules/product/list/productListReducers'
 import transaction from 'src/modules/transaction/transactionReducers'
 import deposit from 'src/modules/deposit/depositReducers'
+import notification from 'src/modules/notification/notificationReducers'
 import { combineReducers } from "redux";
 
 export default (history) =>
@@ -24,5 +25,6 @@ export default (history) =>
     deposit,
     record,
     tenant,
+    notification,
     user,
   });
