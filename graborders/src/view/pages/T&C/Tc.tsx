@@ -21,7 +21,7 @@ function Tc() {
 
   return (
     <>
-      <SubHeader title="Terms & Conditions" detail="Please read these terms carefully" />
+      <SubHeader title="Terms & Conditions"  />
       
       <div className="tc-container">
         {/* Table of Contents */}

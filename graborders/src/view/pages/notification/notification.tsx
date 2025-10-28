@@ -113,7 +113,7 @@ function Notification() {
   return (
     <>
       {/* Header Section */}
-      <SubHeader title="Notifications" detail="Your activity alerts" />
+      <SubHeader title="Notifications"  />
       
       {/* Filter Tabs */}
       <div className="filter-tabs">

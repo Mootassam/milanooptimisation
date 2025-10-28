@@ -5,7 +5,7 @@ function about() {
   return (
     <>
 
-  <SubHeader title="About" detail="Detail company" />
+  <SubHeader title="About"  />
   {/* Page Title */}
   <div className="page-title"></div>
  

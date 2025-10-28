@@ -1,7 +1,10 @@
-import React from "react";
+import React, {useState} from "react";
 import { useHistory } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 function SubHeader(props) {
+    const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(3);
+  
   const history = useHistory();
 
   const goBack = () => {
@@ -16,6 +19,20 @@ function SubHeader(props) {
           <h1>{props.title}</h1>
           <p>{props.detail}</p>
         </div>
+
+         <Link to="/notification" className="remove__ligne">
+                <div className="header-icons">
+                  <div className="notification-icon-wrapper">
+                    <i className="fas fa-bell" />
+                    {unreadNotificationsCount > 0 && (
+                      <span className="notification-badga">
+                        {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+        
         <style>{`   .header {
             background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
             color: white;
@@ -34,8 +51,6 @@ function SubHeader(props) {
             font-size: 20px;
             margin-right: 15px;
             text-decoration: none;
-            width: 40px;
-            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;

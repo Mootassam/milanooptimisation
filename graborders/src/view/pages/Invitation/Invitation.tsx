@@ -134,7 +134,7 @@ function Invitation() {
   return (
     <>
       {/* Header Section */}
-      <SubHeader title="Invitation" detail="Invite Friends & Earn" />
+      <SubHeader title="Invitation"  />
 
       {/* Team Members Modal */}
       {showTeamModal && (
