@@ -19,7 +19,7 @@ export default (database) => {
 
       paymentMethod: {
         type: String,
-        enum: ["trc20", "mtn", "airtel", "telecel", "orange"],
+        enum: ["crypto", "mtn", "airtel", "telecel", "orange"],
         required: true,
       },
 

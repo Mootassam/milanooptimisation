@@ -10,6 +10,8 @@ import { useDispatch, useSelector } from "react-redux";
 import InputFormItem from "src/shared/form/InputFormItem";
 import actions from "src/modules/transaction/form/transactionFormActions";
 import authActions from "src/modules/auth/authActions";
+import selector from "src/modules/transaction/form/transactionFormSelectors";
+import transactionFormActions from "src/modules/transaction/form/transactionFormActions";
 
 const schema = yup.object().shape({
   amount: yupFormSchemas.integer(i18n("entities.transaction.fields.amount"), {
@@ -27,32 +29,53 @@ const schema = yup.object().shape({
 function Withdraw() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const dispatch = useDispatch();
+  const [withdrawalAmount, setWithdrawalAmount] = useState(0);
+  console.log("🚀 ~ Withdraw ~ withdrawalAmount:", withdrawalAmount)
+
+  // Use Redux state for modal and loading
+  const showModal = useSelector(selector.selectModal);
+  const loading = useSelector(selector.selectSaveLoading);
 
   useEffect(() => { }, [currentUser]);
 
-  const onSubmit = ({ amount, withdrawPassword }) => {
-    const values = {
-      status: "pending",
-      date: new Date(),
-      user: currentUser ? currentUser.id : null,
-      type: "withdraw",
-      amount: amount,
-      vip: currentUser,
-      withdrawPassword: withdrawPassword,
-    };
-    dispatch(authActions.doRefreshCurrentUser());
-    dispatch(actions.doCreate(values));
-  };
+  
 
   const [initialValues] = useState({
     amount: "",
+    withdrawPassword: "",
   });
+
+ 
 
   const form = useForm({
     resolver: yupResolver(schema),
     mode: "onSubmit",
     defaultValues: initialValues,
   });
+
+
+   const onSubmit = async ({ amount, withdrawPassword }) => {
+    setWithdrawalAmount(amount);
+    const values = {
+      status: "pending",
+      date: new Date(),
+      user: currentUser ? currentUser.id : null,
+      type: "withdraw",
+      amount: amount,
+      vip: currentUser.vip,
+      withdrawPassword: withdrawPassword,
+      paymentMethod: 'crypto',
+      walletAddress: currentUser.trc20
+    };
+    await dispatch(actions.doCreate(values));
+    form.reset();
+
+  };
+  const handleCloseModal = () => {
+    dispatch(transactionFormActions.doClose());
+    // Reset withdrawal amount when modal closes
+    setWithdrawalAmount(0);
+  };
 
   return (
     <div className="withdraw-page-container">
@@ -78,7 +101,7 @@ function Withdraw() {
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="withdraw-form">
               <div className="withdraw-form-content">
-                
+
                 <div style={{ padding: '0px 15px' }}>
                   {/* Amount Input */}
                   <InputFormItem
@@ -88,6 +111,7 @@ function Withdraw() {
                     iname="fas fa-coins"
                     type="number"
                     externalErrorMessage={null}
+                    disabled={loading} // Disable input during loading
                   />
 
                   {/* Withdraw Password Input */}
@@ -98,15 +122,29 @@ function Withdraw() {
                     iname="fas fa-lock"
                     type="password"
                     externalErrorMessage={null}
+                    disabled={loading} // Disable input during loading
                   />
                 </div>
 
                 {/* Submit Button */}
                 <div className="withdraw-actions">
                   {currentUser.withdraw ? (
-                    <button className="withdraw-confirm-btn" type="submit">
-                      <i className="fas fa-paper-plane btn-icon" />
-                      Confirm Withdrawal
+                    <button
+                      className={`withdraw-confirm-btn ${loading ? 'loading' : ''}`}
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin btn-icon" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-paper-plane btn-icon" />
+                          Confirm Withdrawal
+                        </>
+                      )}
                     </button>
                   ) : (
                     <button className="withdraw-disabled-btn" disabled={true}>
@@ -148,11 +186,69 @@ function Withdraw() {
         </div>
       </div>
 
+      {/* Success Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {/* Success Icon */}
+            <div className="success-icon">
+              <i className="fas fa-check-circle" />
+            </div>
+
+            {/* Modal Header */}
+            <div className="modal-header">
+              <h2 className="modal-title">Withdrawal Successful!</h2>
+              <p className="modal-subtitle">
+                Your withdrawal request has been submitted successfully
+              </p>
+            </div>
+
+            {/* Amount Display */}
+            <div className="amount-display">
+              <div className="amount-label">Withdrawal Amount</div>
+              <div className="amount-value">${withdrawalAmount.toFixed(2)}</div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="modal-info">
+              <div className="info-item">
+                <i className="fas fa-clock info-icon" />
+                <span className="info-text">Processing Time: 24-48 hours</span>
+              </div>
+              <div className="info-item">
+                <i className="fas fa-wallet info-icon" />
+                <span className="info-text">Payment Method: USDT (TRC20)</span>
+              </div>
+              <div className="info-item">
+                <i className="fas fa-shield-alt info-icon" />
+                <span className="info-text">Status: Pending Approval</span>
+              </div>
+              <div className="info-item">
+                <i className="fas fa-map-marker-alt info-icon" />
+                <span className="info-text">Wallet: {currentUser?.trc20 || 'Not provided'}</span>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="modal-actions">
+              <button
+                className="modal-confirm-btn"
+                onClick={handleCloseModal}
+              >
+                <i className="fas fa-check btn-icon" />
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .withdraw-page-container {
           min-height: 100vh;
           background: #f5f7fa;
           padding-bottom: 40px;
+          position: relative;
         }
 
         /* Main Content Section */
@@ -262,13 +358,23 @@ function Withdraw() {
           box-shadow: 0 4px 15px rgba(15, 33, 97, 0.2);
         }
 
-        .withdraw-confirm-btn:hover {
+        .withdraw-confirm-btn:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 6px 20px rgba(15, 33, 97, 0.3);
         }
 
         .withdraw-confirm-btn:active {
           transform: translateY(0);
+        }
+
+        .withdraw-confirm-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .withdraw-confirm-btn.loading {
+          background: linear-gradient(135deg, #7b8796 0%, #9aa5b1 100%);
         }
 
         .withdraw-disabled-btn {
@@ -359,6 +465,157 @@ function Withdraw() {
           flex: 1;
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 24px;
+          padding: 30px;
+          max-width: 400px;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+          animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .success-icon {
+          font-size: 80px;
+          color: #27ae60;
+          margin-bottom: 20px;
+          animation: successBounce 0.6s ease-out;
+        }
+
+        @keyframes successBounce {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); }
+        }
+
+        .modal-header {
+          margin-bottom: 25px;
+        }
+
+        .modal-title {
+          color: #0f2161;
+          font-size: 24px;
+          font-weight: 700;
+          margin: 0 0 8px 0;
+        }
+
+        .modal-subtitle {
+          color: #7b8796;
+          font-size: 14px;
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .amount-display {
+          background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+          border-radius: 16px;
+          padding: 20px;
+          margin: 20px 0;
+          border: 2px solid #f0f4ff;
+        }
+
+        .amount-label {
+          color: #7b8796;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 8px;
+        }
+
+        .amount-value {
+          color: #0f2161;
+          font-size: 32px;
+          font-weight: 700;
+        }
+
+        .modal-info {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 20px 0;
+          text-align: left;
+        }
+
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 0;
+        }
+
+        .info-item:not(:last-child) {
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-icon {
+          color: #0f2161;
+          font-size: 14px;
+          width: 16px;
+        }
+
+        .info-text {
+          color: #7b8796;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .modal-actions {
+          margin-top: 25px;
+        }
+
+        .modal-confirm-btn {
+          background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+          color: white;
+          border: none;
+          border-radius: 16px;
+          padding: 16px 32px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .modal-confirm-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .modal-confirm-btn:active {
+          transform: translateY(0);
+        }
+
         /* Responsive Design */
         @media (max-width: 480px) {
           .withdraw-content-section {
@@ -391,6 +648,23 @@ function Withdraw() {
           .withdraw-disabled-btn {
             padding: 14px 20px;
             font-size: 15px;
+          }
+
+          .modal-content {
+            padding: 25px 20px;
+            margin: 10px;
+          }
+
+          .modal-title {
+            font-size: 22px;
+          }
+
+          .success-icon {
+            font-size: 70px;
+          }
+
+          .amount-value {
+            font-size: 28px;
           }
         }
 

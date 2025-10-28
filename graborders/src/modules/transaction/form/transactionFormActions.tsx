@@ -3,6 +3,7 @@ import Message from 'src/view/shared/message';
 import { getHistory } from 'src/modules/store';
 import { i18n } from "../../../i18n";
 import TransactionService from 'src/modules/transaction/transactionService';
+import authActions from 'src/modules/auth/authActions';
 
 const prefix = 'TRANSACTION_FORM';
 
@@ -14,6 +15,8 @@ const transactionFormActions = {
   CREATE_STARTED: `${prefix}_CREATE_STARTED`,
   CREATE_SUCCESS: `${prefix}_CREATE_SUCCESS`,
   CREATE_ERROR: `${prefix}_CREATE_ERROR`,
+
+  CLOSE_MODAL: `${prefix}_CLOSE_MODAL`,
 
   UPDATE_STARTED: `${prefix}_UPDATE_STARTED`,
   UPDATE_SUCCESS: `${prefix}_UPDATE_SUCCESS`,
@@ -54,17 +57,15 @@ const transactionFormActions = {
         type: transactionFormActions.CREATE_STARTED,
       });
 
-      await TransactionService.create(values);
 
+      await TransactionService.create(values);
       dispatch({
         type: transactionFormActions.CREATE_SUCCESS,
       });
 
-      Message.success(
-        i18n('entities.transaction.create.success'),
-      );
+     
 
-      getHistory().push('/withdraw ');
+
     } catch (error) {
       Errors.handle(error);
 
@@ -72,6 +73,15 @@ const transactionFormActions = {
         type: transactionFormActions.CREATE_ERROR,
       });
     }
+  },
+  doClose: () => async (dispatch) => {
+
+    dispatch({
+      type: transactionFormActions.CLOSE_MODAL,
+    });
+     dispatch(authActions.doInit())
+
+
   },
 
   doUpdate: (id, values) => async (dispatch, getState) => {

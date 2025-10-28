@@ -3,6 +3,8 @@ import MongooseRepository from "../database/repositories/mongooseRepository";
 import { IServiceOptions } from "./IServiceOptions";
 import WithdrawRepository from "../database/repositories/withdrawRepository";
 import Notification from "../database/models/notification";
+import withdraw from "../database/models/withdraw";
+import TransactionRepository from "../database/repositories/TransactionRepository";
 
 export default class WithdrawService {
   options: IServiceOptions;
@@ -96,17 +98,16 @@ export default class WithdrawService {
     }
   }
 
-  async updateTransactionStatus(transactionId, newStatus, options) {
+  async updateTransactionStatus(transactionId, newStatus, options)  {
     const session = await MongooseRepository.createSession(
       this.options.database
     );
 
     try {
-      const Transaction = this.options.database.model('transaction');
       const User = this.options.database.model('user');
 
       // Find the transaction with user data
-      const transaction = await Transaction.findById(transactionId)
+      const transaction = await withdraw(options.database).findById(transactionId)
         .populate('user')
         .session(session);
 
@@ -121,18 +122,25 @@ export default class WithdrawService {
       const amount = parseFloat(transaction.amount);
 
       // Update transaction status
-      const updatedTransaction = await Transaction.findByIdAndUpdate(
-        transactionId,
-        {
-          status: newStatus,
-          updatedBy: MongooseRepository.getCurrentUser(options).id
-        },
-        { new: true, session }
-      );
+            const updatedTransaction = await withdraw(options.database).findByIdAndUpdate(
+              transactionId,
+              {
+                $set: { status: newStatus, updatedBy: MongooseRepository.getCurrentUser(options).id }
+      
+              },
+              { new: true, session }
+            );
 
       // Create notification based on transaction type and new status
-      if (transaction.type === 'withdraw' && newStatus === 'success') {
+      if (newStatus === 'completed') {
         // Only create withdraw_success notification for successful withdrawals
+
+      
+          await User.findByIdAndUpdate(
+            transaction.user._id,
+            { $inc: { balance: -amount } },
+            { session }
+          );
         await this.createNotification(
           transaction.user._id,
           transactionId,
@@ -140,7 +148,7 @@ export default class WithdrawService {
           transaction.amount,
           { ...this.options, session }
         );
-      } else if (transaction.type === 'withdraw' && newStatus === 'canceled') {
+      } else if ( newStatus === 'canceled') {
         // Create withdraw_canceled notification for canceled withdrawals
         await this.createNotification(
           transaction.user._id,
@@ -149,20 +157,11 @@ export default class WithdrawService {
           transaction.amount,
           { ...this.options, session }
         );
-      } else if (transaction.type === 'deposit' && newStatus === 'canceled') {
-        // Create deposit_canceled notification for canceled deposits
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'deposit_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
-      }
+      } 
       // Note: deposit_success is already created in the create method
 
       // Handle withdrawal transactions - only return money if canceled
-      if (transaction.type === 'withdraw') {
+
         // Case: Status changed to 'canceled' - return the amount
         if (newStatus === 'canceled') {
           await User.findByIdAndUpdate(
@@ -173,14 +172,14 @@ export default class WithdrawService {
         }
 
         // Case: Status changed from 'canceled' to 'success' - deduct again
-        else if (oldStatus === 'canceled' && newStatus === 'success') {
+        else if (oldStatus === 'canceled' && newStatus === 'completed') {
           await User.findByIdAndUpdate(
             transaction.user._id,
             { $inc: { balance: -amount } },
             { session }
           );
         }
-      }
+  
 
       await MongooseRepository.commitTransaction(session);
       return updatedTransaction;

@@ -4,6 +4,8 @@ const initialData = {
   initLoading: false,
   saveLoading: false,
   record: null,
+
+  showModal: false
 };
 
 export default (state = initialData, { type, payload }) => {
@@ -35,6 +37,7 @@ export default (state = initialData, { type, payload }) => {
     return {
       ...state,
       saveLoading: true,
+      showModal: false
     };
   }
 
@@ -42,13 +45,29 @@ export default (state = initialData, { type, payload }) => {
     return {
       ...state,
       saveLoading: false,
+      showModal: true
     };
   }
+
+
+
+
 
   if (type === actions.CREATE_ERROR) {
     return {
       ...state,
       saveLoading: false,
+      showModal: false
+
+    };
+  }
+
+    if (type === actions.CLOSE_MODAL) {
+    return {
+      ...state,
+      saveLoading: false,
+      showModal: false
+
     };
   }
 

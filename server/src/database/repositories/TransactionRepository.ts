@@ -5,12 +5,11 @@ import Error404 from "../../errors/Error404";
 import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Transaction from "../models/transaction";
-import Error400 from "../../errors/Error400";
-import UserRepository from "./userRepository";
-import Error405 from "../../errors/Error405";
+
 
 class TransactionRepository {
   static async create(data, options: IRepositoryOptions) {
+    console.log("🚀 ~ TransactionRepository ~ create ~ data:", data)
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
     const [record] = await Transaction(options.database).create(

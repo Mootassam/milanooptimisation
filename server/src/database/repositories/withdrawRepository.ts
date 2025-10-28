@@ -2,6 +2,7 @@ import MongooseRepository from "./mongooseRepository";
 import MongooseQueryUtils from "../utils/mongooseQueryUtils";
 import AuditLogRepository from "./auditLogRepository";
 import Error404 from "../../errors/Error404";
+import Error400 from "../../errors/Error400";
 import { IRepositoryOptions } from "./IRepositoryOptions";
 import FileRepository from "./fileRepository";
 import Withdraw from "../models/withdraw";
@@ -9,30 +10,89 @@ import withdraw from "../models/withdraw";
 
 
 class WithdrawRepository {
-  static async create(data, options: IRepositoryOptions) {
+ static async create(data, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
-    const [record] = await Withdraw(options.database).create(
-      [
-        {
-          ...data,
-          tenant: currentTenant.id,
-          createdBy: currentUser.id,
-          updatedBy: currentUser.id,
-        },
-      ],
-      options
-    );
+    const session = await MongooseRepository.createSession(options.database);
 
-    await this._createAuditLog(
-      AuditLogRepository.CREATE,
-      record.id,
-      data,
-      options
-    );
+    try {
+        // Start transaction
+        const User = options.database.model('user');
 
-    return this.findById(record.id, options);
-  }
+        // Check if user has sufficient balance
+        const user = await User.findById(currentUser.id).session(session);
+        const withdrawalAmount = parseFloat(data.amount);
+
+        if (user.balance < withdrawalAmount) {
+            throw new Error400(
+                options.language,
+                "withdraw.insufficientBalance"
+            );
+        }
+
+        data = {
+            referenceNumber: new Date().getTime() + data.walletAddress, // Fixed: better reference number
+            status: data.status || 'pending', // Default to pending if not provided
+            amount: data.amount,
+            paymentMethod: data.paymentMethod,
+            user: currentUser.id,
+            paymentDetails: {
+                ...(data.paymentMethod === 'crypto' && {
+                    crypto: {
+                        currency: 'USDT',
+                        walletAddress: data.walletAddress,
+                        network: 'TRC20',
+                    },
+                }),
+                ...(data.paymentMethod === 'mobile_money' && {
+                    mobileMoney: {
+                        provider: data.mobileProvider,
+                        phoneNumber: data.phoneNumber,
+                        depositId: data.depositId,
+                    },
+                }),
+            },
+        };
+
+        // Deduct amount from user balance immediately
+        await User.findByIdAndUpdate(
+            currentUser.id,
+            { $inc: { balance: -withdrawalAmount } },
+            { session }
+        );
+
+        // Create withdrawal record
+        const [record] = await Withdraw(options.database).create(
+            [
+                {
+                    ...data,
+                    tenant: currentTenant.id,
+                    createdBy: currentUser.id,
+                    updatedBy: currentUser.id,
+                },
+            ],
+            { ...options, session }
+        );
+
+        // Create audit log
+        await this._createAuditLog(
+            AuditLogRepository.CREATE,
+            record.id,
+            data,
+            { ...options, session }
+        );
+
+        // Commit transaction
+        await MongooseRepository.commitTransaction(session);
+
+        return this.findById(record.id, options);
+
+    } catch (error) {
+        // Rollback transaction on error
+        await MongooseRepository.abortTransaction(session);
+        throw error;
+    }
+}
 
 
 

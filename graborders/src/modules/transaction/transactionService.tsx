@@ -63,7 +63,7 @@ export default class TransactionService {
     const tenantId = AuthCurrentTenant.get();
 
     const response = await authAxios.post(
-      `/tenant/${tenantId}/transaction`,
+      `/tenant/${tenantId}/withdraw`,
       body,
     );
 
