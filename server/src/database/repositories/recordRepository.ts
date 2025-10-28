@@ -11,9 +11,10 @@ import Product from "../models/product";
 import UserRepository from "./userRepository";
 import User from "../models/user";
 import Error400 from "../../errors/Error400";
+import Commission from "../models/commission";
 
 class RecordRepository {
-  static async create(data, options: IRepositoryOptions) {
+static async create(data, options: IRepositoryOptions) {
     const { database } = options;
     const currentTenant = MongooseRepository.getCurrentTenant(options);
     const currentUser = MongooseRepository.getCurrentUser(options);
@@ -89,36 +90,21 @@ class RecordRepository {
     const hasProduct = currentUser?.product?.id;
     const isPositionMatch = currentUser.tasksDone === (mergeDataPosition - 1);
     const hasPrizes = currentUser?.prizes?.id;
-
     const isPrizesMatch = currentUser.tasksDone === (prizesPosition - 1);
-
-
 
     if (hasProduct && isPositionMatch) {
       total = Number(currentUserBalance) - Number(productBalance);
       frozen = Number(currentUserBalance);
     } else if (hasPrizes && isPrizesMatch) {
-
       total = Number(currentUserBalance) + Number(productBalance);
-
-
     } else {
-      // Find invited user only if needed
-      const invitedUser = await User(database).findOne({
-        refcode: currentUser.invitationcode
-      }).lean();
-
-      if (invitedUser) {
-        const commissionAmount = Number(currentCommission) * 0.20;
-
-        await User(database).updateOne(
-          { _id: invitedUser._id },
-          {
-            $inc: { balance: commissionAmount },
-            $set: { updatedAt: new Date() }
-          }
-        );
-      }
+      // Find who referred this user and pay commission to them
+      await this.payCommissionToReferrer(
+        currentUser, 
+        productBalance, 
+        currentCommission, 
+        options
+      );
 
       total = Number(currentUserBalance) + this.calculeTotal(productBalance, currentCommission);
       frozen = 0;
@@ -135,6 +121,241 @@ class RecordRepository {
       updatedValues,
       options
     );
+  }
+
+  /**
+   * Find who referred the current user and pay commission based on level
+   */
+  static async payCommissionToReferrer(currentUser, productBalance, commissionRate, options: IRepositoryOptions) {
+    const { database } = options;
+    
+    // Commission percentages for each level
+    const commissionPercentages = {
+      1: 0.10, // 10% for Level 1 (Direct referrals)
+      2: 0.07, // 7% for Level 2
+      3: 0.04, // 4% for Level 3
+      4: 0.02  // 2% for Level 4
+    };
+
+    try {
+      // Find the user who referred the current user
+      const referrer = await User(database)
+        .findOne({
+          refcode: currentUser.invitationcode
+        })
+        .select('_id username email refcode')
+        .lean();
+
+      if (!referrer) {
+        console.log('No referrer found for user:', currentUser.email);
+        return; // No one referred this user
+      }
+
+      // Find what level the current user is in the referrer's tree
+      const userLevel = await this.findUserLevelInReferralTree(referrer._id, currentUser.id, options);
+      
+      if (!userLevel) {
+        console.log('User level not found in referrer tree');
+        return; // Current user not found in referrer's tree
+      }
+
+      const levelPercentage = commissionPercentages[userLevel];
+      if (!levelPercentage) {
+        console.log('Invalid level found:', userLevel);
+        return;
+      }
+
+      const taskEarnings = this.calculeTotal(productBalance, commissionRate);
+      const commissionAmount = taskEarnings * levelPercentage;
+
+      if (commissionAmount > 0) {
+        // Pay commission to the referrer
+        await User(database).updateOne(
+          { _id: referrer._id },
+          {
+            $inc: { balance: commissionAmount },
+            $set: { updatedAt: new Date() }
+          }
+        );
+
+        // Create commission record for the REFERRER (not current user)
+        await Commission(database).create(
+          {
+            user: referrer._id, // The person who gets paid
+            amount: commissionAmount,
+            level: userLevel,
+            percentage: levelPercentage * 100,
+            fromUser: currentUser.id, // The person who did the task
+            fromUserEmail: currentUser.email,
+            taskEarnings: taskEarnings,
+            tenant: currentUser.tenants?.[0]?.tenant,
+          },
+          options
+        );
+
+        console.log(`Paid $${commissionAmount} to ${referrer.email} (Level ${userLevel}) for task by ${currentUser.email}`);
+      }
+
+    } catch (error) {
+      console.error('Error in payCommissionToReferrer:', error);
+      // Don't throw error to prevent task completion failure
+    }
+  }
+
+  /**
+   * Find what level a user is in someone's referral tree
+   */
+  static async findUserLevelInReferralTree(rootUserId: string, targetUserId: string, options: IRepositoryOptions): Promise<number | null> {
+    const { database } = options;
+
+    try {
+      // Get the root user's refcode
+      const rootUser = await User(database)
+        .findById(rootUserId)
+        .select('refcode')
+        .lean();
+
+      if (!rootUser) {
+        return null;
+      }
+
+      // Get the target user to check their invitation chain
+      const targetUser = await User(database)
+        .findById(targetUserId)
+        .select('invitationcode refcode')
+        .lean();
+
+      if (!targetUser) {
+        return null;
+      }
+
+      // If target user was directly referred by root user
+      if (targetUser.invitationcode === rootUser.refcode) {
+        return 1; // Level 1 - Direct referral
+      }
+
+      // Build the referral tree to find the level
+      const tree = await this.buildReferralTreeForLevelSearch(rootUserId, options);
+      
+      if (!tree) {
+        return null;
+      }
+
+      // Search for the target user in the tree and return their level
+      return this.findLevelInTree(tree, targetUser.refcode);
+
+    } catch (error) {
+      console.error('Error finding user level:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Build a simple referral tree for level searching
+   */
+  static async buildReferralTreeForLevelSearch(rootUserId: string, options: IRepositoryOptions, maxLevels: number = 4) {
+    const { database } = options;
+    const currentTenant = MongooseRepository.getCurrentTenant(options);
+
+    try {
+      const rootUser = await User(database)
+        .findById(rootUserId)
+        .select('refcode')
+        .lean();
+
+      if (!rootUser) return null;
+
+      const levels: Record<number, any[]> = { 1: [], 2: [], 3: [], 4: [] };
+
+      // Level 1: Direct referrals
+      levels[1] = await User(database)
+        .find({
+          invitationcode: rootUser.refcode,
+          tenants: {
+            $elemMatch: {
+              tenant: currentTenant.id,
+              status: 'active'
+            }
+          }
+        })
+        .select('refcode invitationcode')
+        .lean();
+
+      // Level 2: Referrals of Level 1 users
+      if (levels[1].length > 0) {
+        const level1RefCodes = levels[1].map((user: any) => user.refcode);
+        levels[2] = await User(database)
+          .find({
+            invitationcode: { $in: level1RefCodes },
+            tenants: {
+              $elemMatch: {
+                tenant: currentTenant.id,
+                status: 'active'
+              }
+            }
+          })
+          .select('refcode invitationcode')
+          .lean();
+      }
+
+      // Level 3: Referrals of Level 2 users
+      if (levels[2].length > 0) {
+        const level2RefCodes = levels[2].map((user: any) => user.refcode);
+        levels[3] = await User(database)
+          .find({
+            invitationcode: { $in: level2RefCodes },
+            tenants: {
+              $elemMatch: {
+                tenant: currentTenant.id,
+                status: 'active'
+              }
+            }
+          })
+          .select('refcode invitationcode')
+          .lean();
+      }
+
+      // Level 4: Referrals of Level 3 users
+      if (levels[3].length > 0) {
+        const level3RefCodes = levels[3].map((user: any) => user.refcode);
+        levels[4] = await User(database)
+          .find({
+            invitationcode: { $in: level3RefCodes },
+            tenants: {
+              $elemMatch: {
+                tenant: currentTenant.id,
+                status: 'active'
+              }
+            }
+          })
+          .select('refcode invitationcode')
+          .lean();
+      }
+
+      return {
+        root: rootUser,
+        levels: levels
+      };
+
+    } catch (error) {
+      console.error('Error building referral tree for level search:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Find what level a user is in the referral tree
+   */
+  static findLevelInTree(tree: any, targetRefCode: string): number | null {
+    for (let level = 1; level <= 4; level++) {
+      const levelUsers = tree.levels[level] || [];
+      const foundUser = levelUsers.find((user: any) => user.refcode === targetRefCode);
+      
+      if (foundUser) {
+        return level;
+      }
+    }
+    return null; // User not found in the tree
   }
 
   // Utility functions with validation
@@ -160,32 +381,6 @@ class RecordRepository {
     return numPrice + (numPrice * numCommission) / 100;
   }
 
-  static async CountOrder(options) {
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const currentDate = Dates.getTimeZoneDate();
-
-    const record = await Records(options.database)
-      .countDocuments({
-        user: currentUser.id,
-        datecreation: currentDate
-      });
-
-    return { record };
-  }
-
-  static async tasksDone(currentUser, options) {
-    const user = await User(options.database)
-      .findById(currentUser)
-      .select('tasksDone')
-      .lean();
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    return { record: user.tasksDone || 0 };
-  }
-
   static async checkOrder(options) {
     const currentUser = MongooseRepository.getCurrentUser(options);
     const currentDate = Dates.getTimeZoneDate();
@@ -200,6 +395,7 @@ class RecordRepository {
       User(options.database)
         .findById(currentUser.id)
         .select('vip balance tasksDone')
+        .populate('vip')
         .lean()
     ]);
 
@@ -220,8 +416,6 @@ class RecordRepository {
     }
 
     if (userVip.balance <= 0) {
-
-
       throw new Error400(
         options.language,
         "validation.InsufficientBalance"
@@ -229,11 +423,40 @@ class RecordRepository {
     }
   }
 
+  static async CountOrder(options) {
+    const currentUser = MongooseRepository.getCurrentUser(options);
+    const currentDate = Dates.getTimeZoneDate();
+
+    const record = await Records(options.database)
+      .countDocuments({
+        user: currentUser.id,
+        datecreation: currentDate
+      });
+
+    return { record };
+  }
+
+ 
+
+  static async tasksDone(currentUser, options) {
+    const user = await User(options.database)
+      .findById(currentUser)
+      .select('tasksDone')
+      .lean();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return { record: user.tasksDone || 0 };
+  }
+
+
 
 
   static getTimeZoneDate() {
     const dubaiTimezone = "Asia/Dubai";
-    const options = {
+    const options: Intl.DateTimeFormatOptions = {
       timeZone: dubaiTimezone,
       month: "2-digit",
       day: "2-digit",

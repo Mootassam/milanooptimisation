@@ -13,15 +13,24 @@ function Invitation() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   
   const referenceCodeRef = useRef<any>(null);
-  const [showTeamModal, setShowTeamModal] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [showTeamModal, setShowTeamModal] = useState<boolean>(false);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [teamMembers, setTeamMembers] = useState<
+    Array<{
+      id?: string | number;
+      email?: string;
+      joinDate?: string;
+      balance?: number;
+      vipLevel?: string;
+      [key: string]: any;
+    }>
+  >([]);
 
   // Extract data from selectRefUsers
   const targetUser = selectRefUsers?.targetUser;
   const teamSummary = selectRefUsers?.teamSummary;
 
-  const totalCommissions = teamSummary?.totalCommissions || 0;
+  const totalCommissions = selectRefUsers?.totalCommissions || 0;
   
   const totalMembers = teamSummary?.totalMembers || 0;
   const levels = teamSummary?.levels || { 1: [], 2: [], 3: [], 4: [] };
@@ -84,11 +93,11 @@ function Invitation() {
         });
     } else {
       const textArea = document.createElement("textarea");
-      textArea.value = link;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
+  const openTeamModal = (level: number) => {
+    setSelectedLevel(level);
+    setTeamMembers(levels[level] || []);
+    setShowTeamModal(true);
+  };
       Message.success("Referral link copied to clipboard!");
     }
   };
@@ -148,7 +157,7 @@ function Invitation() {
                 <>
                   <div className="team-members-list">
                     {teamMembers.map((member) => (
-                      <div key={member.id} className="team-member-card">
+                      <div key={member?.id} className="team-member-card">
                         <div className="member-avatar">
                           <i className="fas fa-user" />
                         </div>
@@ -277,7 +286,7 @@ function Invitation() {
                 <div className="stat-label">Total Members</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">${totalCommissions}</div>
+                <div className="stat-value">${totalCommissions.toFixed(2)}</div>
                 <div className="stat-label">Total Earned</div>
               </div>
             </div>

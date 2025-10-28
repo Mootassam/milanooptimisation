@@ -11,16 +11,36 @@ export default (database) => {
 
   const CommissionSchema = new Schema(
     {
-
-      amount: {
-        type: String,
-      },
       user: {
         type: Schema.Types.ObjectId,
         ref: "user",
         required: true,
       },
-
+      amount: {
+        type: Number,
+        required: true,
+      },
+      level: {
+        type: Number,
+        required: true,
+        enum: [1, 2, 3, 4],
+      },
+      percentage: {
+        type: Number,
+        required: true,
+      },
+      fromUser: {
+        type: Schema.Types.ObjectId,
+        ref: "user",
+        required: true,
+      },
+      fromUserEmail: {
+        type: String,
+      },
+      taskEarnings: {
+        type: Number,
+        required: true,
+      },
       tenant: {
         type: Schema.Types.ObjectId,
         ref: "tenant",
@@ -34,9 +54,10 @@ export default (database) => {
         type: Schema.Types.ObjectId,
         ref: "user",
       },
-      importHash: { type: String },
     },
-    { timestamps: true }
+    {
+      timestamps: true,
+    }
   );
 
   CommissionSchema.index(

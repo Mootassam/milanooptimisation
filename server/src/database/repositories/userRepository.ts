@@ -362,12 +362,6 @@ export default class UserRepository {
       const targetUser = await User(options.database)
         .findOne({
           _id: targetUserId,
-          tenants: {
-            $elemMatch: {
-              tenant: tenantId,
-              status: 'active'
-            }
-          }
         })
         .select('refcode username email')
         .lean();
@@ -375,20 +369,21 @@ export default class UserRepository {
       if (!targetUser) {
         throw new Error('User not found');
       }
+      const mongoose = require("mongoose");
+
+        const { ObjectId } = mongoose.Types;
+
       const totalCommissions = await commission(options.database).aggregate([
-        {
-          $match: { user: targetUser._id }
-        },
-
-        {
-
-          $group: {
-            _id: null,
-
-            totalAmount: { $sum: { $toDouble: "$amount" } }
-          }
-        }
-      ]);
+    {
+      $match: { user: new ObjectId(targetUserId) } // ensure correct type
+    },
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: "$amount" } // amount is already a Number
+      }
+    }
+  ]);
 
       const levels: Record<number, any[]> = {
         1: [],
