@@ -14,7 +14,7 @@ export default function useNotifications(
 
   useEffect(() => {
     if (!userId) return;
-    
+
     if (!socket) {
       socket = io("http://localhost:8080", {
         transports: ["websocket"],
@@ -40,7 +40,7 @@ export default function useNotifications(
 
     // Listen to new notifications
     socket.on("newNotification", (notif) => {
-      
+
       dispatch(notificationListActions.doCountUnread());
 
 

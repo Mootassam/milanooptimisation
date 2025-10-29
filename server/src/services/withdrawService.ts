@@ -193,6 +193,11 @@ export default class WithdrawService {
     );
   }
 
+
+  async withdrawPending(options) {
+    return await WithdrawRepository.withdrawPending(options)
+  }
+
   async update(id, data) {
     const session = await MongooseRepository.createSession(
       this.options.database

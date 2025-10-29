@@ -5,10 +5,13 @@ import WithdrawService from '../../services/withdrawService';
 
 export default async (req, res, next) => {
   try {
+    // new PermissionChecker(req).validateHas(
+    //   Permissions.values.categoryRead,
+    // );
 
     const payload = await new WithdrawService(
       req,
-    ).findAndCountAll(req.query);
+    ).withdrawPending(req);
 
     await ApiResponseHandler.success(req, res, payload);
   } catch (error) {

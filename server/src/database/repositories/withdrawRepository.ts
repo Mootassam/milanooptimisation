@@ -9,6 +9,7 @@ import Withdraw from "../models/withdraw";
 import withdraw from "../models/withdraw";
 import transaction from "../models/transaction";
 import TransactionRepository from "./TransactionRepository";
+import { sendNotification } from "../../services/notificationServices";
 
 
 class WithdrawRepository {
@@ -70,6 +71,15 @@ class WithdrawRepository {
         ],
         { ...options, session }
       );
+
+      await sendNotification({
+        user: record.user.id,
+        transaction: record.id,
+        type: 'withdraw_success',
+        forAdmin : true,
+        amount: record.amount,
+        options: { ...options, session }
+      });
       await User.findByIdAndUpdate(
         currentUser.id,
         { $inc: { balance: -withdrawalAmount } },
@@ -101,15 +111,12 @@ class WithdrawRepository {
   }
 
 
-
-  static async withdraw(data, options: IRepositoryOptions) {
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-    const currentUser = MongooseRepository.getCurrentUser(options);
-
-
+  static async withdrawPending(options: IRepositoryOptions) {
+    const count = await withdraw(options.database).countDocuments({
+      status: "pending"
+    });
+    return {count : count};
   }
-
-
 
   static async update(id, data, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);

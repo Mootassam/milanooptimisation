@@ -6,6 +6,7 @@ const initialData = {
   rows: [] as Array<any>,
   count: 0,
   loading: false,
+  pendingCount: 0,
   filter: {},
   rawFilter: {},
   pagination: {
@@ -85,14 +86,14 @@ export default (state = initialData, { type, payload }) => {
       loading: true,
       selectedKeys: [],
       filter: payload ? payload.filter : {},
-rawFilter: payload ? payload.rawFilter : {},
+      rawFilter: payload ? payload.rawFilter : {},
       pagination:
         payload && payload.keepPagination
           ? state.pagination
           : {
-              current: 1,
-              pageSize: INITIAL_PAGE_SIZE,
-            },
+            current: 1,
+            pageSize: INITIAL_PAGE_SIZE,
+          },
     };
   }
 
@@ -129,6 +130,29 @@ rawFilter: payload ? payload.rawFilter : {},
   }
 
   if (type === actions.EXPORT_ERROR) {
+    return {
+      ...state,
+      exportLoading: false,
+    };
+  }
+
+
+  if (type === actions.COUNT_STARTED) {
+    return {
+      ...state,
+      exportLoading: true,
+    };
+  }
+
+  if (type === actions.COUNT_SUCCESS) {
+    return {
+      ...state,
+      exportLoading: false,
+      pendingCount: payload
+    };
+  }
+
+  if (type === actions.COUNT_ERROR) {
     return {
       ...state,
       exportLoading: false,

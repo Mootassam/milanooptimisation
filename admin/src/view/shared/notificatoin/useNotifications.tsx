@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { io, Socket } from 'socket.io-client';
 import userListActions from 'src/modules/user/list/userListActions';
+import withdrawListActions from 'src/modules/withdraw/list/withdrawListActions';
+import WithdrawService from 'src/modules/withdraw/withdrawService';
 
 let socket: Socket | null = null;
 
@@ -27,13 +29,14 @@ export default function useNotifications(
 
     // Debug success message
     socket.on('success', (data) => {
-      
+
       console.log('✅ Backend says:', data);
     });
 
     // Listen to new notifications
     socket.on('admin', async (notif) => {
-            // await dispatch(userListActions.count());
+      await dispatch(withdrawListActions.doCountPending())
+
     });
 
     // Cleanup on unmount

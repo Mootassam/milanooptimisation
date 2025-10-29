@@ -12,6 +12,7 @@ export default class WithdrawService {
 
     const tenantId = AuthCurrentTenant.get();
 
+
     const response = await authAxios.put(
       `/tenant/${tenantId}/withdraw/${id}`,
       body,
@@ -64,6 +65,17 @@ export default class WithdrawService {
     );
 
     return response.data;
+  }
+
+  static async withdrawPending() {
+
+
+    const tenantId = AuthCurrentTenant.get();
+    const response = await authAxios.get(
+      `/tenant/${tenantId}/withdrawPending`,
+    );
+
+    return response.data.count;
   }
 
 

@@ -12,6 +12,11 @@ const withdrawListActions = {
   FETCH_SUCCESS: `${prefix}_FETCH_SUCCESS`,
   FETCH_ERROR: `${prefix}_FETCH_ERROR`,
 
+
+  COUNT_STARTED: `${prefix}_COUNT_STARTED`,
+  COUNT_SUCCESS: `${prefix}_COUNT_SUCCESS`,
+  COUNT_ERROR: `${prefix}_COUNT_ERROR`,
+
   RESETED: `${prefix}_RESETED`,
   TOGGLE_ONE_SELECTED: `${prefix}_TOGGLE_ONE_SELECTED`,
   TOGGLE_ALL_SELECTED: `${prefix}_TOGGLE_ALL_SELECTED`,
@@ -124,35 +129,57 @@ const withdrawListActions = {
 
   doFetch:
     (filter?, rawFilter?, keepPagination = false) =>
-    async (dispatch, getState) => {
-      try {
-        dispatch({
-          type: withdrawListActions.FETCH_STARTED,
-          payload: { filter, rawFilter, keepPagination },
-        });
+      async (dispatch, getState) => {
+        try {
+          dispatch({
+            type: withdrawListActions.FETCH_STARTED,
+            payload: { filter, rawFilter, keepPagination },
+          });
 
-        const response = await WithdrawService.list(
-          filter,
-          selectors.selectOrderBy(getState()),
-          selectors.selectLimit(getState()),
-          selectors.selectOffset(getState()),
-        );
+          const response = await WithdrawService.list(
+            filter,
+            selectors.selectOrderBy(getState()),
+            selectors.selectLimit(getState()),
+            selectors.selectOffset(getState()),
+          );
 
-        dispatch({
-          type: withdrawListActions.FETCH_SUCCESS,
-          payload: {
-            rows: response.rows,
-            count: response.count,
-          },
-        });
-      } catch (error) {
-        Errors.handle(error);
+          dispatch({
+            type: withdrawListActions.FETCH_SUCCESS,
+            payload: {
+              rows: response.rows,
+              count: response.count,
+            },
+          });
+        } catch (error) {
+          Errors.handle(error);
 
-        dispatch({
-          type: withdrawListActions.FETCH_ERROR,
-        });
-      }
-    },
+          dispatch({
+            type: withdrawListActions.FETCH_ERROR,
+          });
+        }
+      },
+
+  doCountPending:
+    () =>
+      async (dispatch) => {
+        try {
+          dispatch({
+            type: withdrawListActions.COUNT_STARTED,
+          });
+
+          const response = await WithdrawService.withdrawPending();
+          dispatch({
+            type: withdrawListActions.COUNT_SUCCESS,
+            payload: response
+          });
+        } catch (error) {
+          Errors.handle(error);
+
+          dispatch({
+            type: withdrawListActions.COUNT_ERROR,
+          });
+        }
+      },
 };
 
 export default withdrawListActions;

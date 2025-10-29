@@ -29,6 +29,11 @@ export default (app) => {
     require("./withdrawList").default
   );
 
+    app.get(
+    `/tenant/:tenantId/withdrawPending`,
+    require("./withdrawPending").default
+  );
+
   app.get(
     `/tenant/:tenantId/withdraw/byUser`,
     require("./withdrawByUser").default

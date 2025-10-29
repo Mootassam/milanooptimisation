@@ -18,6 +18,7 @@ export default (database) => {
       },
       // Basic withdraw information
       status: {
+      
         type: String,
         enum: ["pending", "canceled", "sucess", "failed"],
         default: "pending",

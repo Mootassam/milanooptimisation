@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'src/i18n';
 import authActions from 'src/modules/auth/authActions';
@@ -10,9 +10,12 @@ import HeaderWrapper from 'src/view/layout/styles/HeaderWrapper';
 import Avatar from 'src/view/shared/Avatar';
 import config from 'src/config';
 import useNotifications from 'src/view/shared/notificatoin/useNotifications';
+import selectors from 'src/modules/withdraw/list/withdrawListSelectors';
+import withdrawListActions from 'src/modules/withdraw/list/withdrawListActions';
 
 function Header(props) {
   const dispatch = useDispatch();
+  const totalWithdraw = useSelector(selectors.selectPending)
   const currentUser = useSelector(
     authSelectors.selectCurrentUser,
   );
@@ -21,6 +24,12 @@ function Header(props) {
   const doToggleMenu = () => {
     dispatch(layoutActions.doToggleMenu());
   };
+
+  useEffect(() => {
+    dispatch(withdrawListActions.doCountPending
+      ()
+    )
+  }, [dispatch])
 
   const userText = useSelector(
     authSelectors.selectCurrentUserNameOrEmailPrefix,
@@ -55,7 +64,7 @@ function Header(props) {
   };
 
   // Mock data for counts - replace with actual data from your state
-  const withdrawCount = 5; // Example count
+  const withdrawCount = totalWithdraw; // Example count
   const depositCount = 12; // Example count
 
   return (
@@ -76,19 +85,18 @@ function Header(props) {
 
         <div className='header-buttons'>
           {/* Deposit Button */}
-          <div 
+          <div
             className="header-button deposit-button"
             onClick={() => getHistory().push('/deposit')}
           >
             <div className="button-content">
               <i className="fas fa-arrow-down button-icon"></i>
               <span className="button-text">Deposit</span>
-              <span className="count-badge">{depositCount}</span>
             </div>
           </div>
 
           {/* Withdraw Button */}
-          <div 
+          <div
             className="header-button withdraw-button"
             onClick={() => getHistory().push('/withdraw')}
           >
