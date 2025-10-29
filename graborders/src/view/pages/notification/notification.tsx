@@ -10,7 +10,7 @@ function Notification() {
   const dispatch = useDispatch();
   const records = useSelector(selectors.selectRows) as any[];
   const loading = useSelector(selectors.selectLoading);
-  
+
   const [statusFilter, setStatusFilter] = useState("all"); // all, unread, read
 
   useEffect(() => {
@@ -28,77 +28,77 @@ function Notification() {
   });
 
   // Get notification type info based on your data
-const getNotificationInfo = (type) => {
-  switch (type) {
-    case "withdraw_success":
-      return {
-        icon: "fas fa-check-circle",
-        color: "#27ae60",
-        bgColor: "#e8f5e9",
-        title: "Withdrawal Successful",
-        description: (amount) => `Your withdrawal of $${amount} has been processed successfully`
-      };
-    case "withdraw_canceled":
-      return {
-        icon: "fas fa-times-circle",
-        color: "#e74c3c",
-        bgColor: "#ffebee",
-        title: "Withdrawal Canceled",
-        description: (amount) => `Your withdrawal of $${amount} has been canceled`
-      };
-    case "deposit_success":
-      return {
-        icon: "fas fa-arrow-down",
-        color: "#2e86de",
-        bgColor: "#e3f2fd",
-        title: "Deposit Successful",
-        description: (amount) => `Your deposit of $${amount} has been received successfully`
-      };
-    case "deposit_canceled":
-      return {
-        icon: "fas fa-ban",
-        color: "#e67e22",
-        bgColor: "#fff3e0",
-        title: "Deposit Canceled",
-        description: (amount) => `Your deposit of $${amount} has been canceled`
-      };
-    case "system":
-      return {
-        icon: "fas fa-cog",
-        color: "#9b59b6",
-        bgColor: "#f3e5f5",
-        title: "System Update",
-        description: () => "System maintenance or update notification"
-      };
-    case "alert":
-      return {
-        icon: "fas fa-exclamation-triangle",
-        color: "#f39c12",
-        bgColor: "#fff8e1",
-        title: "Important Alert",
-        description: () => "Important security or account alert"
-      };
-    default:
-      return {
-        icon: "fas fa-bell",
-        color: "#7b8796",
-        bgColor: "#f5f6f7",
-        title: "Notification",
-        description: () => "You have a new notification"
-      };
-  }
-};
+  const getNotificationInfo = (type) => {
+    switch (type) {
+      case "withdraw_success":
+        return {
+          icon: "fas fa-check-circle",
+          color: "#27ae60",
+          bgColor: "#e8f5e9",
+          title: "Withdrawal Successful",
+          description: (amount) => `Your withdrawal of $${amount} has been processed successfully`
+        };
+      case "withdraw_canceled":
+        return {
+          icon: "fas fa-times-circle",
+          color: "#e74c3c",
+          bgColor: "#ffebee",
+          title: "Withdrawal Canceled",
+          description: (amount) => `Your withdrawal of $${amount} has been canceled`
+        };
+      case "deposit_success":
+        return {
+          icon: "fas fa-arrow-down",
+          color: "#2e86de",
+          bgColor: "#e3f2fd",
+          title: "Deposit Successful",
+          description: (amount) => `Your deposit of $${amount} has been received successfully`
+        };
+      case "deposit_canceled":
+        return {
+          icon: "fas fa-ban",
+          color: "#e67e22",
+          bgColor: "#fff3e0",
+          title: "Deposit Canceled",
+          description: (amount) => `Your deposit of $${amount} has been canceled`
+        };
+      case "system":
+        return {
+          icon: "fas fa-cog",
+          color: "#9b59b6",
+          bgColor: "#f3e5f5",
+          title: "System Update",
+          description: () => "System maintenance or update notification"
+        };
+      case "alert":
+        return {
+          icon: "fas fa-exclamation-triangle",
+          color: "#f39c12",
+          bgColor: "#fff8e1",
+          title: "Important Alert",
+          description: () => "Important security or account alert"
+        };
+      default:
+        return {
+          icon: "fas fa-bell",
+          color: "#7b8796",
+          bgColor: "#f5f6f7",
+          title: "Notification",
+          description: () => "You have a new notification"
+        };
+    }
+  };
 
   // Format date to relative time
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Recently";
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInHours / 24);
-    
+
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
       if (diffInMinutes < 1) return "Just now";
@@ -117,11 +117,11 @@ const getNotificationInfo = (type) => {
     const groups: Record<string, any[]> = {};
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-    
+
     notifications.forEach(notification => {
       const notificationDate = new Date(notification.createdAt).toDateString();
       let groupKey;
-      
+
       if (notificationDate === today) {
         groupKey = "Today";
       } else if (notificationDate === yesterday) {
@@ -134,22 +134,29 @@ const getNotificationInfo = (type) => {
           day: 'numeric'
         });
       }
-      
+
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
       groups[groupKey].push(notification);
     });
-    
+
     return groups;
   };
 
   const groupedNotifications = groupNotificationsByDate(filteredNotifications);
 
+  const makeAsRead = (id) => {
+    dispatch(notificationListActions
+      .doRead(id)
+    )
+
+  }
+
   return (
     <>
       {/* Header Section */}
-        <Header
+      <Header
         title="Notifications"
         showBackButton={true}
         showLogo={false}
@@ -157,19 +164,19 @@ const getNotificationInfo = (type) => {
       />
       {/* Filter Tabs */}
       <div className="filter-tabs">
-        <div 
+        <div
           className={`filter-tab ${statusFilter === "all" ? "active" : ""}`}
           onClick={() => setStatusFilter("all")}
         >
           All
         </div>
-        <div 
+        <div
           className={`filter-tab ${statusFilter === "unread" ? "active" : ""}`}
           onClick={() => setStatusFilter("unread")}
         >
           Unread
         </div>
-        <div 
+        <div
           className={`filter-tab ${statusFilter === "read" ? "active" : ""}`}
           onClick={() => setStatusFilter("read")}
         >
@@ -200,17 +207,18 @@ const getNotificationInfo = (type) => {
               <div className="notification-date">{date}</div>
               {notifications.map((notification) => {
                 const notificationInfo = getNotificationInfo(notification.type);
-                
+
                 return (
-                  <div 
-                    key={notification._id || notification.id} 
+                  <div
+                    key={notification._id || notification.id}
                     className={`notification-item ${notification.status === "unread" ? "unread" : ""}`}
+                    onClick={() => makeAsRead(notification._id)}
                   >
-                    <div 
+                    <div
                       className="notification-icon"
-                      style={{ 
-                        backgroundColor: notificationInfo.bgColor, 
-                        color: notificationInfo.color 
+                      style={{
+                        backgroundColor: notificationInfo.bgColor,
+                        color: notificationInfo.color
                       }}
                     >
                       <i className={notificationInfo.icon} />

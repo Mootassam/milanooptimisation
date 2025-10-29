@@ -77,7 +77,7 @@ export default class notificationService {
   }
 
 
-    static async countUnreadByUser() {
+  static async countUnreadByUser() {
     const tenantId = AuthCurrentTenant.get();
 
     const response = await authAxios.get(
@@ -87,7 +87,18 @@ export default class notificationService {
     return response.data;
   }
 
-  
+
+  static async makeAsRead(values) {
+
+    const tenantId = AuthCurrentTenant.get();
+    const response = await authAxios.post(
+      `/tenant/${tenantId}/makeAsRead`, { values }
+    );
+
+    return response.data;
+  }
+
+
 
   static async list(filter, orderBy, limit, offset) {
     const params = {

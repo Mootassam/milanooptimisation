@@ -5,7 +5,8 @@ import NotificationService from '../../services/notificationService';
 export default async (req, res, next) => {
   try {
 
-  const id = req.body.data;
+    const id = req.body.values;
+
     const payload = await new NotificationService(
       req,
     ).markRead(id);

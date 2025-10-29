@@ -203,6 +203,8 @@
 
  .notification-badga {
      position: absolute;
+     width: 20px;
+     height: 20px;
      top: -14px;
      right: -10px;
      background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
