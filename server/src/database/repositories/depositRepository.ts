@@ -11,6 +11,7 @@ import Company from "../models/company";
 import TransactionRepository from "./TransactionRepository";
 import WithdrawService from "../../services/withdrawService";
 import Notification from "../models/notification";
+import user from "../models/user";
 
 class DepositRepository {
   static async create(data, options: IRepositoryOptions) {
@@ -55,6 +56,9 @@ class DepositRepository {
       options
     );
 
+    await user(options.database).findByIdAndUpdate({ _id: currentUser.id }, { $inc: { balance: parseFloat(record.amount) } })
+
+
     await TransactionRepository.create
       (data, record.id, 'deposit', options)
     const session = await MongooseRepository.createSession(options.database);
@@ -81,26 +85,26 @@ class DepositRepository {
 
 
 
-    static async createNotification(
-      userId: any,
-      transactionId: any,
-      type: string,
-      amount: any,
-      options: IRepositoryOptions
-    ) {
-      const currentUser = MongooseRepository.getCurrentUser(options);
-      const currentTenant = MongooseRepository.getCurrentTenant(options);
-  
-      await Notification(options.database).create([{
-        type, // Now using the type directly (deposit_success, withdraw_success, etc.)
-        status: 'unread',
-        user: userId,
-        transaction: transactionId,
-        amount: amount.toString(),
-        tenant: currentTenant.id,
-        createdBy: currentUser.id,
-      }], options);
-    }
+  static async createNotification(
+    userId: any,
+    transactionId: any,
+    type: string,
+    amount: any,
+    options: IRepositoryOptions
+  ) {
+    const currentUser = MongooseRepository.getCurrentUser(options);
+    const currentTenant = MongooseRepository.getCurrentTenant(options);
+
+    await Notification(options.database).create([{
+      type, // Now using the type directly (deposit_success, withdraw_success, etc.)
+      status: 'unread',
+      user: userId,
+      transaction: transactionId,
+      amount: amount.toString(),
+      tenant: currentTenant.id,
+      createdBy: currentUser.id,
+    }], options);
+  }
 
   static async tronScan(data, options: IRepositoryOptions) {
     const { txid, amount } = data;

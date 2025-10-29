@@ -5,6 +5,7 @@ import { getHistory } from 'src/modules/store';
 import { i18n } from '../../../i18n';
 import DepositService from 'src/modules/deposit/depositService';
 import depositListActions from 'src/modules/deposit/list/depositListActions';
+import authActions from 'src/modules/auth/authActions';
 
 const prefix = 'DEPOSIT_FORM';
 
@@ -66,6 +67,8 @@ const depositFormActions = {
         payload: record,
       });
 
+
+
     } catch (error) {
       Errors.handle(error);
 
@@ -82,6 +85,7 @@ const depositFormActions = {
       showModal: false,
       showErrorModal: false
     });
+    await dispatch(authActions.doInit())
   },
 
   doUpdate: (id, values) => async (dispatch, getState) => {
