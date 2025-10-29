@@ -4,7 +4,7 @@ services:
     build: ./server
     image : milano-backend 
     ports:
-      - 8085:8080
+      - 8085:8085
     restart: unless-stopped
     volumes:
       - upload:/upload
