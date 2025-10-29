@@ -8,10 +8,10 @@ import moment from 'moment';
 
 const authAxios = Axios.create({
   //Local
-  // baseURL: "http://159.198.77.158:8080/api",
+  // baseURL: "http://199.192.21.96:8085/api",
 
   //Randthis
-  baseURL: 'http://localhost:8080/api/',
+  baseURL: 'http://199.192.21.96:8085/api/',
 
   paramsSerializer: function (params) {
 

@@ -19,7 +19,7 @@ export default function useNotifications(
     if (!userId) return;
 
     if (!socket) {
-      socket = io('http://localhost:8080', {
+      socket = io('http://199.192.21.96:8085', {
         transports: ['websocket'], // ensure stable connection
       });
     }

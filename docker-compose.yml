@@ -4,7 +4,7 @@ services:
     build: ./server
     image : wakanda-backend 
     ports:
-      - 8080:8080
+      - 8085:8080
     restart: unless-stopped
     volumes:
       - upload:/upload
@@ -13,7 +13,7 @@ services:
   db:
     image: mongo:4.0-xenial
     ports:
-      - 2727:27017
+      - 2747:27017
     restart: unless-stopped
     volumes:
       - phone:/data/db

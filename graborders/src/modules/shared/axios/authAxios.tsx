@@ -2,8 +2,8 @@ import axios from "axios";
 import authToken from "src/modules/auth/authToken";
 
 const authAxios = axios.create({
-  // baseURL: "http://159.198.77.158:8080/api",
-  baseURL: "http://localhost:8080/api",
+  // baseURL: "http://199.192.21.96:8085/api",
+  baseURL: "http://199.192.21.96:8085/api",
 });
 
 
