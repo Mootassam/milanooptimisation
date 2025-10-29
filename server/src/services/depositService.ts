@@ -3,6 +3,7 @@ import MongooseRepository from "../database/repositories/mongooseRepository";
 import { IServiceOptions } from "./IServiceOptions";
 import DepositRepository from "../database/repositories/depositRepository";
 import Notification from "../database/models/notification";
+import { sendNotification } from "./notificationServices";
 
 export default class DepositService {
   options: IServiceOptions;
@@ -52,20 +53,6 @@ export default class DepositService {
 
 
 
-  async createNotification(userId, transactionId, type, amount, options) {
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-
-    await Notification(options.database).create([{
-      type, // Now using the type directly (deposit_success, withdraw_success, etc.)
-      status: 'unread',
-      user: userId,
-      transaction: transactionId,
-      amount: amount.toString(),
-      tenant: currentTenant.id,
-      createdBy: currentUser.id,
-    }], options);
-  }
 
   async checkSolde(data, options) {
     const currentUser = MongooseRepository.getCurrentUser(options);
@@ -138,31 +125,37 @@ export default class DepositService {
       // Create notification based on transaction type and new status
       if (transaction.type === 'withdraw' && newStatus === 'success') {
         // Only create withdraw_success notification for successful withdrawals
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_success', // Created only when withdrawal is successful
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transactionId,
+          type: 'withdraw_success',
+          amount: transaction.amount,
+          options: { ...options, session }
+        });
       } else if (transaction.type === 'withdraw' && newStatus === 'canceled') {
         // Create withdraw_canceled notification for canceled withdrawals
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transactionId,
+          type: 'withdraw_canceled',
+          amount: transaction.amount,
+          options: { ...options, session }
+        });
       } else if (transaction.type === 'deposit' && newStatus === 'canceled') {
         // Create deposit_canceled notification for canceled deposits
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'deposit_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transactionId,
+          type: 'deposit_canceled',
+          amount: transaction.amount,
+          options: { ...options, session }
+        });
+
       }
       // Note: deposit_success is already created in the create method
 

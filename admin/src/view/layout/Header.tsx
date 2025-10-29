@@ -9,10 +9,15 @@ import I18nSelect from 'src/view/layout/I18nSelect';
 import HeaderWrapper from 'src/view/layout/styles/HeaderWrapper';
 import Avatar from 'src/view/shared/Avatar';
 import config from 'src/config';
+import useNotifications from 'src/view/shared/notificatoin/useNotifications';
 
 function Header(props) {
   const dispatch = useDispatch();
+  const currentUser = useSelector(
+    authSelectors.selectCurrentUser,
+  );
 
+  useNotifications(currentUser.id)
   const doToggleMenu = () => {
     dispatch(layoutActions.doToggleMenu());
   };

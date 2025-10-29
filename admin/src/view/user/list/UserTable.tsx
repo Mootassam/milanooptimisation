@@ -98,18 +98,7 @@ function UserTable() {
           <table className="user-list-table">
             <thead className="table-header">
               <tr>
-                <th className="checkbox-column">
-                  {hasRows && (
-                    <div className="checkbox-wrapper">
-                      <input
-                        type="checkbox"
-                        className="form-checkbox"
-                        checked={Boolean(isAllSelected)}
-                        onChange={doToggleAllSelected}
-                      />
-                    </div>
-                  )}
-                </th>
+             
                 <th className="sortable-header" onClick={() => doChangeSort('email')}>
                   {i18n('user.fields.email')}
                   {sorter.field === 'email' && (
@@ -188,16 +177,7 @@ function UserTable() {
               {!loading &&
                 rows.map((row) => (
                   <tr key={row.id} className="table-row">
-                    <td className="checkbox-column">
-                      <div className="checkbox-wrapper">
-                        <input
-                          type="checkbox"
-                          className="form-checkbox"
-                          checked={selectedKeys.includes(row.id)}
-                          onChange={() => doToggleOneSelected(row.id)}
-                        />
-                      </div>
-                    </td>
+                
                     <td className="table-cell">{row.email}</td>
                     <td className="table-cell">{row.phoneNumber}</td>
                     <td className="table-cell">{row.invitationcode}</td>

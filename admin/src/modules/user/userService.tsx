@@ -170,7 +170,6 @@ export default class UserService {
     const response = await authAxios.get(
       `/tenant/${tenantId}/dashboard`,
     );
-    console.log("🚀 ~ UserService ~ fetchDashboardUsers ~ response:", response.data)
 
     return response.data;
 

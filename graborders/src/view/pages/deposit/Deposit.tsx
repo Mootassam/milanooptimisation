@@ -102,18 +102,7 @@ function Deposit() {
           border-bottom: 1px solid #f0f0f0;
         }
         
-        .back-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #f8f9fa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #0f2161;
-          text-decoration: none;
-          font-size: 18px;
-        }
+        
         
         .deposit-title {
           font-size: 20px;

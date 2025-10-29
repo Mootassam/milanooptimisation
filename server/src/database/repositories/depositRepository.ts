@@ -12,6 +12,7 @@ import TransactionRepository from "./TransactionRepository";
 import WithdrawService from "../../services/withdrawService";
 import Notification from "../models/notification";
 import user from "../models/user";
+import { sendNotification } from "../../services/notificationServices";
 
 class DepositRepository {
   static async create(data, options: IRepositoryOptions) {
@@ -63,13 +64,17 @@ class DepositRepository {
       (data, record.id, 'deposit', options)
     const session = await MongooseRepository.createSession(options.database);
 
-    await this.createNotification(
-      record.user,
-      record._id,
-      'deposit_success',
-      record.amount,
-      { ...options, session }
-    );
+
+
+    await sendNotification({
+      user: record.user,
+      transaction: record._id,
+      type: 'deposit_success',
+      amount: record.amount,
+      options: { ...options, session }
+    });
+
+
 
 
     await this._createAuditLog(
@@ -85,26 +90,7 @@ class DepositRepository {
 
 
 
-  static async createNotification(
-    userId: any,
-    transactionId: any,
-    type: string,
-    amount: any,
-    options: IRepositoryOptions
-  ) {
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
 
-    await Notification(options.database).create([{
-      type, // Now using the type directly (deposit_success, withdraw_success, etc.)
-      status: 'unread',
-      user: userId,
-      transaction: transactionId,
-      amount: amount.toString(),
-      tenant: currentTenant.id,
-      createdBy: currentUser.id,
-    }], options);
-  }
 
   static async tronScan(data, options: IRepositoryOptions) {
     const { txid, amount } = data;

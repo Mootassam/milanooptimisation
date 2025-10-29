@@ -208,18 +208,7 @@ function WithdrawListTable(props) {
         <table className="withdraw-list-table">
           <thead className="table-header">
             <tr>
-              <th className="checkbox-column">
-                {hasRows && (
-                  <div className="checkbox-wrapper">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox"
-                      checked={Boolean(isAllSelected)}
-                      onChange={doToggleAllSelected}
-                    />
-                  </div>
-                )}
-              </th>
+             
               <th className="sortable-header" onClick={() => doChangeSort('user')}>
                 {i18n('entities.withdraw.fields.user')}
                 {sorter.field === 'user' && (
@@ -297,16 +286,7 @@ function WithdrawListTable(props) {
 
               return (
                 <tr key={row.id} className="table-row">
-                  <td className="checkbox-column">
-                    <div className="checkbox-wrapper">
-                      <input
-                        type="checkbox"
-                        className="form-checkbox"
-                        checked={selectedKeys.includes(row.id)}
-                        onChange={() => doToggleOneSelected(row.id)}
-                      />
-                    </div>
-                  </td>
+                 
                   <td className="table-cell">
                     <UserListItem value={row.user} />
                   </td>

@@ -98,7 +98,9 @@ function Withdraw() {
               <i className="fas fa-wallet balance-icon" />
               <span className="balance-text">
                 Available balance: <strong>${currentUser?.balance?.toFixed(2) || 0} </strong>
+
               </span>
+
             </div>
           </div>
 

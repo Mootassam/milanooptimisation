@@ -184,12 +184,12 @@ function Profile() {
           </div>
           <div className="profile-info">
             <h2 className="profile-name">{currentUser.email.split('@')[0]}</h2>
-            <span className="profile-status">Gold Member</span>
+            <span className="profile-status">Invitation Code :  {currentUser.refcode}</span>
           </div>
         </div>
         <div className="profile-details">
           <div className="profile-detail">
-            <div className="detail-label">Invitation Code</div>
+            <div className="detail-label">Freez Blance</div>
             <div className="detail-value">{currentUser.refcode}</div>
           </div>
           <div className="profile-detail">

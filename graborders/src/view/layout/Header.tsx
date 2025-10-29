@@ -4,8 +4,12 @@ import { Link, useHistory } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import notificationListActions from "src/modules/notification/list/notificationListActions";
 import notificationListSelectors from "src/modules/notification/list/notificationListSelectors";
+import useNotifications from "src/view/shared/notifications/useNotifications"
+import authSelectors from "src/modules/auth/authSelectors";
 
 function Header(props) {
+  const currentUser = useSelector(authSelectors.selectCurrentUser);
+   const notifications = useNotifications(currentUser.id);
   const {
     title,           // Title for sub-header mode
     detail,          // Detail text for sub-header mode  

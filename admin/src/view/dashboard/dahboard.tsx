@@ -28,7 +28,6 @@ function Dashboard() {
   const withdrawalPendingCount = useSelector(userListSelectors.selectWithdrawalPendingCount);
   const withdrawalTotalAmount = useSelector(userListSelectors.selectWithdrawalTotalAmount);
 
-  console.log("🚀 ~ Dashboard ~ dashboardData:", dashboardData);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {

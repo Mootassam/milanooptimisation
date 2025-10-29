@@ -107,18 +107,6 @@ function CouponsListTable(props) {
         <table className="record-list-table">
           <thead className="table-header">
             <tr>
-              <th className="checkbox-column">
-                {hasRows && (
-                  <div className="checkbox-wrapper">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox"
-                      checked={Boolean(isAllSelected)}
-                      onChange={doToggleAllSelected}
-                    />
-                  </div>
-                )}
-              </th>
               <th className="sortable-header" onClick={() => doChangeSort('title')}>
                 {i18n('entities.record.fields.user')}
                 {sorter.field === 'title' && (
@@ -181,16 +169,7 @@ function CouponsListTable(props) {
                 const statusInfo = getStatusInfo(row.status);
                 return (
                   <tr key={row.id} className="table-row">
-                    <td className="checkbox-column">
-                      <div className="checkbox-wrapper">
-                        <input
-                          type="checkbox"
-                          className="form-checkbox"
-                          checked={selectedKeys.includes(row.id)}
-                          onChange={() => doToggleOneSelected(row.id)}
-                        />
-                      </div>
-                    </td>
+                 
                     <td className="table-cell text-center">
                       <UserListItem value={row.user} />
                     </td>

@@ -3,6 +3,7 @@ import MongooseRepository from "../database/repositories/mongooseRepository";
 import { IServiceOptions } from "./IServiceOptions";
 import TransactionRepository from "../database/repositories/TransactionRepository";
 import Notification from "../database/models/notification";
+import { sendNotification } from "./notificationServices";
 
 export default class TransactionService {
   options: IServiceOptions;
@@ -17,57 +18,59 @@ export default class TransactionService {
       this.options.database
     );
 
-    try {
-      // await this.checkSolde(data, { ...this.options });
+    // try {
+    //   // await this.checkSolde(data, { ...this.options });
 
-      const values = {
-        status: data.status,
-        datetransaction: data.datetransaction || new Date(),
-        user: data.user || MongooseRepository.getCurrentUser(this.options).id,
-        type: data.type,
-        amount: data.amount,
-      };
-      console.log("🚀 ~ TransactionService ~ create ~ values:", values)
+    //   const values = {
+    //     status: data.status,
+    //     datetransaction: data.datetransaction || new Date(),
+    //     user: data.user || MongooseRepository.getCurrentUser(this.options).id,
+    //     type: data.type,
+    //     amount: data.amount,
+    //   };
+    //   console.log("🚀 ~ TransactionService ~ create ~ values:", values)
 
-      const record = await TransactionRepository.create(values, {
-        ...this.options,
-        session,
-      });
+    //   const record = await TransactionRepository.create(values, {
+    //     ...this.options,
+    //     session,
+    //   });
 
-      // For deposit transactions, create deposit_success notification
-      if (data.type === 'deposit') {
-        await this.updateUserBalance(data.user, data.amount, session, 'inc');
+    //   // For deposit transactions, create deposit_success notification
+    //   if (data.type === 'deposit') {
+    //     await this.updateUserBalance(data.user, data.amount, session, 'inc');
 
-        await this.createNotification(
-          data.user,
-          record._id,
-          'deposit_success', // Changed to deposit_success
-          data.amount,
-          { ...this.options, session }
-        );
-      }
 
-      // For withdrawal transactions, deduct balance but DON'T create notification
-      if (data.type === 'withdraw') {
 
-        await this.updateUserBalance(data.user, data.amount, session, 'dec');
-        // No notification created for withdrawal on creation
-      }
+    //     await sendNotification({
+    //       user: data.user,
+    //       transaction: record._id,
+    //       type: 'deposit_success',
+    //       amount: data.amount,
+    //       options: { ...this.options, session }
+    //     });
+    //   }
 
-      await MongooseRepository.commitTransaction(session);
+    //   // For withdrawal transactions, deduct balance but DON'T create notification
+    //   if (data.type === 'withdraw') {
 
-      return record;
-    } catch (error) {
-      await MongooseRepository.abortTransaction(session);
+    //     await this.updateUserBalance(data.user, data.amount, session, 'dec');
+    //     // No notification created for withdrawal on creation
+    //   }
 
-      MongooseRepository.handleUniqueFieldError(
-        error,
-        this.options.language,
-        "mandat"
-      );
+    //   await MongooseRepository.commitTransaction(session);
 
-      throw error;
-    }
+    //   return record;
+    // } catch (error) {
+    //   await MongooseRepository.abortTransaction(session);
+
+    //   MongooseRepository.handleUniqueFieldError(
+    //     error,
+    //     this.options.language,
+    //     "mandat"
+    //   );
+
+    //   throw error;
+    // }
   }
 
   async updateUserBalance(userId, amount, session, operation = 'inc') {
@@ -79,20 +82,7 @@ export default class TransactionService {
     await User.findByIdAndUpdate(userId, update, { session });
   }
 
-  async createNotification(userId, transactionId, type, amount, options) {
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
 
-    await Notification(options.database).create([{
-      type, // Now using the type directly (deposit_success, withdraw_success, etc.)
-      status: 'unread',
-      user: userId,
-      transaction: transactionId,
-      amount: amount.toString(),
-      tenant: currentTenant.id,
-      createdBy: currentUser.id,
-    }], options);
-  }
 
   async checkSolde(data, options) {
     const currentUser = MongooseRepository.getCurrentUser(options);
@@ -165,31 +155,40 @@ export default class TransactionService {
       // Create notification based on transaction type and new status
       if (transaction.type === 'withdraw' && newStatus === 'success') {
         // Only create withdraw_success notification for successful withdrawals
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_success', // Created only when withdrawal is successful
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transaction._id,
+          type: 'withdraw_success',
+          amount: transaction.amount,
+          options: { ...this.options, session }
+        });
       } else if (transaction.type === 'withdraw' && newStatus === 'canceled') {
         // Create withdraw_canceled notification for canceled withdrawals
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'withdraw_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transaction._id,
+          type: 'withdraw_canceled',
+          amount: transaction.amount,
+          options: { ...this.options, session }
+        });
+
       } else if (transaction.type === 'deposit' && newStatus === 'canceled') {
         // Create deposit_canceled notification for canceled deposits
-        await this.createNotification(
-          transaction.user._id,
-          transactionId,
-          'deposit_canceled',
-          transaction.amount,
-          { ...this.options, session }
-        );
+
+
+        await sendNotification({
+          user: transaction.user._id,
+          transaction: transaction._id,
+          type: 'deposit_canceled',
+          amount: transaction.amount,
+          options: { ...this.options, session }
+        });
       }
       // Note: deposit_success is already created in the create method
 
