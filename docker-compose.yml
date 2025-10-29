@@ -2,7 +2,7 @@ version: "3.3"
 services:
   backend:
     build: ./server
-    image : wakanda-backend 
+    image : milano-backend 
     ports:
       - 8085:8080
     restart: unless-stopped
@@ -13,15 +13,15 @@ services:
   db:
     image: mongo:4.0-xenial
     ports:
-      - 2747:27017
+      - 2757:27017
     restart: unless-stopped
     volumes:
       - phone:/data/db
   web:
     build: ./admin
-    image: wakanda-web
+    image: milano-web
     ports:
-      - 3077:80
+      - 3017:80
     restart: unless-stopped
     volumes:
       - "./admin:/app"
