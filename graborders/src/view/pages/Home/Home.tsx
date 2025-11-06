@@ -45,7 +45,7 @@ function Home() {
   };
 
   const currentVip = (Id) => {
-    if (currentUser.vip.id === Id) {
+    if (currentUser?.vip?.id === Id) {
       return "Current Plan";
     }
     return "Upgrade";

@@ -43,17 +43,17 @@ export default (database) => {
       },
       grab: {
         type: Boolean,
-        default: false,
+        default: true,
       },
       withdraw: {
         type: Boolean,
-        default: false,
+        default: true,
 
       },
 
       balance: {
         type: Number,
-        default: 25,
+        default: 0,
       },
       freezeblance: {
         type: Number,

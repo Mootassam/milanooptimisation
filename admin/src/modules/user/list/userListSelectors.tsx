@@ -40,9 +40,19 @@ const selectActiveAccounts = createSelector(
   (userMetrics) => userMetrics?.activeAccounts || 0,
 );
 
-const selectNewUsersLast7Days = createSelector(
+// UPDATED: Changed from selectNewUsersLast7Days to selectNewUsersPerDay
+const selectNewUsersPerDay = createSelector(
   [selectUserMetrics],
-  (userMetrics) => userMetrics?.newUsersLast7Days || 0,
+  (userMetrics) => userMetrics?.newUsersPerDay || [],
+);
+
+// Keep the old selector for backward compatibility
+const selectNewUsersLast7Days = createSelector(
+  [selectNewUsersPerDay],
+  (newUsersPerDay) => {
+    if (!Array.isArray(newUsersPerDay)) return 0;
+    return newUsersPerDay.reduce((total, day) => total + (day.count || 0), 0);
+  },
 );
 
 const selectCompletedTasks = createSelector(
@@ -69,6 +79,12 @@ const selectTotalTransactions = createSelector(
 const selectTotalVolume = createSelector(
   [selectTransactionMetrics],
   (transactionMetrics) => transactionMetrics?.totalVolume || 0,
+);
+
+// NEW: Total Withdraw selector
+const selectTotalWithdraw = createSelector(
+  [selectTransactionMetrics],
+  (transactionMetrics) => transactionMetrics?.totalWithdraw || 0,
 );
 
 const selectLastTransactions = createSelector(
@@ -239,12 +255,14 @@ const userListSelectors = {
   selectTransactionMetrics,
   selectTotalUsers,
   selectActiveAccounts,
-  selectNewUsersLast7Days,
+  selectNewUsersPerDay, // NEW: Added this selector
+  selectNewUsersLast7Days, // Keep for backward compatibility
   selectCompletedTasks,
   selectCompletedTasksCount,
   selectTopPerformers,
   selectTotalTransactions,
   selectTotalVolume,
+  selectTotalWithdraw, // NEW: Added this selector
   selectLastTransactions,
   selectDepositStats,
   selectWithdrawalStats,

@@ -73,7 +73,7 @@ export default class UserRepository {
 
   // statics for the dahboard
 
-  static async mapUserForTenantMobile(options: IRepositoryOptions) {
+static async mapUserForTenantMobile(options: IRepositoryOptions) {
 
     const tenantId = MongooseRepository.getCurrentTenant(options);
     const sevenDaysAgo = new Date();
@@ -104,6 +104,12 @@ export default class UserRepository {
             $addFields: {
               vipData: { $arrayElemAt: ['$vipInfo', 0] },
               isNewUser: { $gte: ['$createdAt', sevenDaysAgo] },
+              createdDate: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt"
+                }
+              },
               hasCompletedTasks: {
                 $cond: {
                   if: {
@@ -122,9 +128,10 @@ export default class UserRepository {
             $group: {
               _id: null,
               totalUsers: { $sum: 1 },
-              newUsersLast7Days: {
-                $sum: {
-                  $cond: ['$isNewUser', 1, 0]
+              newUsersPerDay: {
+                $push: {
+                  date: '$createdDate',
+                  isNewUser: '$isNewUser'
                 }
               },
               completedTasksCount: {
@@ -148,11 +155,87 @@ export default class UserRepository {
                 }
               }
             }
+          },
+          {
+            $addFields: {
+              newUsersPerDay: {
+                $reduce: {
+                  input: "$newUsersPerDay",
+                  initialValue: [],
+                  in: {
+                    $cond: {
+                      if: {
+                        $and: [
+                          { $gte: ["$$this.date", sevenDaysAgo] },
+                          { $eq: ["$$this.isNewUser", true] }
+                        ]
+                      },
+                      then: {
+                        $concatArrays: [
+                          "$$value",
+                          [{
+                            date: "$$this.date",
+                            count: 1
+                          }]
+                        ]
+                      },
+                      else: "$$value"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            $addFields: {
+              newUsersPerDay: {
+                $map: {
+                  input: {
+                    $range: [0, 7]
+                  },
+                  as: "day",
+                  in: {
+                    date: {
+                      $dateToString: {
+                        format: "%Y-%m-%d",
+                        date: {
+                          $add: [
+                            new Date(sevenDaysAgo),
+                            { $multiply: ["$$day", 24 * 60 * 60 * 1000] }
+                          ]
+                        }
+                      }
+                    },
+                    count: {
+                      $size: {
+                        $filter: {
+                          input: "$newUsersPerDay",
+                          as: "user",
+                          cond: {
+                            $eq: ["$$user.date", {
+                              $dateToString: {
+                                format: "%Y-%m-%d",
+                                date: {
+                                  $add: [
+                                    new Date(sevenDaysAgo),
+                                    { $multiply: ["$$day", 24 * 60 * 60 * 1000] }
+                                  ]
+                                }
+                              }
+                            }]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         ]);
 
       // Transaction, Deposit, Withdrawal metrics in parallel
-      const [transactionStats, depositStats, withdrawStats] = await Promise.all([
+      const [transactionStats, depositStats, withdrawStats, totalDepositStats, totalWithdrawStats] = await Promise.all([
         // Transaction stats
         transaction(options.database).aggregate([
           {
@@ -173,7 +256,71 @@ export default class UserRepository {
             }
           }
         ]),
-        // Deposit stats
+        // Deposit stats - PER DAY for last 7 days
+        deposit(options.database).aggregate([
+          {
+            $match: {
+              status: 'completed',
+              createdAt: { $gte: sevenDaysAgo }
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt"
+                }
+              },
+              count: { $sum: 1 },
+              totalAmount: { $sum: '$amount' }
+            }
+          },
+          {
+            $sort: { _id: 1 }
+          },
+          {
+            $project: {
+              date: "$_id",
+              count: 1,
+              totalAmount: 1,
+              _id: 0
+            }
+          }
+        ]),
+        // Withdrawal stats - PER DAY for last 7 days
+        withdraw(options.database).aggregate([
+          {
+            $match: {
+              status: 'success',
+              createdAt: { $gte: sevenDaysAgo }
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$createdAt"
+                }
+              },
+              count: { $sum: 1 },
+              totalAmount: { $sum: '$amount' }
+            }
+          },
+          {
+            $sort: { _id: 1 }
+          },
+          {
+            $project: {
+              date: "$_id",
+              count: 1,
+              totalAmount: 1,
+              _id: 0
+            }
+          }
+        ]),
+        // TOTAL DEPOSIT (all time)
         deposit(options.database).aggregate([
           {
             $match: {
@@ -183,22 +330,21 @@ export default class UserRepository {
           {
             $group: {
               _id: null,
-              count: { $sum: 1 },
-              totalAmount: { $sum: '$amount' }
+              totalDepositAmount: { $sum: '$amount' }
             }
           }
         ]),
-        // Withdrawal stats
+        // TOTAL WITHDRAW (all time)
         withdraw(options.database).aggregate([
           {
-            $facet: {
-              pendingCount: [
-                { $match: { status: 'pending' } },
-                { $count: 'count' }
-              ],
-              totalAmount: [
-                { $group: { _id: null, amount: { $sum: '$amount' } } }
-              ]
+            $match: {
+              status: 'success'
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalWithdrawAmount: { $sum: '$amount' }
             }
           }
         ])
@@ -206,23 +352,26 @@ export default class UserRepository {
 
       const userData = userMetrics[0] || {
         totalUsers: 0,
-        newUsersLast7Days: 0,
+        newUsersPerDay: [],
         completedTasksCount: 0,
         completedTasksUsers: []
       };
 
       const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
-      const depositData = depositStats[0] || { count: 0, totalAmount: 0 };
-      const withdrawData = withdrawStats[0] || {
-        pendingCount: [{ count: 0 }],
-        totalAmount: [{ amount: 0 }]
-      };
+      const depositData = depositStats || [];
+      const withdrawData = withdrawStats || [];
+      const totalDepositData = totalDepositStats[0] || { totalDepositAmount: 0 };
+      const totalWithdrawData = totalWithdrawStats[0] || { totalWithdrawAmount: 0 };
+
+      // Fill in missing days for deposit and withdrawal stats
+      const filledDepositStats = await this.fillMissingDays(depositData, sevenDaysAgo);
+      const filledWithdrawStats = await this.fillMissingDays(withdrawData, sevenDaysAgo);
 
       return {
         userMetrics: {
           totalUsers: userData.totalUsers,
           activeAccounts: userData.totalUsers,
-          newUsersLast7Days: userData.newUsersLast7Days,
+          newUsersPerDay: userData.newUsersPerDay,
           completedTasks: {
             count: userData.completedTasksCount,
             users: userData.completedTasksUsers
@@ -240,14 +389,18 @@ export default class UserRepository {
             };
           }),
           depositStats: {
-            completedCount: depositData.count,
-            totalAmount: depositData.totalAmount
+            daily: filledDepositStats,
+            completedCount: filledDepositStats.reduce((sum, day) => sum + day.count, 0),
+            totalAmount: filledDepositStats.reduce((sum, day) => sum + day.totalAmount, 0)
           },
           withdrawalStats: {
-            pendingCount: withdrawData?.pendingCount[0]?.count || 0,
-            totalAmount: withdrawData?.totalAmount[0]?.amount || 0
+            daily: filledWithdrawStats,
+            completedCount: filledDepositStats.reduce((sum, day) => sum + day.count, 0),
+            totalAmount: filledWithdrawStats.reduce((sum, day) => sum + day.totalAmount, 0),
+            pendingCount: withdrawData?.pendingCount?.[0]?.count || 0
           },
-          totalVolume: depositData.totalAmount + (withdrawData.totalAmount[0]?.amount || 0)
+          totalVolume: totalDepositData.totalDepositAmount,
+          totalWithdraw: totalWithdrawData.totalWithdrawAmount
         }
       };
 
@@ -257,6 +410,35 @@ export default class UserRepository {
     }
   }
 
+
+  // Helper function to fill missing days with zero values
+static async fillMissingDays(data, startDate) {
+const dateMap = new Map();
+const result: { date: string; count: number; totalAmount: number; }[] = [];
+// Create map of existing data
+data.forEach(item => {
+  dateMap.set(item.date, item);
+});
+
+  // Generate last 7 days
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(currentDate.getDate() + i);
+    const dateString = currentDate.toISOString().split('T')[0];
+    
+    if (dateMap.has(dateString)) {
+      result.push(dateMap.get(dateString));
+    } else {
+      result.push({
+        date: dateString,
+        count: 0,
+        totalAmount: 0
+      });
+    }
+  }
+
+  return result;
+}
 
 
   static async resetCompletedTasksUsers(options: IRepositoryOptions) {

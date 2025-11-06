@@ -31,7 +31,10 @@ function Withdraw() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const dispatch = useDispatch();
   const [withdrawalAmount, setWithdrawalAmount] = useState(0);
-  console.log("🚀 ~ Withdraw ~ withdrawalAmount:", withdrawalAmount)
+  const [netAmount, setNetAmount] = useState(0);
+  const [chargeAmount, setChargeAmount] = useState(0);
+  
+  const WITHDRAWAL_CHARGE_RATE = 3.1; // 3.1% charge
 
   // Use Redux state for modal and loading
   const showModal = useSelector(selector.selectModal);
@@ -39,14 +42,10 @@ function Withdraw() {
 
   useEffect(() => { }, [currentUser]);
 
-
-
   const [initialValues] = useState({
     amount: "",
     withdrawPassword: "",
   });
-
-
 
   const form = useForm({
     resolver: yupResolver(schema),
@@ -54,6 +53,30 @@ function Withdraw() {
     defaultValues: initialValues,
   });
 
+  // Calculate net amount when withdrawal amount changes
+  const calculateNetAmount = (amount) => {
+    const amountNum = parseFloat(amount) || 0;
+    const charge = (amountNum * WITHDRAWAL_CHARGE_RATE) / 100;
+    const net = amountNum - charge;
+    
+    setChargeAmount(charge);
+    setNetAmount(net);
+  };
+
+  // Handle amount input change - fixed version
+  const handleAmountChange = (value) => {
+    calculateNetAmount(value);
+  };
+
+  // Watch the amount field for changes
+  const watchedAmount = form.watch('amount');
+
+  // Recalculate when watched amount changes
+  useEffect(() => {
+    if (watchedAmount !== undefined) {
+      calculateNetAmount(watchedAmount);
+    }
+  }, [watchedAmount]);
 
   const onSubmit = async ({ amount, withdrawPassword }) => {
     setWithdrawalAmount(amount);
@@ -70,8 +93,11 @@ function Withdraw() {
     };
     await dispatch(actions.doCreate(values));
     form.reset();
-
+    // Reset calculations after submission
+    setNetAmount(0);
+    setChargeAmount(0);
   };
+
   const handleCloseModal = () => {
     dispatch(transactionFormActions.doClose());
     // Reset withdrawal amount when modal closes
@@ -98,9 +124,7 @@ function Withdraw() {
               <i className="fas fa-wallet balance-icon" />
               <span className="balance-text">
                 Available balance: <strong>${currentUser?.balance?.toFixed(2) || 0} </strong>
-
               </span>
-
             </div>
           </div>
 
@@ -118,8 +142,23 @@ function Withdraw() {
                     iname="fas fa-coins"
                     type="number"
                     externalErrorMessage={null}
-                    disabled={loading} // Disable input during loading
+                    disabled={loading}
+                    // Remove the onChange prop since we're using form.watch
                   />
+
+                  {/* Net Amount Display */}
+                  {watchedAmount && parseFloat(watchedAmount) >= 20 && (
+                    <div className="amount-calculation-section">
+                      <div className="calculation-row">
+                        <span className="calculation-label">Withdrawal Charge ({WITHDRAWAL_CHARGE_RATE}%):</span>
+                        <span className="calculation-value charge">- ${chargeAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="calculation-row total">
+                        <span className="calculation-label">You Will Receive:</span>
+                        <span className="calculation-value net-amount">${netAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Withdraw Password Input */}
                   <InputFormItem
@@ -129,7 +168,7 @@ function Withdraw() {
                     iname="fas fa-lock"
                     type="password"
                     externalErrorMessage={null}
-                    disabled={loading} // Disable input during loading
+                    disabled={loading}
                   />
                 </div>
 
@@ -165,7 +204,7 @@ function Withdraw() {
           </FormProvider>
         </div>
 
-        {/* Rules Section */}
+        {/* Rules Section - Updated with charge info */}
         <div className="withdraw-rules-card">
           <div className="rules-header">
             <i className="fas fa-info-circle rules-icon" />
@@ -175,16 +214,22 @@ function Withdraw() {
           <ul className="rules-list">
             <li className="rules-list-item">
               <span className="rule-number">(1)</span>
-              <span className="rule-text">Minimum withdrawal is $20 </span>
+              <span className="rule-text">Minimum withdrawal is $20</span>
             </li>
             <li className="rules-list-item">
               <span className="rule-number">(2)</span>
+              <span className="rule-text">
+                Withdrawal charge: {WITHDRAWAL_CHARGE_RATE}% applied on all withdrawals
+              </span>
+            </li>
+            <li className="rules-list-item">
+              <span className="rule-number">(3)</span>
               <span className="rule-text">
                 The payment shall be made within 48 hours after withdrawal application is approved
               </span>
             </li>
             <li className="rules-list-item">
-              <span className="rule-number">(3)</span>
+              <span className="rule-number">(4)</span>
               <span className="rule-text">
                 Incomplete daily order submission is subjected to no withdrawal, all products must be submitted for withdrawal
               </span>
@@ -193,7 +238,7 @@ function Withdraw() {
         </div>
       </div>
 
-      {/* Success Modal */}
+      {/* Success Modal - Updated to show net amount */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -214,6 +259,14 @@ function Withdraw() {
             <div className="amount-display">
               <div className="amount-label">Withdrawal Amount</div>
               <div className="amount-value">${withdrawalAmount.toFixed(2)}</div>
+              <div className="charge-info">
+                <span className="charge-label">Charge ({WITHDRAWAL_CHARGE_RATE}%):</span>
+                <span className="charge-amount">- ${chargeAmount.toFixed(2)}</span>
+              </div>
+              <div className="net-amount-info">
+                <span className="net-label">You Will Receive:</span>
+                <span className="net-amount">${netAmount.toFixed(2)}</span>
+              </div>
             </div>
 
             {/* Additional Info */}
@@ -339,6 +392,48 @@ function Withdraw() {
           display: flex;
           flex-direction: column;
           gap: 0px;
+        }
+
+        /* Amount Calculation Section */
+        .amount-calculation-section {
+          background: #f8f9ff;
+          border-radius: 12px;
+          padding: 16px;
+          margin: 15px 0;
+          border: 1px solid #e8ecff;
+        }
+
+        .calculation-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+        }
+
+        .calculation-row.total {
+          border-top: 2px solid #e8ecff;
+          margin-top: 8px;
+          padding-top: 12px;
+        }
+
+        .calculation-label {
+          color: #7b8796;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .calculation-value {
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .calculation-value.charge {
+          color: #e74c3c;
+        }
+
+        .calculation-value.net-amount {
+          color: #27ae60;
+          font-size: 16px;
         }
 
         /* Button Styles */
@@ -558,6 +653,39 @@ function Withdraw() {
         .amount-value {
           color: #0f2161;
           font-size: 32px;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+
+        .charge-info, .net-amount-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 6px 0;
+          border-top: 1px solid #e8ecff;
+        }
+
+        .net-amount-info {
+          border-top: 2px solid #e8ecff;
+          margin-top: 8px;
+          padding-top: 12px;
+        }
+
+        .charge-label, .net-label {
+          color: #7b8796;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .charge-amount {
+          color: #e74c3c;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .net-amount {
+          color: #27ae60;
+          font-size: 18px;
           font-weight: 700;
         }
 
