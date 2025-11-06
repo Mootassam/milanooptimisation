@@ -182,6 +182,7 @@ function Profile() {
           <div className="profile-image">
             <i className="fas fa-user" />
           </div>
+          
           <div className="profile-info">
             <h2 className="profile-name">{currentUser.email.split('@')[0]}</h2>
             <span className="profile-status">Invitation Code :  {currentUser.refcode}</span>
