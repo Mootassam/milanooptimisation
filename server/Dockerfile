@@ -1,12 +1,23 @@
-FROM node:14.16.0-alpine3.13
+# Use a newer Node version (supports node:crypto)
+FROM node:18-alpine
+
+# Set working directory
 WORKDIR /app
-COPY package*.json /app/
-COPY . /app/
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
-#RUN npm ci --only=production
-#RUN  npm install --production --silent && mv node_modules ../
-# ENV BACKEND_URL="http://199.192.21.96:8082/api"
+
+# Copy the rest of the app
+COPY . .
+
+# Set environment variable
 ENV BACKEND_URL="http://199.192.21.96:8085/api/"
-# ENV BACKEND_URL="http://199.192.21.96:8082/api"
+
+# Expose port
 EXPOSE 8085
+
+# Start the app
 CMD ["npm", "start"]
