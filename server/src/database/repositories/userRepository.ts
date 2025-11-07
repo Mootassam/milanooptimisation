@@ -441,6 +441,30 @@ data.forEach(item => {
 }
 
 
+
+static async resetAllUsersTasks (options: IRepositoryOptions){
+  try {
+    console.log('Starting daily reset of tasksDone for all users...');
+    
+    const result = await User(options.database).updateMany(
+      {}, // Update all users
+      { 
+        $set: { 
+          tasksDone: 0 
+        } 
+      },
+      options
+    );
+    
+    console.log(`Successfully reset tasksDone for ${result.modifiedCount} users`);
+    return result;
+  } catch (error) {
+    console.error('Error resetting tasks:', error);
+    throw error;
+  }
+}
+
+
   static async resetCompletedTasksUsers(options: IRepositoryOptions) {
     const currentUser = MongooseRepository.getCurrentUser(options);
     const tenantId = MongooseRepository.getCurrentTenant(options);

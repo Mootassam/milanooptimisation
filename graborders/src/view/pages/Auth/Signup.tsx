@@ -82,144 +82,161 @@ function Signup() {
   };
 
   return (
-    <div className="container">
-      <div className="headers">
-        <div className="logo">
-          Mano<span>Mano</span>
+    <div className="page-wrapper">
+      <div className="container">
+        <div className="headers">
+          <div className="logo">
+            Mano<span>Mano</span>
+          </div>
+          <div className="tagline">DIY • Home • Garden</div>
         </div>
-        <div className="tagline">DIY • Home • Garden</div>
-      </div>
-      
-      <div className="form-container">
-        <h1 className="welcome-text">Create Account</h1>
-        <p className="subtitle">Create an account so you can explore all the existing features</p>
         
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            {/* Email */}
-            <div className="input-group">
-              <label>Email Address</label>
-              <div className="input-wrapper">
-                <i className="fas fa-envelope"></i>
-                <InputFormItem
-                  type="text"
-                  name="email"
-                  placeholder="Enter your email"
-                  className="auth-input"
-                  externalErrorMessage={externalErrorMessage}
-                />
+        <div className="form-container">
+          <h1 className="welcome-text">Create Account</h1>
+          <p className="subtitle">Create an account so you can explore all the existing features</p>
+          
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              {/* Email */}
+              <div className="input-group">
+                <label>Email Address</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-envelope"></i>
+                  <InputFormItem
+                    type="text"
+                    name="email"
+                    placeholder="Enter your email"
+                    className="auth-input"
+                    externalErrorMessage={externalErrorMessage}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Phone Number */}
-            <div className="input-group">
-              <label>Phone Number</label>
-              <div className="input-wrapper">
-                <i className="fas fa-phone"></i>
-                <InputFormItem
-                  type="text"
-                  name="phoneNumber"
-                  placeholder="Enter your phone number"
-                  className="auth-input"
-                />
+              {/* Phone Number */}
+              <div className="input-group">
+                <label>Phone Number</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-phone"></i>
+                  <InputFormItem
+                    type="text"
+                    name="phoneNumber"
+                    placeholder="Enter your phone number"
+                    className="auth-input"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Withdrawal Password */}
-            <div className="input-group">
-              <label>Withdrawal Password</label>
-              <div className="input-wrapper">
-                <i className="fas fa-key"></i>
-                <InputFormItem
-                  type="password"
-                  name="withdrawPassword"
-                  placeholder="Create withdrawal password"
-                  className="auth-input"
-                />
+              {/* Withdrawal Password */}
+              <div className="input-group">
+                <label>Withdrawal Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-key"></i>
+                  <InputFormItem
+                    type="password"
+                    name="withdrawPassword"
+                    placeholder="Create withdrawal password"
+                    className="auth-input"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="input-group">
-              <label>Password</label>
-              <div className="input-wrapper">
-                <i className="fas fa-lock"></i>
-                <InputFormItem
-                  type="password"
-                  name="password"
-                  placeholder="Create your password"
-                  className="auth-input"
-                />
+              {/* Password */}
+              <div className="input-group">
+                <label>Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-lock"></i>
+                  <InputFormItem
+                    type="password"
+                    name="password"
+                    placeholder="Create your password"
+                    className="auth-input"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Confirm Password */}
-            <div className="input-group">
-              <label>Confirm Password</label>
-              <div className="input-wrapper">
-                <i className="fas fa-lock"></i>
-                <InputFormItem
-                  type="password"
-                  name="newPasswordConfirmation"
-                  placeholder="Confirm your password"
-                  className="auth-input"
-                />
+              {/* Confirm Password */}
+              <div className="input-group">
+                <label>Confirm Password</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-lock"></i>
+                  <InputFormItem
+                    type="password"
+                    name="newPasswordConfirmation"
+                    placeholder="Confirm your password"
+                    className="auth-input"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Invitation Code */}
-            <div className="input-group">
-              <label>Invitation Code</label>
-              <div className="input-wrapper">
-                <i className="fas fa-user-plus"></i>
-                <InputFormItem
-                  type="text"
-                  name="invitationcode"
-                  placeholder="Enter invitation code"
-                  className="auth-input"
-                  externalErrorMessage={externalErrorMessage}
-                />
+              {/* Invitation Code */}
+              <div className="input-group">
+                <label>Invitation Code</label>
+                <div className="input-wrapper">
+                  <i className="fas fa-user-plus"></i>
+                  <InputFormItem
+                    type="text"
+                    name="invitationcode"
+                    placeholder="Enter invitation code"
+                    className="auth-input"
+                    externalErrorMessage={externalErrorMessage}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Terms Agreement */}
-            <div className="remember-forgot">
-              <div className="remember">
-                <input type="checkbox" id="terms" />
-                <label htmlFor="terms">
-                  I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                </label>
+              {/* Terms Agreement */}
+              <div className="remember-forgot">
+                <div className="remember">
+                  <input type="checkbox" id="terms" />
+                  <label htmlFor="terms">
+                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                  </label>
+                </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <button disabled={loading} type="submit" className="login-btn">
-              {loading ? (
-                <ButtonIcon loading={loading} />
-              ) : (
-                <>
-                  <i className="fas fa-user-plus" style={{marginRight: '8px'}}></i>
-                  Create Account
-                </>
-              )}
-            </button>
-          </form>
-        </FormProvider>
+              {/* Submit Button */}
+              <button disabled={loading} type="submit" className="login-btn">
+                {loading ? (
+                  <ButtonIcon loading={loading} />
+                ) : (
+                  <>
+                    <i className="fas fa-user-plus" style={{marginRight: '8px'}}></i>
+                    Create Account
+                  </>
+                )}
+              </button>
+            </form>
+          </FormProvider>
 
-        {/* Sign In Link */}
-        <div className="signup-link">
-          Already have an account? <Link to="/auth/signin">Sign in now</Link>
+          {/* Sign In Link */}
+          <div className="signup-link">
+            Already have an account? <Link to="/auth/signin">Sign in now</Link>
+          </div>
         </div>
-      </div>
 
-      <div className="footer">
-        <p>
-          By creating an account, you agree to our <a href="#">Terms of Service</a> and{" "}
-          <a href="#">Privacy Policy</a>
-        </p>
+        <div className="footer">
+          <p>
+            By creating an account, you agree to our <a href="#">Terms of Service</a> and{" "}
+            <a href="#">Privacy Policy</a>
+          </p>
+        </div>
       </div>
 
       <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-wrapper {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          padding: 20px;
+        }
         
         .container {
           width: 100%;
@@ -414,9 +431,13 @@ function Signup() {
         }
         
         @media (max-width: 480px) {
+          .page-wrapper {
+            padding: 15px;
+          }
+          
           .container {
             max-width: 100%;
-            margin: 10px;
+            margin: 0;
           }
           
           .form-container {
@@ -424,7 +445,7 @@ function Signup() {
           }
           
           .headers {
-            padding: 20px 0px;
+            padding: 20px 15px;
           }
           
           .logo {
@@ -444,7 +465,7 @@ function Signup() {
           }
           
           .form-container {
-            padding: 20px 0px;
+            padding: 20px 15px;
           }
         }
       `}</style>

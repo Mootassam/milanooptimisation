@@ -17,6 +17,11 @@ const userFormActions = {
   ADD_SUCCESS: `${prefix}_ADD_SUCCESS`,
   ADD_ERROR: `${prefix}_ADD_ERROR`,
 
+  
+  REF_STARTED: `${prefix}_REF_STARTED`,
+  REF_SUCCESS: `${prefix}_REF_SUCCESS`,
+  REF_ERROR: `${prefix}_REF_ERROR`,
+
   UPDATE_STARTED: `${prefix}_UPDATE_STARTED`,
   UPDATE_SUCCESS: `${prefix}_UPDATE_SUCCESS`,
   UPDATE_ERROR: `${prefix}_UPDATE_ERROR`,
@@ -69,6 +74,29 @@ const userFormActions = {
 
       dispatch({
         type: userFormActions.ADD_ERROR,
+      });
+    }
+  },
+
+    doRef: (values) => async (dispatch, getState) => {
+    try {
+      dispatch({
+        type: userFormActions.REF_STARTED,
+      });
+
+     const record =  await UserService.fetchRefUsers(values);
+
+      dispatch({
+        type: userFormActions.REF_SUCCESS,
+        payload: record,
+      });
+
+
+    } catch (error) {
+      Errors.handle(error);
+
+      dispatch({
+        type: userFormActions.REF_ERROR,
       });
     }
   },

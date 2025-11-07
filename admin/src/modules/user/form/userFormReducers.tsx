@@ -4,6 +4,8 @@ const initialData = {
   initLoading: false,
   saveLoading: false,
   user: null,
+  refLoading: false,
+  invitedUsers: null
 };
 
 export default (state = initialData, { type, payload }) => {
@@ -28,6 +30,28 @@ export default (state = initialData, { type, payload }) => {
       ...state,
       user: null,
       initLoading: false,
+    };
+  }
+
+  if (type === actions.REF_STARTED) {
+    return {
+      ...state,
+      refLoading: true,
+    };
+  }
+
+  if (type === actions.REF_SUCCESS) {
+    return {
+      ...state,
+      refLoading: false,
+      invitedUsers: payload,
+    };
+  }
+
+  if (type === actions.REF_ERROR) {
+    return {
+      ...state,
+      refLoading: false,
     };
   }
 

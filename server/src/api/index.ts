@@ -12,6 +12,7 @@ import setupSwaggerUI from "./apiDocumentation";
 import { Server as SocketIOServer } from "socket.io";
 import { createServer } from "http";
 import { setSocketIO } from "../services/notificationServices";
+import { startDailyResetCron } from "../database/utils/dailyResetCron";
 
 const app = express();
 const server = createServer(app);
@@ -26,7 +27,7 @@ const io = new SocketIOServer(server, {
 setSocketIO(io);
 // Enables CORS
 app.use(cors({ origin: true }));
-
+startDailyResetCron();
 // Initializes and adds the database middleware.
 app.use(databaseMiddleware);
 

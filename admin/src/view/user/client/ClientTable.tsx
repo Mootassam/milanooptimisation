@@ -16,11 +16,20 @@ import TableWrapper from 'src/view/shared/styles/TableWrapper';
 import recordListActions from 'src/modules/record/list/recordListActions';
 import selectorTaskdone from 'src/modules/record/list/recordListSelectors';
 import UserService from 'src/modules/user/userService';
+import userFormActions from 'src/modules/user/form/userFormActions';
+import userFormSelectors from 'src/modules/user/form/userFormSelectors';
 
 function UserTable() {
   const dispatch = useDispatch();
   const [recordIdToDestroy, setRecordIdToDestroy] = useState(null);
   const [totalTask, setTotalTasks] = useState('');
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  
+  const selectRefLoading = useSelector(userFormSelectors.selectRefLoading);
+  const selectRefUsers = useSelector(userFormSelectors.selectRefUsers);
+  console.log("🚀 ~ UserTable ~ selectRefUsers:", selectRefUsers)
+  
   const tasksdone = useSelector(selectorTaskdone.selectCountRecord);
   const LoadingTasksDone = useSelector(selectorTaskdone.selectLoading);
   const loading = useSelector(selectors.selectLoading);
@@ -68,13 +77,183 @@ function UserTable() {
     await UserService.doOneClickLogin(id);
   };
 
+  const fetchTeam = async (id) => {
+    try {
+      setSelectedUserId(id);
+      setShowTeamModal(true);
+      dispatch(userFormActions.doRef(id));
+    } catch (error) {
+      console.error('Error fetching team data:', error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
+
+  const TeamModal = () => {
+    if (!showTeamModal) return null;
+
+    return (
+      <div className="modal-overlay">
+        <div className="team-modal-container">
+          <div className="modal-header">
+            <h3 className="modal-title">
+              <i className="fas fa-users"></i>
+              Team Details
+              {selectRefLoading && (
+                <span className="loading-badge">
+                  <Spinner />
+                  Loading...
+                </span>
+              )}
+            </h3>
+            <button className="modal-close" onClick={() => setShowTeamModal(false)}>
+              <i className="fa-solid fa-times"></i>
+            </button>
+          </div>
+          
+          <div className="modal-content">
+            {selectRefLoading ? (
+              <div className="loading-team-data">
+                <Spinner />
+                <p>Loading team data...</p>
+              </div>
+            ) : selectRefUsers ? (
+              <>
+                {/* Target User Info */}
+                <div className="team-section">
+                  <h4 className="section-title">Target User</h4>
+                  <div className="user-info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">{selectRefUsers.targetUser?.email || 'N/A'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Referral Code:</span>
+                      <span className="info-value">{selectRefUsers.targetUser?.refcode || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Team Summary */}
+                <div className="team-section">
+                  <div className="summary-header">
+                    <h4 className="section-title">Team Summary</h4>
+                    <div className="summary-stats">
+                      <div className="stat-item">
+                        <span className="stat-label">Total Members:</span>
+                        <span className="stat-value">
+                          {selectRefUsers.teamSummary?.totalMembers || 0}
+                        </span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Total Commissions:</span>
+                        <span className="stat-value">
+                          ${(selectRefUsers.totalCommissions || 0).toFixed(6)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Team Levels */}
+                  <div className="team-levels">
+                    {selectRefUsers.teamSummary?.levels ? (
+                      Object.entries(selectRefUsers.teamSummary.levels).map(([level, users]) => (
+                        <div key={level} className="level-section">
+                          <h5 className="level-title">
+                            Level {level} ({Array.isArray(users) ? users.length : 0} members)
+                          </h5>
+                          
+                          {Array.isArray(users) && users.length > 0 ? (
+                            <div className="users-table">
+                              <div className="table-header">
+                                <div className="table-cell">Email</div>
+                                <div className="table-cell">Ref Code</div>
+                                <div className="table-cell">Join Date</div>
+                                <div className="table-cell">Balance</div>
+                                <div className="table-cell">VIP Level</div>
+                                <div className="table-cell">Tasks Done</div>
+                              </div>
+                              
+                              <div className="table-body">
+                                {users.map((user) => (
+                                  <div key={user.id} className="table-row">
+                                    <div className="table-cell" data-label="Email">
+                                      {user.email || 'N/A'}
+                                    </div>
+                                    <div className="table-cell" data-label="Ref Code">
+                                      {user.refcode || 'N/A'}
+                                    </div>
+                                    <div className="table-cell" data-label="Join Date">
+                                      {formatDate(user.joinDate)}
+                                    </div>
+                                    <div className="table-cell" data-label="Balance">
+                                      ${(user.balance || 0).toFixed(2)}
+                                    </div>
+                                    <div className="table-cell" data-label="VIP Level">
+                                      {user.vipLevel || 'N/A'}
+                                    </div>
+                                    <div className="table-cell" data-label="Tasks Done">
+                                      {user.tasksDone || 0}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="no-members">
+                              No members at this level
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-team-data">
+                        <i className="fas fa-users-slash"></i>
+                        <p>No team data available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="no-team-data">
+                <i className="fas fa-exclamation-triangle"></i>
+                <p>Failed to load team data</p>
+                <button 
+                  className="btn-action primary" 
+                  onClick={() => selectedUserId && fetchTeam(selectedUserId)}
+                >
+                  <i className="fas fa-redo"></i>
+                  Retry
+                </button>
+              </div>
+            )}
+          </div>
+          
+          <div className="modal-actions">
+            <button className="btn-action primary" onClick={() => setShowTeamModal(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="user-list-container">
       <div className="table-responsive">
         <table className="user-list-table">
           <thead className="table-header">
             <tr>
-            
               <th className="sortable-header" onClick={() => doChangeSort('email')}>
                 {i18n('user.fields.email')}
                 {sorter.field === 'email' && (
@@ -107,7 +286,7 @@ function UserTable() {
                   </span>
                 )}
               </th>
-           
+
               <th className="table-header">
                 {i18n('user.fields.balance')}
               </th>
@@ -146,13 +325,12 @@ function UserTable() {
             {!loading &&
               rows.map((row) => (
                 <tr key={row.id} className="table-row">
-             
                   <td className="table-cell">{row.email}</td>
                   <td className="table-cell">{row.phoneNumber}</td>
                   <td className="table-cell">{row.invitationcode}</td>
                   <td className="table-cell">{row.refcode}</td>
                   <td className="table-cell">
-                  ${row.balance.toFixed(2)}
+                    ${row.balance.toFixed(2)}
                   </td>
                   <td className="table-cell text-center">
                     <UserStatusView value={row.status} />
@@ -161,15 +339,22 @@ function UserTable() {
                     <span>{row.country} <br />{row.ipAddress}</span>
                   </td>
                   <td className="actions-cell">
-                    <div className='buttons-container'
-
-                    >
+                    <div className='buttons-container'>
                       <button
                         className="btn-action primary"
                         onClick={() => oneClick(row.id)}
                       >
                         <i className="fas fa-sign-in-alt"></i>
                         Login
+                      </button>
+
+                      <button 
+                        className="btn-action info"
+                        onClick={() => fetchTeam(row?.id)}
+                        disabled={selectRefLoading}
+                      >
+                        <i className="fas fa-users"></i>
+                        {selectRefLoading && selectedUserId === row.id ? 'Loading...' : 'Team'}
                       </button>
 
                       <button
@@ -181,7 +366,7 @@ function UserTable() {
                       </button>
 
                       <Link
-                        className="btn-action info"
+                        className="btn-action warning"
                         to={`/password-reset/${row.id}`}
                       >
                         <i className="fas fa-key"></i>
@@ -189,7 +374,7 @@ function UserTable() {
                       </Link>
 
                       <Link
-                        className="btn-action warning"
+                        className="btn-action secondary"
                         to={`/user/${row.id}`}
                       >
                         <i className="fas fa-eye"></i>
@@ -273,6 +458,8 @@ function UserTable() {
           </div>
         </div>
       )}
+
+      <TeamModal />
 
       <style>{`
         .user-list-container {
@@ -420,12 +607,17 @@ function UserTable() {
           white-space: nowrap;
         }
 
+        .btn-action:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
         .btn-action.primary {
           background: #007bff;
           color: white;
         }
 
-        .btn-action.primary:hover {
+        .btn-action.primary:hover:not(:disabled) {
           background: #0056b3;
         }
 
@@ -434,7 +626,7 @@ function UserTable() {
           color: white;
         }
 
-        .btn-action.success:hover {
+        .btn-action.success:hover:not(:disabled) {
           background: #218838;
         }
 
@@ -443,7 +635,7 @@ function UserTable() {
           color: white;
         }
 
-        .btn-action.info:hover {
+        .btn-action.info:hover:not(:disabled) {
           background: #138496;
         }
 
@@ -452,8 +644,17 @@ function UserTable() {
           color: #212529;
         }
 
-        .btn-action.warning:hover {
+        .btn-action.warning:hover:not(:disabled) {
           background: #e0a800;
+        }
+
+        .btn-action.secondary {
+          background: #6c757d;
+          color: white;
+        }
+
+        .btn-action.secondary:hover:not(:disabled) {
+          background: #545b62;
         }
 
         .btn-action.danger {
@@ -461,7 +662,7 @@ function UserTable() {
           color: white;
         }
 
-        .btn-action.danger:hover {
+        .btn-action.danger:hover:not(:disabled) {
           background: #c82333;
         }
 
@@ -487,14 +688,25 @@ function UserTable() {
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 1000;
+          z-index: 9000;
           padding: 20px;
+
         }
 
         .modal-container {
           background: white;
           border-radius: 8px;
           max-width: 400px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .team-modal-container {
+          background: white;
+          border-radius: 8px;
+          max-width: 900px;
           width: 100%;
           max-height: 90vh;
           overflow-y: auto;
@@ -519,6 +731,18 @@ function UserTable() {
           gap: 8px;
         }
 
+        .loading-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          background: #e7f3ff;
+          color: #0066cc;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-weight: normal;
+        }
+
         .modal-close {
           background: none;
           border: none;
@@ -536,6 +760,21 @@ function UserTable() {
 
         .modal-content {
           padding: 20px;
+        }
+
+        .loading-team-data {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+          padding: 40px 20px;
+          text-align: center;
+        }
+
+        .loading-team-data p {
+          margin: 0;
+          color: #6c757d;
+          font-size: 14px;
         }
 
         .payment-details-grid {
@@ -583,6 +822,170 @@ function UserTable() {
           justify-content: flex-end;
         }
 
+        /* Team Modal Styles */
+        .team-section {
+          margin-bottom: 30px;
+        }
+
+        .section-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #495057;
+          margin-bottom: 15px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid #e9ecef;
+        }
+
+        .user-info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .info-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px;
+          background: #f8f9fa;
+          border-radius: 6px;
+        }
+
+        .info-label {
+          font-weight: 500;
+          color: #6c757d;
+        }
+
+        .info-value {
+          font-weight: 600;
+          color: #495057;
+        }
+
+        .summary-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 15px;
+        }
+
+        .summary-stats {
+          display: flex;
+          gap: 20px;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 12px 20px;
+          background: #e7f3ff;
+          border-radius: 8px;
+          border: 1px solid #b3d9ff;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          color: #0066cc;
+          margin-bottom: 4px;
+        }
+
+        .stat-value {
+          font-size: 18px;
+          font-weight: 700;
+          color: #004d99;
+        }
+
+        .team-levels {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .level-section {
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 15px;
+          background: #fafbfc;
+        }
+
+        .level-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #495057;
+          margin-bottom: 15px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .users-table {
+          width: 100%;
+          border: 1px solid #e9ecef;
+          border-radius: 6px;
+          overflow: hidden;
+        }
+
+        .users-table .table-header {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 1fr;
+          background: #e0efff;
+          color: white;
+          padding: 12px 8px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        .users-table .table-cell {
+          padding: 8px;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+        }
+
+        .users-table .table-row {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1.5fr 1fr 1fr 1fr;
+          border-bottom: 1px solid #e9ecef;
+          transition: background-color 0.2s;
+        }
+
+        .users-table .table-row:hover {
+          background: #f8f9fa;
+        }
+
+        .users-table .table-row:last-child {
+          border-bottom: none;
+        }
+
+        .no-members {
+          text-align: center;
+          padding: 20px;
+          color: #6c757d;
+          font-style: italic;
+          background: #f8f9fa;
+          border-radius: 4px;
+        }
+
+        .no-team-data {
+          text-align: center;
+          padding: 40px 20px;
+          color: #6c757d;
+        }
+
+        .no-team-data i {
+          font-size: 48px;
+          margin-bottom: 15px;
+          color: #adb5bd;
+        }
+
+        .no-team-data p {
+          margin: 0 0 15px 0;
+          font-size: 16px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
           .actions-container {
@@ -600,6 +1003,11 @@ function UserTable() {
             max-width: calc(100vw - 20px);
           }
           
+          .team-modal-container {
+            margin: 10px;
+            max-width: calc(100vw - 20px);
+          }
+          
           .detail-row {
             flex-direction: column;
             align-items: flex-start;
@@ -609,13 +1017,49 @@ function UserTable() {
           .detail-value {
             text-align: left;
           }
+          
+          .user-info-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .summary-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          
+          .summary-stats {
+            width: 100%;
+            justify-content: space-between;
+          }
+          
+          .users-table .table-header,
+          .users-table .table-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+          
+          .users-table .table-header {
+            display: none;
+          }
+          
+          .users-table .table-cell {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+          }
+          
+          .users-table .table-cell::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #6c757d;
+          }
         }
 
-
         .buttons-container {
-        display: flex;
-        gap: 6px;
-        align-items: center;
+          display: flex;
+          gap: 6px;
+          align-items: center;
+          // flex-wrap: wrap;
         }
       `}</style>
     </div>

@@ -20,7 +20,17 @@ function Home() {
   const [timemodal, setBigModal] = useState(true);
   const loading = useSelector(selector.selectLoading);
   const [Modal, setShowModal] = useState(false);
-  const [selectedVip, setSelectedVip] = useState(null);
+  interface VipItem {
+    id: string;
+    title: string;
+    photo: Array<{ downloadUrl: string }>;
+    comisionrate: string;
+    dailyorder: string;
+    levellimit: string;
+    withdrawperday: string;
+    setperday: string;
+  }
+  const [selectedVip, setSelectedVip] = useState<VipItem | null>(null);
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const searchAllCoins = async () => { };
   interface DataItem {

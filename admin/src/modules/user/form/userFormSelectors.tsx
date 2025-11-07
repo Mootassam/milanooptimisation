@@ -16,12 +16,27 @@ const selectSaveLoading = createSelector(
   [selectRaw],
   (raw) => Boolean(raw.saveLoading),
 );
+const selectRefLoading = createSelector(
+  [selectRaw],
+  (raw) => raw.refLoading,
+);
+
+
+
+
+const selectRefUsers = createSelector(
+  [selectRaw],
+  (raw) => raw.invitedUsers,
+);
+
 
 const userFormSelectors = {
   selectInitLoading,
   selectSaveLoading,
   selectUser,
   selectRaw,
+  selectRefLoading,
+  selectRefUsers,
 };
 
 export default userFormSelectors;
