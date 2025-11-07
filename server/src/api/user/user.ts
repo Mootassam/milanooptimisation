@@ -8,6 +8,7 @@ export default async (req, res) => {
     new PermissionChecker(req).validateHas(
       Permissions.values.userRead,
     );
+    
 
     const payload = await UserRepository.findAndCountAll(
       req.query,

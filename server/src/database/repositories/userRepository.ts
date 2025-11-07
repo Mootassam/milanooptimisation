@@ -20,15 +20,7 @@ import deposit from "../models/deposit";
 import withdraw from "../models/withdraw";
 import commission from "../models/commission";
 export default class UserRepository {
-
-
-
-
-
-
-
-
-
+ 
 
 
 
@@ -74,341 +66,326 @@ export default class UserRepository {
   // statics for the dahboard
 
 static async mapUserForTenantMobile(options: IRepositoryOptions) {
-
     const tenantId = MongooseRepository.getCurrentTenant(options);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     try {
-      // User metrics in single aggregation
-      const userMetrics = await User(options.database)
-        .aggregate([
-          {
-            $match: {
-              'tenants.status': 'active',
-              $or: [
-                { 'tenants.roles': 'member' },
-                { 'tenants.roles': { $in: ['member'] } }
-              ]
-            }
-          },
-          {
-            $lookup: {
-              from: 'vips',
-              localField: 'vip',
-              foreignField: '_id',
-              as: 'vipInfo'
-            }
-          },
-          {
-            $addFields: {
-              vipData: { $arrayElemAt: ['$vipInfo', 0] },
-              isNewUser: { $gte: ['$createdAt', sevenDaysAgo] },
-              createdDate: {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: "$createdAt"
-                }
-              },
-              hasCompletedTasks: {
-                $cond: {
-                  if: {
-                    $and: [
-                      { $ne: [{ $arrayElemAt: ['$vipInfo.dailyorder', 0] }, null] },
-                      { $gte: ['$tasksDone', { $toInt: { $arrayElemAt: ['$vipInfo.dailyorder', 0] } }] }
-                    ]
-                  },
-                  then: true,
-                  else: false
-                }
-              }
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalUsers: { $sum: 1 },
-              newUsersPerDay: {
-                $push: {
-                  date: '$createdDate',
-                  isNewUser: '$isNewUser'
-                }
-              },
-              completedTasksCount: {
-                $sum: {
-                  $cond: ['$hasCompletedTasks', 1, 0]
-                }
-              },
-              completedTasksUsers: {
-                $push: {
-                  $cond: [
-                    '$hasCompletedTasks',
-                    {
-                      id: '$_id',
-                      username: '$username',
-                      email: '$email',
-                      tasksDone: '$tasksDone',
-                      dailyOrder: '$vipData.dailyorder'
-                    },
-                    '$$REMOVE'
-                  ]
-                }
-              }
-            }
-          },
-          {
-            $addFields: {
-              newUsersPerDay: {
-                $reduce: {
-                  input: "$newUsersPerDay",
-                  initialValue: [],
-                  in: {
-                    $cond: {
-                      if: {
-                        $and: [
-                          { $gte: ["$$this.date", sevenDaysAgo] },
-                          { $eq: ["$$this.isNewUser", true] }
+        // User metrics in single aggregation
+        const userMetrics = await User(options.database)
+            .aggregate([
+                {
+                    $match: {
+                        'tenants.status': 'active',
+                        $or: [
+                            { 'tenants.roles': 'member' },
+                            { 'tenants.roles': { $in: ['member'] } }
                         ]
-                      },
-                      then: {
-                        $concatArrays: [
-                          "$$value",
-                          [{
-                            date: "$$this.date",
-                            count: 1
-                          }]
-                        ]
-                      },
-                      else: "$$value"
                     }
-                  }
-                }
-              }
-            }
-          },
-          {
-            $addFields: {
-              newUsersPerDay: {
-                $map: {
-                  input: {
-                    $range: [0, 7]
-                  },
-                  as: "day",
-                  in: {
-                    date: {
-                      $dateToString: {
-                        format: "%Y-%m-%d",
-                        date: {
-                          $add: [
-                            new Date(sevenDaysAgo),
-                            { $multiply: ["$$day", 24 * 60 * 60 * 1000] }
-                          ]
+                },
+                {
+                    $lookup: {
+                        from: 'vips',
+                        localField: 'vip',
+                        foreignField: '_id',
+                        as: 'vipInfo'
+                    }
+                },
+                {
+                    $addFields: {
+                        vipData: { $arrayElemAt: ['$vipInfo', 0] },
+                        // Check if user registered today
+                        isTodayUser: {
+                            $and: [
+                                { $gte: ['$createdAt', today] },
+                                { $lt: ['$createdAt', new Date(today.getTime() + 24 * 60 * 60 * 1000)] }
+                            ]
+                        },
+                        hasCompletedTasks: {
+                            $cond: {
+                                if: {
+                                    $and: [
+                                        { $ne: [{ $arrayElemAt: ['$vipInfo.dailyorder', 0] }, null] },
+                                        { $gte: ['$tasksDone', { $toInt: { $arrayElemAt: ['$vipInfo.dailyorder', 0] } }] }
+                                    ]
+                                },
+                                then: true,
+                                else: false
+                            }
                         }
-                      }
-                    },
-                    count: {
-                      $size: {
-                        $filter: {
-                          input: "$newUsersPerDay",
-                          as: "user",
-                          cond: {
-                            $eq: ["$$user.date", {
-                              $dateToString: {
-                                format: "%Y-%m-%d",
-                                date: {
-                                  $add: [
-                                    new Date(sevenDaysAgo),
-                                    { $multiply: ["$$day", 24 * 60 * 60 * 1000] }
-                                  ]
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalUsers: { $sum: 1 },
+                        newUsersToday: {
+                            $sum: {
+                                $cond: ['$isTodayUser', 1, 0]
+                            }
+                        },
+                        completedTasksCount: {
+                            $sum: {
+                                $cond: ['$hasCompletedTasks', 1, 0]
+                            }
+                        },
+                        completedTasksUsers: {
+                            $push: {
+                                $cond: [
+                                    '$hasCompletedTasks',
+                                    {
+                                        id: '$_id',
+                                        username: '$username',
+                                        email: '$email',
+                                        tasksDone: '$tasksDone',
+                                        dailyOrder: '$vipData.dailyorder'
+                                    },
+                                    '$$REMOVE'
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]);
+
+        // Enhanced metrics with daily breakdowns
+        const [transactionStats, depositStats, withdrawStats, dailyMetrics] = await Promise.all([
+            // Transaction stats
+            transaction(options.database).aggregate([
+                {
+                    $facet: {
+                        totalCount: [{ $count: 'count' }],
+                        lastFive: [
+                            { $sort: { createdAt: -1 } },
+                            { $limit: 5 },
+                            {
+                                $lookup: {
+                                    from: 'users',
+                                    localField: 'user',
+                                    foreignField: '_id',
+                                    as: 'userInfo'
                                 }
-                              }
-                            }]
-                          }
-                        }
-                      }
+                            }
+                        ]
                     }
-                  }
                 }
-              }
-            }
-          }
+            ]),
+            // Deposit stats
+            deposit(options.database).aggregate([
+                {
+                    $match: {
+                        status: 'success'
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        count: { $sum: 1 },
+                        totalAmount: { $sum: '$amount' }
+                    }
+                }
+            ]),
+            // Withdrawal stats
+            withdraw(options.database).aggregate([
+                {
+                    $facet: {
+                        pendingCount: [
+                            { $match: { status: 'pending' } },
+                            { $count: 'count' }
+                        ],
+                        totalAmount: [
+                            { $group: { _id: null, amount: { $sum: '$amount' } } }
+                        ]
+                    }
+                }
+            ]),
+            // Daily metrics for all time with daily breakdown
+            Promise.all([
+                // Daily deposits breakdown
+                deposit(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                $dateToString: {
+                                    format: '%Y-%m-%d',
+                                    date: '$createdAt'
+                                }
+                            },
+                            dailyAmount: { $sum: '$amount' },
+                            dailyCount: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { _id: -1 } }
+                ]),
+                // Daily withdrawals breakdown
+                withdraw(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                $dateToString: {
+                                    format: '%Y-%m-%d',
+                                    date: '$createdAt'
+                                }
+                            },
+                            dailyAmount: { $sum: '$amount' },
+                            dailyCount: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { _id: -1 } }
+                ]),
+                // Daily new users breakdown
+                User(options.database).aggregate([
+                    {
+                        $match: {
+                            'tenants.status': 'active'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                $dateToString: {
+                                    format: '%Y-%m-%d',
+                                    date: '$createdAt'
+                                }
+                            },
+                            dailyUsers: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { _id: -1 } }
+                ]),
+                // Today's deposits
+                deposit(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success',
+                            createdAt: { $gte: today }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            dailyAmount: { $sum: '$amount' },
+                            dailyCount: { $sum: 1 }
+                        }
+                    }
+                ]),
+                // Today's withdrawals
+                withdraw(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success',
+                            createdAt: { $gte: today }
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            dailyAmount: { $sum: '$amount' },
+                            dailyCount: { $sum: 1 }
+                        }
+                    }
+                ])
+            ])
         ]);
 
-      // Transaction, Deposit, Withdrawal metrics in parallel
-      const [transactionStats, depositStats, withdrawStats, totalDepositStats, totalWithdrawStats] = await Promise.all([
-        // Transaction stats
-        transaction(options.database).aggregate([
-          {
-            $facet: {
-              totalCount: [{ $count: 'count' }],
-              lastFive: [
-                { $sort: { createdAt: -1 } },
-                { $limit: 5 },
-                {
-                  $lookup: {
-                    from: 'users',
-                    localField: 'user',
-                    foreignField: '_id',
-                    as: 'userInfo'
-                  }
+        const [dailyDeposits, dailyWithdrawals, dailyNewUsers, todayDeposits, todayWithdrawals] = dailyMetrics;
+
+        const userData = userMetrics[0] || {
+            totalUsers: 0,
+            newUsersToday: 0,
+            completedTasksCount: 0,
+            completedTasksUsers: []
+        };
+
+        const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
+        const depositData = depositStats[0] || { count: 0, totalAmount: 0 };
+        const withdrawData = withdrawStats[0] || {
+            pendingCount: [{ count: 0 }],
+            totalAmount: [{ amount: 0 }]
+        };
+
+        // Calculate totals from daily breakdowns
+        const totalDeposits = dailyDeposits.reduce((sum, day) => sum + day.dailyAmount, 0);
+        const totalWithdrawals = dailyWithdrawals.reduce((sum, day) => sum + day.dailyAmount, 0);
+        const totalDepositCount = dailyDeposits.reduce((sum, day) => sum + day.dailyCount, 0);
+        const totalWithdrawalCount = dailyWithdrawals.reduce((sum, day) => sum + day.dailyCount, 0);
+
+        return {
+            userMetrics: {
+                totalUsers: userData.totalUsers,
+                activeAccounts: userData.totalUsers,
+                newUsersToday: userData.newUsersToday,
+                completedTasks: {
+                    count: userData.completedTasksCount,
+                    users: userData.completedTasksUsers
                 }
-              ]
+            },
+            transactionMetrics: {
+                totalTransactions: transactionData.totalCount[0]?.count || 0,
+                lastTransactions: transactionData.lastFive.map(t => {
+                    return {
+                        id: t._id,
+                        user: t.userInfo?.[0]?.email || 'Unknown',
+                        amount: t.amount,
+                        status: t.status,
+                        date: t.createdAt
+                    };
+                }),
+                depositStats: {
+                    completedCount: depositData.count,
+                    totalAmount: depositData.totalAmount
+                },
+                withdrawalStats: {
+                    pendingCount: withdrawData?.pendingCount[0]?.count || 0,
+                    totalAmount: withdrawData?.totalAmount[0]?.amount || 0
+                },
+                totalVolume: depositData.totalAmount + (withdrawData.totalAmount[0]?.amount || 0)
+            },
+            // Daily breakdown metrics
+            dailyMetrics: {
+                // Total metrics
+                totalDeposits: {
+                    amount: totalDeposits,
+                    count: totalDepositCount,
+                    dailyBreakdown: dailyDeposits
+                },
+                totalWithdrawals: {
+                    amount: totalWithdrawals,
+                    count: totalWithdrawalCount,
+                    dailyBreakdown: dailyWithdrawals
+                },
+                totalNewUsers: {
+                    count: userData.totalUsers,
+                    dailyBreakdown: dailyNewUsers
+                },
+                // Today's metrics
+                todayDeposits: {
+                    amount: todayDeposits[0]?.dailyAmount || 0,
+                    count: todayDeposits[0]?.dailyCount || 0
+                },
+                todayWithdrawals: {
+                    amount: todayWithdrawals[0]?.dailyAmount || 0,
+                    count: todayWithdrawals[0]?.dailyCount || 0
+                },
+                pendingWithdrawals: withdrawData?.pendingCount[0]?.count || 0
             }
-          }
-        ]),
-        // Deposit stats - PER DAY for last 7 days
-        deposit(options.database).aggregate([
-          {
-            $match: {
-              status: 'completed',
-              createdAt: { $gte: sevenDaysAgo }
-            }
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: "$createdAt"
-                }
-              },
-              count: { $sum: 1 },
-              totalAmount: { $sum: '$amount' }
-            }
-          },
-          {
-            $sort: { _id: 1 }
-          },
-          {
-            $project: {
-              date: "$_id",
-              count: 1,
-              totalAmount: 1,
-              _id: 0
-            }
-          }
-        ]),
-        // Withdrawal stats - PER DAY for last 7 days
-        withdraw(options.database).aggregate([
-          {
-            $match: {
-              status: 'success',
-              createdAt: { $gte: sevenDaysAgo }
-            }
-          },
-          {
-            $group: {
-              _id: {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: "$createdAt"
-                }
-              },
-              count: { $sum: 1 },
-              totalAmount: { $sum: '$amount' }
-            }
-          },
-          {
-            $sort: { _id: 1 }
-          },
-          {
-            $project: {
-              date: "$_id",
-              count: 1,
-              totalAmount: 1,
-              _id: 0
-            }
-          }
-        ]),
-        // TOTAL DEPOSIT (all time)
-        deposit(options.database).aggregate([
-          {
-            $match: {
-              status: 'completed'
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalDepositAmount: { $sum: '$amount' }
-            }
-          }
-        ]),
-        // TOTAL WITHDRAW (all time)
-        withdraw(options.database).aggregate([
-          {
-            $match: {
-              status: 'success'
-            }
-          },
-          {
-            $group: {
-              _id: null,
-              totalWithdrawAmount: { $sum: '$amount' }
-            }
-          }
-        ])
-      ]);
-
-      const userData = userMetrics[0] || {
-        totalUsers: 0,
-        newUsersPerDay: [],
-        completedTasksCount: 0,
-        completedTasksUsers: []
-      };
-
-      const transactionData = transactionStats[0] || { totalCount: [{ count: 0 }], lastFive: [] };
-      const depositData = depositStats || [];
-      const withdrawData = withdrawStats || [];
-      const totalDepositData = totalDepositStats[0] || { totalDepositAmount: 0 };
-      const totalWithdrawData = totalWithdrawStats[0] || { totalWithdrawAmount: 0 };
-
-      // Fill in missing days for deposit and withdrawal stats
-      const filledDepositStats = await this.fillMissingDays(depositData, sevenDaysAgo);
-      const filledWithdrawStats = await this.fillMissingDays(withdrawData, sevenDaysAgo);
-
-      return {
-        userMetrics: {
-          totalUsers: userData.totalUsers,
-          activeAccounts: userData.totalUsers,
-          newUsersPerDay: userData.newUsersPerDay,
-          completedTasks: {
-            count: userData.completedTasksCount,
-            users: userData.completedTasksUsers
-          }
-        },
-        transactionMetrics: {
-          totalTransactions: transactionData.totalCount[0]?.count || 0,
-          lastTransactions: transactionData.lastFive.map(t => {
-            return {
-              id: t._id,
-              user: t.userInfo?.[0]?.email || 'Unknown',
-              amount: t.amount,
-              status: t.status,
-              date: t.createdAt
-            };
-          }),
-          depositStats: {
-            daily: filledDepositStats,
-            completedCount: filledDepositStats.reduce((sum, day) => sum + day.count, 0),
-            totalAmount: filledDepositStats.reduce((sum, day) => sum + day.totalAmount, 0)
-          },
-          withdrawalStats: {
-            daily: filledWithdrawStats,
-            completedCount: filledDepositStats.reduce((sum, day) => sum + day.count, 0),
-            totalAmount: filledWithdrawStats.reduce((sum, day) => sum + day.totalAmount, 0),
-            pendingCount: withdrawData?.pendingCount?.[0]?.count || 0
-          },
-          totalVolume: totalDepositData.totalDepositAmount,
-          totalWithdraw: totalWithdrawData.totalWithdrawAmount
-        }
-      };
+        };
 
     } catch (error) {
-      console.error('Error in mapUserForTenantMobile:', error);
-      throw error;
+        console.error('Error in mapUserForTenantMobile:', error);
+        throw error;
     }
-  }
+}
 
 
   // Helper function to fill missing days with zero values
@@ -441,36 +418,12 @@ data.forEach(item => {
 }
 
 
-
-static async resetAllUsersTasks (options: IRepositoryOptions){
-  try {
-    console.log('Starting daily reset of tasksDone for all users...');
-    
-    const result = await User(options.database).updateMany(
-      {}, // Update all users
-      { 
-        $set: { 
-          tasksDone: 0 
-        } 
-      },
-      options
-    );
-    
-    console.log(`Successfully reset tasksDone for ${result.modifiedCount} users`);
-    return result;
-  } catch (error) {
-    console.error('Error resetting tasks:', error);
-    throw error;
-  }
-}
-
-
-  static async resetCompletedTasksUsers(options: IRepositoryOptions) {
+  static async resetsuccessTasksUsers(options: IRepositoryOptions) {
     const currentUser = MongooseRepository.getCurrentUser(options);
     const tenantId = MongooseRepository.getCurrentTenant(options);
 
     try {
-      // Find all users with role 'member' who have completed their daily tasks
+      // Find all users with role 'member' who have success their daily tasks
       const users = await User(options.database)
         .find({
           tenants: {
@@ -487,7 +440,7 @@ static async resetAllUsersTasks (options: IRepositoryOptions){
         .populate('vip')
         .lean();
 
-      // Filter users who completed their tasks (tasksDone >= dailyorder)
+      // Filter users who success their tasks (tasksDone >= dailyorder)
       const usersToReset = users.filter(user => {
         if (!user.vip || !user.vip.dailyorder) return false;
 
@@ -503,7 +456,7 @@ static async resetAllUsersTasks (options: IRepositoryOptions){
       if (userIdsToReset.length === 0) {
         return {
           success: true,
-          message: 'No users found with completed tasks to reset',
+          message: 'No users found with success tasks to reset',
           resetCount: 0,
           resetUsers: []
         };
@@ -554,7 +507,7 @@ static async resetAllUsersTasks (options: IRepositoryOptions){
       };
 
     } catch (error) {
-      console.error('Error in resetCompletedTasksUsers:', error);
+      console.error('Error in resetsuccessTasksUsers:', error);
       throw error;
     }
   }

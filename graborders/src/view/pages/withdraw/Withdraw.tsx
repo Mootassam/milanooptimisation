@@ -30,15 +30,19 @@ const schema = yup.object().shape({
 function Withdraw() {
   const currentUser = useSelector(authSelectors.selectCurrentUser);
   const dispatch = useDispatch();
-  const [withdrawalAmount, setWithdrawalAmount] = useState(0);
-  const [netAmount, setNetAmount] = useState(0);
-  const [chargeAmount, setChargeAmount] = useState(0);
   
   const WITHDRAWAL_CHARGE_RATE = 3.1; // 3.1% charge
 
   // Use Redux state for modal and loading
   const showModal = useSelector(selector.selectModal);
   const loading = useSelector(selector.selectSaveLoading);
+
+  // State for modal display values
+  const [modalValues, setModalValues] = useState({
+    withdrawalAmount: 0,
+    chargeAmount: 0,
+    netAmount: 0
+  });
 
   useEffect(() => { }, [currentUser]);
 
@@ -59,50 +63,53 @@ function Withdraw() {
     const charge = (amountNum * WITHDRAWAL_CHARGE_RATE) / 100;
     const net = amountNum - charge;
     
-    setChargeAmount(charge);
-    setNetAmount(net);
-  };
-
-  // Handle amount input change - fixed version
-  const handleAmountChange = (value) => {
-    calculateNetAmount(value);
+    return { amountNum, charge, net };
   };
 
   // Watch the amount field for changes
   const watchedAmount = form.watch('amount');
 
-  // Recalculate when watched amount changes
-  useEffect(() => {
-    if (watchedAmount !== undefined) {
-      calculateNetAmount(watchedAmount);
-    }
-  }, [watchedAmount]);
-
   const onSubmit = async ({ amount, withdrawPassword }) => {
-    setWithdrawalAmount(amount);
+    const { amountNum, charge, net } = calculateNetAmount(amount);
+    
+    // Set modal values BEFORE dispatching the action
+    setModalValues({
+      withdrawalAmount: amountNum,
+      chargeAmount: charge,
+      netAmount: net
+    });
+
     const values = {
       status: "pending",
       date: new Date(),
       user: currentUser ? currentUser.id : null,
       type: "withdraw",
-      amount: amount,
+      amount: net, // Submit the NET amount after fee deduction
+      originalAmount: amountNum, // Keep original for reference
+      chargeAmount: charge, // Fee amount
+      chargeRate: WITHDRAWAL_CHARGE_RATE, // Fee rate
       vip: currentUser.vip,
       withdrawPassword: withdrawPassword,
       paymentMethod: 'crypto',
       walletAddress: currentUser.trc20
     };
+    
     await dispatch(actions.doCreate(values));
     form.reset();
-    // Reset calculations after submission
-    setNetAmount(0);
-    setChargeAmount(0);
   };
 
   const handleCloseModal = () => {
     dispatch(transactionFormActions.doClose());
-    // Reset withdrawal amount when modal closes
-    setWithdrawalAmount(0);
+    // Reset modal values when modal closes
+    setModalValues({
+      withdrawalAmount: 0,
+      chargeAmount: 0,
+      netAmount: 0
+    });
   };
+
+  // Calculate current form values for display
+  const { amountNum: currentAmount, charge: currentCharge, net: currentNet } = calculateNetAmount(watchedAmount);
 
   return (
     <div className="withdraw-page-container">
@@ -143,19 +150,22 @@ function Withdraw() {
                     type="number"
                     externalErrorMessage={null}
                     disabled={loading}
-                    // Remove the onChange prop since we're using form.watch
                   />
 
                   {/* Net Amount Display */}
                   {watchedAmount && parseFloat(watchedAmount) >= 20 && (
                     <div className="amount-calculation-section">
                       <div className="calculation-row">
+                        <span className="calculation-label">Requested Amount:</span>
+                        <span className="calculation-value original">${currentAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="calculation-row">
                         <span className="calculation-label">Withdrawal Charge ({WITHDRAWAL_CHARGE_RATE}%):</span>
-                        <span className="calculation-value charge">- ${chargeAmount.toFixed(2)}</span>
+                        <span className="calculation-value charge">- ${currentCharge.toFixed(2)}</span>
                       </div>
                       <div className="calculation-row total">
-                        <span className="calculation-label">You Will Receive:</span>
-                        <span className="calculation-value net-amount">${netAmount.toFixed(2)}</span>
+                        <span className="calculation-label">Amount You Will Receive:</span>
+                        <span className="calculation-value net-amount">${currentNet.toFixed(2)}</span>
                       </div>
                     </div>
                   )}
@@ -178,7 +188,7 @@ function Withdraw() {
                     <button
                       className={`withdraw-confirm-btn ${loading ? 'loading' : ''}`}
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || !watchedAmount || parseFloat(watchedAmount) < 20}
                     >
                       {loading ? (
                         <>
@@ -238,7 +248,7 @@ function Withdraw() {
         </div>
       </div>
 
-      {/* Success Modal - Updated to show net amount */}
+      {/* Success Modal - Now uses modalValues state */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -257,15 +267,19 @@ function Withdraw() {
 
             {/* Amount Display */}
             <div className="amount-display">
-              <div className="amount-label">Withdrawal Amount</div>
-              <div className="amount-value">${withdrawalAmount.toFixed(2)}</div>
-              <div className="charge-info">
-                <span className="charge-label">Charge ({WITHDRAWAL_CHARGE_RATE}%):</span>
-                <span className="charge-amount">- ${chargeAmount.toFixed(2)}</span>
-              </div>
-              <div className="net-amount-info">
-                <span className="net-label">You Will Receive:</span>
-                <span className="net-amount">${netAmount.toFixed(2)}</span>
+              <div className="amount-breakdown">
+                <div className="breakdown-row">
+                  <span className="breakdown-label">Requested Amount:</span>
+                  <span className="breakdown-value">${modalValues.withdrawalAmount.toFixed(2)}</span>
+                </div>
+                <div className="breakdown-row">
+                  <span className="breakdown-label">Withdrawal Charge ({WITHDRAWAL_CHARGE_RATE}%):</span>
+                  <span className="breakdown-value charge">- ${modalValues.chargeAmount.toFixed(2)}</span>
+                </div>
+                <div className="breakdown-row total">
+                  <span className="breakdown-label">Amount You Will Receive:</span>
+                  <span className="breakdown-value net-amount">${modalValues.netAmount.toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
@@ -286,6 +300,10 @@ function Withdraw() {
               <div className="info-item">
                 <i className="fas fa-map-marker-alt info-icon" />
                 <span className="info-text">Wallet: {currentUser?.trc20 || 'Not provided'}</span>
+              </div>
+              <div className="info-item">
+                <i className="fas fa-info-circle info-icon" />
+                <span className="info-text">Submitted Amount: ${modalValues.netAmount.toFixed(2)} (after fee)</span>
               </div>
             </div>
 
@@ -425,6 +443,10 @@ function Withdraw() {
         .calculation-value {
           font-size: 14px;
           font-weight: 600;
+        }
+
+        .calculation-value.original {
+          color: #0f2161;
         }
 
         .calculation-value.charge {
@@ -643,47 +665,39 @@ function Withdraw() {
           border: 2px solid #f0f4ff;
         }
 
-        .amount-label {
-          color: #7b8796;
-          font-size: 14px;
-          font-weight: 500;
-          margin-bottom: 8px;
+        .amount-breakdown {
+          width: 100%;
         }
 
-        .amount-value {
-          color: #0f2161;
-          font-size: 32px;
-          font-weight: 700;
-          margin-bottom: 12px;
-        }
-
-        .charge-info, .net-amount-info {
+        .breakdown-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 6px 0;
-          border-top: 1px solid #e8ecff;
+          padding: 10px 0;
         }
 
-        .net-amount-info {
+        .breakdown-row.total {
           border-top: 2px solid #e8ecff;
-          margin-top: 8px;
-          padding-top: 12px;
+          margin-top: 10px;
+          padding-top: 15px;
         }
 
-        .charge-label, .net-label {
+        .breakdown-label {
           color: #7b8796;
           font-size: 14px;
           font-weight: 500;
         }
 
-        .charge-amount {
-          color: #e74c3c;
+        .breakdown-value {
           font-size: 14px;
           font-weight: 600;
         }
 
-        .net-amount {
+        .breakdown-value.charge {
+          color: #e74c3c;
+        }
+
+        .breakdown-value.net-amount {
           color: #27ae60;
           font-size: 18px;
           font-weight: 700;
@@ -796,10 +810,6 @@ function Withdraw() {
 
           .success-icon {
             font-size: 70px;
-          }
-
-          .amount-value {
-            font-size: 28px;
           }
         }
 

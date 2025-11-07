@@ -218,33 +218,7 @@ function Home() {
       </section>
 
       {/* Additional News Section */}
-      <section className="news-section">
-        <div className="section-header">
-          <h2><i className="fas fa-newspaper"></i> Latest Updates</h2>
-        </div>
 
-        <div className="news-container">
-          <div className="news-item">
-            <div className="news-icon">
-              <i className="fas fa-gift"></i>
-            </div>
-            <div className="news-content">
-              <h3>Referral Program Launched</h3>
-              <p>Earn 10% commission on your referrals' earnings</p>
-            </div>
-          </div>
-
-          <div className="news-item">
-            <div className="news-icon">
-              <i className="fas fa-chart-line"></i>
-            </div>
-            <div className="news-content">
-              <h3>New Investment Options</h3>
-              <p>Diversify your portfolio with our new crypto options</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* VIP Upgrade Modal */}
       {selectedVip && (
@@ -260,6 +234,14 @@ function Home() {
             <div className="modal-body">
               <div className="vip-modal-image">
                 <img src={selectedVip?.photo[0]?.downloadUrl} alt={selectedVip.title} />
+              </div>
+
+              <div className="contact-support-message">
+                <div className="support-icon">
+                  <i className="fas fa-headset"></i>
+                </div>
+                <h3>Contact Customer Support</h3>
+                <p>To upgrade your VIP level, please contact our customer support team who will assist you with the upgrade process.</p>
               </div>
 
               <div className="benefits-list">
@@ -280,22 +262,15 @@ function Home() {
                   <i className="fas fa-check-circle"></i>
                   <span><strong>Withdrawals per Day:</strong> {selectedVip.withdrawperday}</span>
                 </div>
-                <div className="benefit-item">
-                  <i className="fas fa-check-circle"></i>
-                  <span><strong>Sets per Day:</strong> {selectedVip.setperday}</span>
-                </div>
               </div>
 
               <div className="modal-actions">
                 <button className="cancel-btn" onClick={hideModal}>
                   Cancel
                 </button>
-                <button
-                  className="confirm-upgrade-btn"
-                  onClick={() => submit(selectedVip)}
-                >
-                  Confirm Upgrade
-                </button>
+                <Link to="/Online" className="contact-support-btn">
+                  Contact Support
+                </Link>
               </div>
             </div>
           </div>
@@ -720,6 +695,42 @@ function Home() {
           object-fit: cover;
         }
         
+        /* Contact Support Message */
+        .contact-support-message {
+          text-align: center;
+          margin-bottom: 20px;
+          padding: 16px;
+          background: #f0f8ff;
+          border-radius: 12px;
+          border-left: 4px solid #0f2161;
+        }
+        
+        .support-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #0f2161;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 12px;
+          font-size: 24px;
+        }
+        
+        .contact-support-message h3 {
+          color: #0f2161;
+          font-size: 18px;
+          margin: 0 0 8px;
+        }
+        
+        .contact-support-message p {
+          color: #7b8796;
+          font-size: 14px;
+          line-height: 1.5;
+          margin: 0;
+        }
+        
         .benefits-list {
           margin-bottom: 24px;
         }
@@ -782,22 +793,28 @@ function Home() {
           border-color: #0f2161;
         }
         
-        .confirm-upgrade-btn {
+        .contact-support-btn {
           flex: 2;
           padding: 14px;
           border: none;
-          background: linear-gradient(135deg, #ffde59 0%, #ffd000 100%);
-          color: #0f2161;
+          background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
+          color: white;
           border-radius: 12px;
           font-weight: 700;
           cursor: pointer;
           font-size: 16px;
           transition: all 0.3s ease;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
         }
         
-        .confirm-upgrade-btn:hover {
+        .contact-support-btn:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(255, 222, 89, 0.4);
+          box-shadow: 0 8px 20px rgba(15, 33, 97, 0.4);
+          color: white;
         }
         
         /* Bottom Navigation */

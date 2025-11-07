@@ -130,12 +130,12 @@ function Profile() {
       icon: "fas fa-bell",
       description: "Manage your alerts"
     },
-    {
-      path: "/language",
-      name: "Language",
-      icon: "fas fa-language",
-      description: "Change app language"
-    },
+    // {
+    //   path: "/language",
+    //   name: "Language",
+    //   icon: "fas fa-language",
+    //   description: "Change app language"
+    // },
     {
       path: "/help-support",
       name: "Help & Support",

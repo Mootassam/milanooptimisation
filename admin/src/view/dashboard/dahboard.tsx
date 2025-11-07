@@ -13,22 +13,34 @@ function Dashboard() {
   const loadingDashboard = useSelector(userListSelectors.dashboardLoading);
   const dashboardData = useSelector(userListSelectors.dataDashboard);
 
-  // Individual data selectors - UPDATED for new structure
-  const userMetrics = useSelector(userListSelectors.selectUserMetrics);
-  const transactionMetrics = useSelector(userListSelectors.selectTransactionMetrics);
-  const totalUsers = useSelector(userListSelectors.selectTotalUsers);
-  const activeAccounts = useSelector(userListSelectors.selectActiveAccounts);
-  const newUsersPerDay = useSelector(userListSelectors.selectNewUsersPerDay);
-  const completedTasksCount = useSelector(userListSelectors.selectCompletedTasksCount);
-  const topPerformers = useSelector(userListSelectors.selectTopPerformers);
-  const totalTransactions = useSelector(userListSelectors.selectTotalTransactions);
-  const totalVolume = useSelector(userListSelectors.selectTotalVolume);
-  const totalWithdraw = useSelector(userListSelectors.selectTotalWithdraw);
-  const lastTransactions = useSelector(userListSelectors.selectLastTransactions);
+  // Extract data from the new backend structure
+  const userMetrics = dashboardData?.userMetrics || {};
+  const transactionMetrics = dashboardData?.transactionMetrics || {};
+  const dailyMetrics = dashboardData?.dailyMetrics || {};
+
+  // User metrics
+  const totalUsers = userMetrics.totalUsers || 0;
+  const activeAccounts = userMetrics.activeAccounts || 0;
+  const newUsersToday = userMetrics.newUsersToday || 0;
+  const completedTasks = userMetrics.completedTasks || { count: 0, users: [] };
+  const topPerformers = completedTasks.users || [];
+
+  // Transaction metrics
+  const totalTransactions = transactionMetrics.totalTransactions || 0;
+  const totalVolume = transactionMetrics.totalVolume || 0;
+  const lastTransactions = transactionMetrics.lastTransactions || [];
   
-  // UPDATED: Deposit stats from new structure
-  const depositStats = useSelector(userListSelectors.selectDepositStats);
-  const withdrawalStats = useSelector(userListSelectors.selectWithdrawalStats);
+  // Deposit and withdrawal stats
+  const depositStats = transactionMetrics.depositStats || { completedCount: 0, totalAmount: 0 };
+  const withdrawalStats = transactionMetrics.withdrawalStats || { pendingCount: 0, totalAmount: 0 };
+
+  // Daily metrics - UPDATED to match new backend structure
+  const totalDeposits = dailyMetrics.totalDeposits || { amount: 0, count: 0, dailyBreakdown: [] };
+  const totalWithdrawals = dailyMetrics.totalWithdrawals || { amount: 0, count: 0, dailyBreakdown: [] };
+  const totalNewUsers = dailyMetrics.totalNewUsers || { count: 0, dailyBreakdown: [] };
+  const todayDeposits = dailyMetrics.todayDeposits || { amount: 0, count: 0 };
+  const todayWithdrawals = dailyMetrics.todayWithdrawals || { amount: 0, count: 0 };
+  const pendingWithdrawals = dailyMetrics.pendingWithdrawals || 0;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -59,12 +71,6 @@ function Dashboard() {
   // Reset tasks for all users
   const handleResetAllTasks = () => {
     dispatch(userListActions.resetAllTasks());
-  };
-
-  // Calculate total new users for last 7 days
-  const getTotalNewUsersLast7Days = () => {
-    if (!newUsersPerDay || !Array.isArray(newUsersPerDay)) return 0;
-    return newUsersPerDay.reduce((total, day) => total + (day.count || 0), 0);
   };
 
   // Loading state
@@ -169,21 +175,21 @@ function Dashboard() {
             <i className="fas fa-chart-line"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{formatCurrency(totalVolume)}</h3>
-            <p className="metric-label">Total Volume</p>
-            <span className="metric-subtitle">All-time deposits</span>
+            <h3 className="metric-value">{formatCurrency(totalDeposits.amount)}</h3>
+            <p className="metric-label">Total Deposits</p>
+            <span className="metric-subtitle">{totalDeposits.count} deposits</span>
           </div>
         </div>
 
-        {/* Total Withdraw - NEW from updated structure */}
+        {/* Total Withdraw - Using withdrawalStats totalAmount */}
         <div className="metric-card withdraw">
           <div className="metric-icon">
             <i className="fas fa-money-bill-wave"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{formatCurrency(totalWithdraw)}</h3>
+            <h3 className="metric-value">{formatCurrency(totalWithdrawals.amount)}</h3>
             <p className="metric-label">Total Withdraw</p>
-            <span className="metric-subtitle">All-time withdrawals</span>
+            <span className="metric-subtitle">{totalWithdrawals.count} completed</span>
           </div>
         </div>
 
@@ -193,7 +199,7 @@ function Dashboard() {
             <i className="fas fa-users"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{totalUsers.toLocaleString()}</h3>
+            <h3 className="metric-value">{totalUsers}</h3>
             <p className="metric-label">Total Users</p>
             <span className="metric-subtitle">Active: {activeAccounts.toLocaleString()}</span>
           </div>
@@ -205,25 +211,25 @@ function Dashboard() {
             <i className="fas fa-exchange-alt"></i>
           </div>
           <div className="metric-content">
-            <h3 className="metric-value">{totalTransactions.toLocaleString()}</h3>
+            <h3 className="metric-value">{totalTransactions}</h3>
             <p className="metric-label">Total Transactions</p>
             <span className="metric-subtitle">All transactions</span>
           </div>
         </div>
       </div>
 
-      {/* Today's Overview - UPDATED with new data structure */}
+      {/* Daily Overview - UPDATED with new data structure */}
       <div className="today-overview">
-        <h2 className="section-title">7-Day Overview</h2>
+        <h2 className="section-title">Daily Overview</h2>
         <div className="today-grid">
           <div className="today-card">
             <div className="today-icon success">
               <i className="fas fa-download"></i>
             </div>
             <div className="today-content">
-              <h4>{formatCurrency(depositStats?.totalAmount || 0)}</h4>
-              <p>7-Day Deposits</p>
-              <span className="today-count">{depositStats?.completedCount || 0} deposits</span>
+              <h4>{formatCurrency(todayDeposits.amount)}</h4>
+              <p>Today's Deposits</p>
+              <span className="today-count">{todayDeposits.count} deposits</span>
             </div>
           </div>
           
@@ -232,9 +238,9 @@ function Dashboard() {
               <i className="fas fa-upload"></i>
             </div>
             <div className="today-content">
-              <h4>{formatCurrency(withdrawalStats?.totalAmount || 0)}</h4>
-              <p>7-Day Withdrawals</p>
-              <span className="today-count">{withdrawalStats?.completedCount || 0} completed</span>
+              <h4>{formatCurrency(todayWithdrawals.amount)}</h4>
+              <p>Today's Withdrawals</p>
+              <span className="today-count">{todayWithdrawals.count} completed</span>
             </div>
           </div>
           
@@ -243,9 +249,9 @@ function Dashboard() {
               <i className="fas fa-user-plus"></i>
             </div>
             <div className="today-content">
-              <h4>{getTotalNewUsersLast7Days()}</h4>
-              <p>New Users (7 Days)</p>
-              <span className="today-count">Last 7 days</span>
+              <h4>{newUsersToday}</h4>
+              <p>New Users Today</p>
+              <span className="today-count">Registered today</span>
             </div>
           </div>
           
@@ -254,7 +260,7 @@ function Dashboard() {
               <i className="fas fa-tasks"></i>
             </div>
             <div className="today-content">
-              <h4>{withdrawalStats?.pendingCount || 0}</h4>
+              <h4>{pendingWithdrawals}</h4>
               <p>Pending Withdrawals</p>
               <span className="today-count">Awaiting approval</span>
             </div>
@@ -262,65 +268,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Daily Breakdown Section - NEW */}
-      <div className="daily-breakdown">
-        <h2 className="section-title">Daily Breakdown - Last 7 Days</h2>
-        <div className="breakdown-grid">
-          {/* Deposit Daily Breakdown */}
-          <div className="breakdown-card">
-            <div className="breakdown-header">
-              <h4 className="breakdown-title">
-                <i className="fas fa-download breakdown-icon deposit"></i>
-                Daily Deposits
-              </h4>
-              <span className="breakdown-total">
-                {formatCurrency(depositStats?.totalAmount || 0)}
-              </span>
-            </div>
-            <div className="breakdown-list">
-              {depositStats?.daily?.map((day, index) => (
-                <div key={index} className="breakdown-item">
-                  <span className="breakdown-date">{day.date}</span>
-                  <span className="breakdown-amount">
-                    {formatCurrency(day.totalAmount)} 
-                    <span className="breakdown-count">({day.count})</span>
-                  </span>
-                </div>
-              ))}
-              {(!depositStats?.daily || depositStats.daily.length === 0) && (
-                <div className="no-data">No deposit data available</div>
-              )}
-            </div>
-          </div>
+   
 
-          {/* Withdrawal Daily Breakdown */}
-          <div className="breakdown-card">
-            <div className="breakdown-header">
-              <h4 className="breakdown-title">
-                <i className="fas fa-upload breakdown-icon withdraw"></i>
-                Daily Withdrawals
-              </h4>
-              <span className="breakdown-total">
-                {formatCurrency(withdrawalStats?.totalAmount || 0)}
-              </span>
-            </div>
-            <div className="breakdown-list">
-              {withdrawalStats?.daily?.map((day, index) => (
-                <div key={index} className="breakdown-item">
-                  <span className="breakdown-date">{day.date}</span>
-                  <span className="breakdown-amount">
-                    {formatCurrency(day.totalAmount)} 
-                    <span className="breakdown-count">({day.count})</span>
-                  </span>
-                </div>
-              ))}
-              {(!withdrawalStats?.daily || withdrawalStats.daily.length === 0) && (
-                <div className="no-data">No withdrawal data available</div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Main Content Grid */}
       <div className="content-grid">
@@ -365,7 +315,7 @@ function Dashboard() {
                 </div>
               );
             })}
-            {(!lastTransactions || lastTransactions.length === 0) && (
+            {lastTransactions.length === 0 && (
               <div className="no-data">
                 <p>No recent transactions</p>
               </div>
@@ -383,25 +333,30 @@ function Dashboard() {
               disabled={loading}
             >
               <i className="fas fa-bomb"></i>
-              Reset All Tasks <span className="badge-count">{topPerformers?.length || 0}</span>
+              Reset All Tasks <span className="badge-count">{topPerformers.length}</span>
             </button>
           </div>
           <div className="users-list">
-            {topPerformers?.map(user => (
+            {topPerformers.map(user => (
               <div key={user.id} className="user-item">
                 <div className="user-info">
                   <div className="user-main">
-                    <span className="username">{user.email || user.username || 'Unknown User'}</span>
+                    <span className="username">{user.email || 'Unknown User'}</span>
                   </div>
                   <div className="user-meta">
                     <span className="user-status success">
                       {user.tasksDone || 0} tasks completed
                     </span>
+                    {user.dailyOrder && (
+                      <span className="user-status info">
+                        Daily: {user.dailyOrder}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
-            {(!topPerformers || topPerformers.length === 0) && (
+            {topPerformers.length === 0 && (
               <div className="no-data">
                 <p>No performance data available</p>
               </div>
@@ -601,7 +556,7 @@ function Dashboard() {
           margin: 0;
         }
 
-        /* Daily Breakdown Styles - NEW */
+        /* Daily Breakdown Styles */
         .daily-breakdown {
           margin-bottom: 30px;
         }
@@ -690,6 +645,12 @@ function Dashboard() {
           color: #94a3b8;
           margin-left: 4px;
           font-weight: normal;
+        }
+
+        /* User status styles */
+        .user-status.info {
+          background: #F0F9FF !important;
+          color: #0EA5E9 !important;
         }
 
         /* Rest of existing styles remain the same */
@@ -871,8 +832,9 @@ function Dashboard() {
 
         .user-meta {
           display: flex;
-          gap: 12px;
+          gap: 8px;
           align-items: center;
+          flex-wrap: wrap;
         }
 
         .user-status {

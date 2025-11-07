@@ -9,6 +9,13 @@ const privateRoutes = [
     permissionRequired: permissions.categoryRead,
     exact: true,
   },
+
+  {
+    path: "/Chat",
+    loader: () => import("src/view/pages/LiveChat/LiveChat"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
   {
     path: "/Order",
     loader: () => import("src/view/pages/Order/Order"),
