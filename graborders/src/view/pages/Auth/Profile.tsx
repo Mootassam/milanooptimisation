@@ -102,12 +102,12 @@ function Profile() {
       icon: "fas fa-lock",
       description: "Update your login password"
     },
-    {
-      path: "/withdrawal-password",
-      name: "Withdrawal Password",
-      icon: "fas fa-key",
-      description: "Change your withdrawal password"
-    },
+    // {
+    //   path: "/withdrawal-password",
+    //   name: "Withdrawal Password",
+    //   icon: "fas fa-key",
+    //   description: "Change your withdrawal password"
+    // },
     {
       path: "/wallet-address",
       name: "Wallet Address",
