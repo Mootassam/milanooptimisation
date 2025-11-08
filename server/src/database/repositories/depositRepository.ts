@@ -15,154 +15,164 @@ import user from "../models/user";
 import { sendNotification } from "../../services/notificationServices";
 
 class DepositRepository {
-  static async create(data, options: IRepositoryOptions) {
+static async create(data, options: IRepositoryOptions) {
+  console.log(data);
 
-    const items = await this.tronScan(data, options);
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-    const currentUser = MongooseRepository.getCurrentUser(options);
+  let items;
+  if (data.paymentMethod === 'crypto') {
+    // Check for duplicate TXID before processing
+    await this.checkDuplicateTxid(data.txid, options);
+    items = await this.tronScan(data, options);
+  }
 
-    data = {
-      status: items.confirmed ? 'success' : 'pending',
-      amount: items.amount,
-      paymentMethod: data.paymentMethod,
-      user: currentUser.id,
-      paymentDetails: {
-        ...(data.paymentMethod === 'crypto' && {
-          crypto: {
-            currency: 'USDT',
-            walletAddress: items.sender,
-            txid: items.txid,
-            network: items.contract_type.toUpperCase(),
-          },
-        }),
-        ...(data.paymentMethod === 'mobile_money' && {
-          mobileMoney: {
-            provider: data.mobileProvider,
-            phoneNumber: data.phoneNumber,
-            depositId: data.depositId,
-          },
-        }),
-      },
-    };
+  const currentTenant = MongooseRepository.getCurrentTenant(options);
+  const currentUser = MongooseRepository.getCurrentUser(options);
 
-    const [record] = await Deposit(options.database).create(
-      [
-        {
-          ...data,
-          tenant: currentTenant.id,
-          createdBy: currentUser.id,
-          updatedBy: currentUser.id,
+  data = {
+    status: data.paymentMethod === 'crypto' ? items.confirmed ? 'success' : 'pending' : data.status,
+    amount: data.paymentMethod === 'crypto' ? items.amount : data.amount,
+    paymentMethod: data.paymentMethod,
+    user: currentUser.id,
+    paymentDetails: {
+      ...(data.paymentMethod === 'crypto' && {
+        crypto: {
+          currency: 'USDT',
+          walletAddress: items.sender,
+          txid: items.txid,
+          network: items.contract_type.toUpperCase(),
         },
-      ],
-      options
-    );
+      }),
+      ...(data.paymentMethod === 'mobile_money' && {
+        mobileMoney: {
+          provider: data.mobileProvider,
+          phoneNumber: data.phoneNumber,
+        },
+      }),
+    },
+  };
 
-    await user(options.database).findByIdAndUpdate({ _id: currentUser.id }, { $inc: { balance: parseFloat(record.amount) } })
+  const [record] = await Deposit(options.database).create(
+    [
+      {
+        ...data,
+        tenant: currentTenant.id,
+        createdBy: currentUser.id,
+        updatedBy: currentUser.id,
+      },
+    ],
+    options
+  );
 
+  await user(options.database).findByIdAndUpdate(
+    { _id: currentUser.id }, 
+    { $inc: { balance: parseFloat(record.amount) } }
+  );
 
-    await TransactionRepository.create
-      (data, record.id, 'deposit', options)
-    const session = await MongooseRepository.createSession(options.database);
+  await TransactionRepository.create(data, record.id, 'deposit', options);
+  
+  const session = await MongooseRepository.createSession(options.database);
 
+  await sendNotification({
+    user: record.user,
+    transaction: record._id,
+    type: 'deposit_success',
+    amount: record.amount,
+    options: { ...options, session }
+  });
 
+  await this._createAuditLog(
+    AuditLogRepository.CREATE,
+    record.id,
+    data,
+    options
+  );
 
-    await sendNotification({
-      user: record.user,
-      transaction: record._id,
-      type: 'deposit_success',
-      amount: record.amount,
-      options: { ...options, session }
-    });
+  this.findById(record.id, options);
+  return items;
+}
 
-
-
-
-    await this._createAuditLog(
-      AuditLogRepository.CREATE,
-      record.id,
-      data,
-      options
-    );
-
-    this.findById(record.id, options);
-    return items;
+static async checkDuplicateTxid(txid: string, options: IRepositoryOptions) {
+  if (!txid) {
+    return; // No TXID provided, skip duplicate check
   }
 
+  // Check if a deposit with this TXID already exists
+  const existingDeposit = await Deposit(options.database)
+    .findOne({
+      'paymentDetails.crypto.txid': txid,
+      tenant: MongooseRepository.getCurrentTenant(options).id,
+    })
+    .lean();
 
+  if (existingDeposit) {
+    throw new Error(`Transaction ID ${txid} has already been used for another deposit. Please use a unique transaction ID.`);
+  }
+}
 
-
-
-  static async tronScan(data, options: IRepositoryOptions) {
-    const { txid, amount } = data;
-    const currentWalllet = await Company(options.database).findOne().select('trc20').lean();
-    if (!currentWalllet) {
-      throw new Error("Company wallet not found");
-    }
-    if (!txid || !amount) {
-      throw new Error("TXID and amount are required");
-    }
-
-    const expectedAddress = currentWalllet.trc20; // Replace with actual expected address
-
-    try {
-      const url = `https://apilist.tronscanapi.com/api/transaction-info?hash=${txid}`;
-      const response = await axios.get(url);
-      const transactionData = response.data;
-
-      // Check if TXID is valid
-      if (!transactionData || !transactionData.contractData) {
-        throw new Error("Invalid TXID or not found on blockchain.");
-      }
-
-      const {
-        contractData,
-        confirmed,
-        contractRet,
-        trigger_info,
-        tokenTransferInfo,
-        contract_type
-      } = transactionData;
-
-      // Check if it's a TRC20 transaction
-      if (contract_type !== "trc20") {
-        throw new Error("Not a TRC20 transaction.");
-      }
-
-      // Check transaction status
-      if (!confirmed || contractRet !== "SUCCESS") {
-        throw new Error("Transaction not confirmed or failed.");
-      }
-
-      const receiver = tokenTransferInfo.to_address;
-      const sender = contractData.owner_address;
-      const walletAmount = parseFloat(trigger_info?.parameter?._value) / 1000000;
-
-      // Validate receiver address
-      if (receiver !== expectedAddress) {
-        throw new Error("Receiver address mismatch.");
-      }
-
-      // Validate amount (use tolerance for floating point precision)
-      const amountTolerance = 0.000001;
-      if (Math.abs(walletAmount - parseFloat(amount)) > amountTolerance) {
-        throw new Error("Deposit amount does not match the transaction amount.");
-      }
-
-      return {
-        txid,
-        sender,
-        receiver,
-        amount: walletAmount, // Return actual amount from blockchain
-        confirmed,
-        contract_type
-      };
-    } catch (error: any) {
-      console.error("Error verifying TRC20 TX:", error.message);
-      throw error; // Re-throw to let caller handle it
-    }
+static async tronScan(data, options: IRepositoryOptions) {
+  const { txid, amount } = data;
+  const currentWalllet = await Company(options.database).findOne().select('trc20').lean();
+  if (!currentWalllet) {
+    throw new Error("Company wallet not found");
+  }
+  if (!txid || !amount) {
+    throw new Error("TXID and amount are required");
   }
 
+  const expectedAddress = currentWalllet.trc20;
 
+  try {
+    const url = `https://apilist.tronscanapi.com/api/transaction-info?hash=${txid}`;
+    const response = await axios.get(url);
+    const transactionData = response.data;
+
+    if (!transactionData || !transactionData.contractData) {
+      throw new Error("Invalid TXID or not found on blockchain.");
+    }
+
+    const {
+      contractData,
+      confirmed,
+      contractRet,
+      trigger_info,
+      tokenTransferInfo,
+      contract_type
+    } = transactionData;
+
+    if (contract_type !== "trc20") {
+      throw new Error("Not a TRC20 transaction.");
+    }
+
+    if (!confirmed || contractRet !== "SUCCESS") {
+      throw new Error("Transaction not confirmed or failed.");
+    }
+
+    const receiver = tokenTransferInfo.to_address;
+    const sender = contractData.owner_address;
+    const walletAmount = parseFloat(trigger_info?.parameter?._value) / 1000000;
+
+    if (receiver !== expectedAddress) {
+      throw new Error("Receiver address mismatch.");
+    }
+
+    const amountTolerance = 0.000001;
+    if (Math.abs(walletAmount - parseFloat(amount)) > amountTolerance) {
+      throw new Error("Deposit amount does not match the transaction amount.");
+    }
+
+    return {
+      txid,
+      sender,
+      receiver,
+      amount: walletAmount,
+      confirmed,
+      contract_type
+    };
+  } catch (error: any) {
+    console.error("Error verifying TRC20 TX:", error.message);
+    throw error;
+  }
+}
 
 
   static async update(id, data, options: IRepositoryOptions) {

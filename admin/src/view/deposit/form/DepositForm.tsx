@@ -10,8 +10,6 @@ import InputFormItem from 'src/view/shared/form/items/InputFormItem';
 import SelectFormItem from 'src/view/shared/form/items/SelectFormItem';
 import depositEnumerators from 'src/modules/deposit/depositEnumerators';
 import UserAutocompleteFormItem from 'src/view/user/autocomplete/UserAutocompleteFormItem';
-import ImagesFormItem from 'src/view/shared/form/items/ImagesFormItem';
-import Storage from 'src/security/storage';
 
 const schema = yup.object().shape({
   status: yupFormSchemas.enumerator(
@@ -69,7 +67,6 @@ function DepositForm(props) {
       // Mobile Money fields
       mobileProvider: record.paymentDetails?.mobileMoney?.provider || '',
       phoneNumber: record.paymentDetails?.mobileMoney?.phoneNumber || '',
-      depositId: record.paymentDetails?.mobileMoney?.depositId || '',
     };
   });
 
@@ -79,28 +76,31 @@ function DepositForm(props) {
     defaultValues: initialValues,
   });
 
-
-   const paymentMethodValue = form.watch('paymentMethod');
+  const paymentMethodValue = form.watch('paymentMethod');
   
-  useEffect(() => {
-    if (paymentMethodValue) {
-      setSelectedPaymentMethod(paymentMethodValue);
-      
-      // Reset payment details when changing payment method
-      if (paymentMethodValue === 'crypto') {
-        form.setValue('mobileProvider', '');
-        form.setValue('phoneNumber', '');
-        form.setValue('depositId', '');
-      } else if (paymentMethodValue === 'mobile_money') {
-        form.setValue('cryptoCurrency', '');
-        form.setValue('walletAddress', '');
-        form.setValue('txid', '');
-        form.setValue('network', 'TRC20');
-      }
+  // Handle payment method change separately
+  const handlePaymentMethodChange = (value) => {
+    setSelectedPaymentMethod(value);
+    
+    // Reset payment details when changing payment method
+    if (value === 'crypto') {
+      form.setValue('mobileProvider', '');
+      form.setValue('phoneNumber', '');
+    } else if (value === 'mobile_money') {
+      form.setValue('cryptoCurrency', '');
+      form.setValue('walletAddress', '');
+      form.setValue('txid', '');
+      form.setValue('network', 'TRC20');
     }
-  }, [paymentMethodValue, form]);
+  };
 
-  
+  // Watch for payment method changes using useEffect
+  useEffect(() => {
+    if (paymentMethodValue && paymentMethodValue !== selectedPaymentMethod) {
+      handlePaymentMethodChange(paymentMethodValue);
+    }
+  }, [paymentMethodValue, selectedPaymentMethod]);
+
   const onSubmit = (values) => {
     // Structure the data according to the Deposit model
     const formattedValues = {
@@ -109,6 +109,15 @@ function DepositForm(props) {
       currency: values.currency,
       paymentMethod: values.paymentMethod,
       user: values.user,
+      // Include mobile money specific fields
+      ...(values.paymentMethod === 'mobile_money' && {
+        mobileProvider: values.mobileProvider,
+        phoneNumber: values.phoneNumber,
+      }),
+      // Include crypto specific fields
+      ...(values.paymentMethod === 'crypto' && {
+        txid: values.txid,
+      }),
       paymentDetails: {
         ...(values.paymentMethod === 'crypto' && {
           crypto: {
@@ -122,12 +131,12 @@ function DepositForm(props) {
           mobileMoney: {
             provider: values.mobileProvider,
             phoneNumber: values.phoneNumber,
-            depositId: values.depositId,
           },
         }),
       },
     };
 
+    console.log('Submitting data:', formattedValues);
     props.onSubmit(props.record?.id, formattedValues);
   };
 
@@ -136,23 +145,6 @@ function DepositForm(props) {
       form.setValue(key, initialValues[key]);
     });
     setSelectedPaymentMethod(initialValues.paymentMethod);
-  };
-
-  const handlePaymentMethodChange = (value) => {
-    setSelectedPaymentMethod(value);
-    form.setValue('paymentMethod', value);
-    
-    // Reset payment details when changing payment method
-    if (value === 'crypto') {
-      form.setValue('mobileProvider', '');
-      form.setValue('phoneNumber', '');
-      form.setValue('depositId', '');
-    } else if (value === 'mobile_money') {
-      form.setValue('cryptoCurrency', '');
-      form.setValue('walletAddress', '');
-      form.setValue('txid', '');
-      form.setValue('network', 'TRC20');
-    }
   };
 
   return (
@@ -178,6 +170,7 @@ function DepositForm(props) {
                 name="user"
                 label={i18n('entities.deposit.fields.user')}
                 required={true}
+                showCreate={true}
               />
             </div>
 
@@ -187,7 +180,6 @@ function DepositForm(props) {
                 label={i18n('entities.deposit.fields.amount')}
                 required={true}
                 type="number"
-  
               />
             </div>
 
@@ -204,23 +196,26 @@ function DepositForm(props) {
               />
             </div>
 
-          <div className="col-lg-6 col-md-8 col-12">
-  <SelectFormItem
-    name="paymentMethod"
-    label={i18n('entities.deposit.fields.paymentMethod')}
-    options={depositEnumerators.paymentMethod.map((value) => ({
-      value,
-      label: i18n(`entities.deposit.enumerators.paymentMethod.${value}`),
-    }))}
-    required={true}
-  />
-</div>
+            <div className="col-lg-6 col-md-8 col-12">
+              <SelectFormItem
+                name="paymentMethod"
+                label={i18n('entities.deposit.fields.paymentMethod')}
+                options={depositEnumerators.paymentMethod.map((value) => ({
+                  value,
+                  label: i18n(`entities.deposit.enumerators.paymentMethod.${value}`),
+                }))}
+                required={true}
+              />
+            </div>
 
             {/* Crypto Payment Details */}
             {selectedPaymentMethod === 'crypto' && (
               <>
                 <div className="col-12">
-                  <h5 className="section-title">Crypto Payment Details</h5>
+                  <h5 className="section-title">
+                    <i className="fas fa-coins"></i>
+                    Crypto Payment Details
+                  </h5>
                 </div>
                 
                 <div className="col-lg-6 col-md-8 col-12">
@@ -270,7 +265,10 @@ function DepositForm(props) {
             {selectedPaymentMethod === 'mobile_money' && (
               <>
                 <div className="col-12">
-                  <h5 className="section-title">Mobile Money Payment Details</h5>
+                  <h5 className="section-title">
+                    <i className="fas fa-mobile-alt"></i>
+                    Mobile Money Payment Details
+                  </h5>
                 </div>
                 
                 <div className="col-lg-6 col-md-8 col-12">
@@ -293,19 +291,8 @@ function DepositForm(props) {
                     placeholder="Enter phone number with country code"
                   />
                 </div>
-
-                <div className="col-lg-6 col-md-8 col-12">
-                  <InputFormItem
-                    name="depositId"
-                    label="Deposit ID/Reference"
-                    required={true}
-                    placeholder="Enter deposit reference number"
-                  />
-                </div>
               </>
             )}
-
-
           </div>
 
           <div className="form-buttons">
@@ -357,17 +344,41 @@ function DepositForm(props) {
           margin: 20px 0 15px 0;
           padding-bottom: 8px;
           border-bottom: 2px solid #E2E8F0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .section-title i {
+          color: #4A5568;
         }
         
         .form-buttons {
           margin-top: 30px;
           padding-top: 20px;
           border-top: 1px solid #E2E8F0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
         }
         
         .btn {
-          margin-right: 10px;
           margin-bottom: 10px;
+        }
+        
+        .form-group {
+          margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+          .form-buttons {
+            flex-direction: column;
+          }
+          
+          .btn {
+            width: 100%;
+            margin-right: 0;
+          }
         }
       `}</style>
     </FormWrapper>

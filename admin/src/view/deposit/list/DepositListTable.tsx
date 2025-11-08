@@ -199,7 +199,6 @@ function DepositListTable(props) {
         <table className="spot-list-table">
           <thead className="table-header">
             <tr>
-         
               <th
                 className="sortable-header"
                 onClick={() => doChangeSort('user')}
@@ -261,7 +260,7 @@ function DepositListTable(props) {
           <tbody className="table-body">
             {loading && (
               <tr>
-                <td colSpan={7} className="loading-cell">
+                <td colSpan={6} className="loading-cell">
                   <div className="loading-container">
                     <Spinner />
                     <span className="loading-text">
@@ -273,7 +272,7 @@ function DepositListTable(props) {
             )}
             {!loading && !hasRows && (
               <tr>
-                <td colSpan={7} className="no-data-cell">
+                <td colSpan={6} className="no-data-cell">
                   <div className="no-data-content">
                     <i className="fas fa-database no-data-icon"></i>
                     <p>{i18n('table.noData')}</p>
@@ -286,19 +285,14 @@ function DepositListTable(props) {
                 const paymentMethodInfo = getPaymentMethodInfo(row.paymentMethod);
                 const statusInfo = getStatusInfo(row.status);
                 const isPending = row.status === 'pending';
-                const isCrypto = row.paymentMethod === 'crypto';
 
                 return (
                   <tr key={row.id} className="table-row">
-                   
                     <td className="table-cell">
                       <UserListItem value={row.user} />
                     </td>
                     <td className="table-cell">
-                      <div
-                        className={`payment-info`}
-
-                      >
+                      <div className="payment-info">
                         <div
                           className="payment-badge"
                           style={{
@@ -310,7 +304,7 @@ function DepositListTable(props) {
                           <i className={paymentMethodInfo.icon}></i>
                           <span>{paymentMethodInfo.text}</span>
                         </div>
-
+                       
                       </div>
                     </td>
                     <td className="table-cell numeric">
@@ -319,24 +313,7 @@ function DepositListTable(props) {
                       </span>
                     </td>
                     <td className="table-cell">
-                      {isPending ? (
-                        <div className="status-buttons">
-                          <button
-                            className="btn-action edit"
-                            onClick={() => handleStatusChange(row.id, 'success')}
-                          >
-                            <i className="fa-solid fa-check"></i>
-                            Complete
-                          </button>
-                          <button
-                            className="btn-action delete"
-                            onClick={() => handleStatusChange(row.id, 'canceled')}
-                          >
-                            <i className="fa-solid fa-xmark"></i>
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
+                   
                         <div
                           className="status-badge"
                           style={{
@@ -348,21 +325,19 @@ function DepositListTable(props) {
                           <i className={statusInfo.icon}></i>
                           <span>{statusInfo.text}</span>
                         </div>
-                      )}
                     </td>
                     <td className="table-cell">
                       {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
                     </td>
                     <td className="actions-cell">
                       <div className='actions-container' style={{ cursor: 'pointer' }}>
-
-                        {isCrypto && (
-                          <div className={`view-details  `} onClick={() => isCrypto && openPaymentModal(row)}>
-                            <i className="fa-solid fa-eye"></i>
-                            View Details
-                          </div>
-                        )}
-
+                        <div 
+                          className="view-details" 
+                          onClick={() => openPaymentModal(row)}
+                        >
+                          <i className="fa-solid fa-eye"></i>
+                          View Details
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -386,8 +361,8 @@ function DepositListTable(props) {
           <div className="modal-container">
             <div className="modal-header">
               <h3 className="modal-title">
-                <i className="fa-solid fa-coins"></i>
-                Crypto Payment Details
+                <i className={`fa-solid ${selectedDeposit.paymentMethod === 'crypto' ? 'fa-coins' : 'fa-mobile-screen'}`}></i>
+                {selectedDeposit.paymentMethod === 'crypto' ? 'Crypto' : 'Mobile Money'} Payment Details
               </h3>
               <button className="modal-close" onClick={closePaymentModal}>
                 <i className="fa-solid fa-times"></i>
@@ -423,7 +398,7 @@ function DepositListTable(props) {
                 </div>
 
                 {/* Crypto Details */}
-                {selectedDeposit.paymentDetails?.crypto && (
+                {selectedDeposit.paymentMethod === 'crypto' && selectedDeposit.paymentDetails?.crypto && (
                   <div className="detail-section">
                     <h4 className="section-title">Crypto Information</h4>
                     <div className="detail-row">
@@ -448,20 +423,65 @@ function DepositListTable(props) {
                         </button>
                       </div>
                     </div>
+                    {selectedDeposit.paymentDetails.crypto.txid && (
+                      <div className="detail-row">
+                        <span className="detail-label">Transaction ID:</span>
+                        <div className="detail-value with-copy">
+                          <span className="txid">
+                            {selectedDeposit.paymentDetails.crypto.txid}
+                          </span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedDeposit.paymentDetails.crypto.txid)}
+                          >
+                            <i className="fa-solid fa-copy"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mobile Money Details */}
+                {selectedDeposit.paymentMethod === 'mobile_money' && selectedDeposit.paymentDetails?.mobileMoney && (
+                  <div className="detail-section">
+                    <h4 className="section-title">Mobile Money Information</h4>
                     <div className="detail-row">
-                      <span className="detail-label">Transaction ID:</span>
+                      <span className="detail-label">Provider:</span>
+                      <span className="detail-value" style={{ textTransform: 'capitalize' }}>
+                        {selectedDeposit.paymentDetails.mobileMoney.provider}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Phone Number:</span>
                       <div className="detail-value with-copy">
-                        <span className="txid">
-                          {selectedDeposit.paymentDetails.crypto.txid}
+                        <span className="phone-number">
+                          {selectedDeposit.paymentDetails.mobileMoney.phoneNumber}
                         </span>
                         <button
                           className="copy-btn"
-                          onClick={() => copyToClipboard(selectedDeposit.paymentDetails.crypto.txid)}
+                          onClick={() => copyToClipboard(selectedDeposit.paymentDetails.mobileMoney.phoneNumber)}
                         >
                           <i className="fa-solid fa-copy"></i>
                         </button>
                       </div>
                     </div>
+                    {selectedDeposit.paymentDetails.mobileMoney.depositId && (
+                      <div className="detail-row">
+                        <span className="detail-label">Deposit ID:</span>
+                        <div className="detail-value with-copy">
+                          <span className="deposit-id">
+                            {selectedDeposit.paymentDetails.mobileMoney.depositId}
+                          </span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedDeposit.paymentDetails.mobileMoney.depositId)}
+                          >
+                            <i className="fa-solid fa-copy"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -539,8 +559,6 @@ function DepositListTable(props) {
           cursor: pointer;
         }
 
-   
-
         .numeric {
           text-align: right;
         }
@@ -585,8 +603,6 @@ function DepositListTable(props) {
           font-size: 14px;
         }
 
-    
-
         .actions-header {
           width: 120px;
         }
@@ -615,6 +631,7 @@ function DepositListTable(props) {
           align-items: center;
           gap: 6px;
           padding: 4px 8px;
+          border-radius: 4px;
           font-size: 11px;
           font-weight: 600;
           width: fit-content;
@@ -637,6 +654,12 @@ function DepositListTable(props) {
           color: #4299E1;
           margin-top: 2px;
           font-weight: 500;
+          cursor: pointer;
+          transition: color 0.2s ease;
+        }
+
+        .view-details:hover {
+          color: #3182ce;
         }
 
         .view-details i {
@@ -700,9 +723,9 @@ function DepositListTable(props) {
           align-items: center;
           gap: 6px;
           padding: 6px 12px;
+          border-radius: 4px;
           font-size: 12px;
           font-weight: 600;
-         
         }
 
         .status-badge i {
@@ -835,7 +858,9 @@ function DepositListTable(props) {
         }
 
         .crypto-address,
-        .txid {
+        .txid,
+        .phone-number,
+        .deposit-id {
           font-family: monospace;
           font-size: 12px;
           background: #f8f9fa;
@@ -873,7 +898,6 @@ function DepositListTable(props) {
 
         /* Responsive */
         @media (max-width: 768px) {
-      
           .status-buttons {
             flex-direction: column;
             gap: 4px;
