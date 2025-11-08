@@ -41,6 +41,12 @@ export default (app) => {
     `/tenant/:tenantId/userRef`,
     require('./userRef').default,
   );
+
+
+       app.post(
+    `/tenant/:tenantId/allRef`,
+    require('./userAllRef').default,
+  );
       app.get(
     `/tenant/:tenantId/resetTasks`,
     require('./userResetTasks').default,

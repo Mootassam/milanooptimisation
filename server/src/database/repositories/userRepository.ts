@@ -148,8 +148,8 @@ static async mapUserForTenantMobile(options: IRepositoryOptions) {
                 }
             ]);
 
-        // Enhanced metrics with daily breakdowns
-        const [transactionStats, depositStats, withdrawStats, dailyMetrics] = await Promise.all([
+        // Enhanced metrics with daily AND monthly breakdowns
+        const [transactionStats, depositStats, withdrawStats, dailyMetrics, monthlyMetrics] = await Promise.all([
             // Transaction stats
             transaction(options.database).aggregate([
                 {
@@ -295,10 +295,56 @@ static async mapUserForTenantMobile(options: IRepositoryOptions) {
                         }
                     }
                 ])
+            ]),
+            // Monthly metrics
+            Promise.all([
+                // Monthly deposits breakdown
+                deposit(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                $dateToString: {
+                                    format: '%Y-%m',
+                                    date: '$createdAt'
+                                }
+                            },
+                            monthlyAmount: { $sum: '$amount' },
+                            monthlyCount: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { _id: -1 } }
+                ]),
+                // Monthly withdrawals breakdown
+                withdraw(options.database).aggregate([
+                    {
+                        $match: {
+                            status: 'success'
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: {
+                                $dateToString: {
+                                    format: '%Y-%m',
+                                    date: '$createdAt'
+                                }
+                            },
+                            monthlyAmount: { $sum: '$amount' },
+                            monthlyCount: { $sum: 1 }
+                        }
+                    },
+                    { $sort: { _id: -1 } }
+                ])
             ])
         ]);
 
         const [dailyDeposits, dailyWithdrawals, dailyNewUsers, todayDeposits, todayWithdrawals] = dailyMetrics;
+        const [monthlyDeposits, monthlyWithdrawals] = monthlyMetrics;
 
         const userData = userMetrics[0] || {
             totalUsers: 0,
@@ -319,6 +365,11 @@ static async mapUserForTenantMobile(options: IRepositoryOptions) {
         const totalWithdrawals = dailyWithdrawals.reduce((sum, day) => sum + day.dailyAmount, 0);
         const totalDepositCount = dailyDeposits.reduce((sum, day) => sum + day.dailyCount, 0);
         const totalWithdrawalCount = dailyWithdrawals.reduce((sum, day) => sum + day.dailyCount, 0);
+
+        // Calculate current month totals
+        const currentMonth = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+        const currentMonthDeposit = monthlyDeposits.find(month => month._id === currentMonth);
+        const currentMonthWithdrawal = monthlyWithdrawals.find(month => month._id === currentMonth);
 
         return {
             userMetrics: {
@@ -378,6 +429,41 @@ static async mapUserForTenantMobile(options: IRepositoryOptions) {
                     count: todayWithdrawals[0]?.dailyCount || 0
                 },
                 pendingWithdrawals: withdrawData?.pendingCount[0]?.count || 0
+            },
+            // NEW: Monthly breakdown metrics
+            monthlyMetrics: {
+                // Current month totals
+                currentMonth: {
+                    deposit: {
+                        amount: currentMonthDeposit?.monthlyAmount || 0,
+                        count: currentMonthDeposit?.monthlyCount || 0
+                    },
+                    withdrawal: {
+                        amount: currentMonthWithdrawal?.monthlyAmount || 0,
+                        count: currentMonthWithdrawal?.monthlyCount || 0
+                    }
+                },
+                // All months breakdown
+                deposits: {
+                    totalAmount: totalDeposits,
+                    totalCount: totalDepositCount,
+                    monthlyBreakdown: monthlyDeposits
+                },
+                withdrawals: {
+                    totalAmount: totalWithdrawals,
+                    totalCount: totalWithdrawalCount,
+                    monthlyBreakdown: monthlyWithdrawals
+                },
+                // Summary for quick access
+                summary: {
+                    totalDepositsAllTime: totalDeposits,
+                    totalWithdrawalsAllTime: totalWithdrawals,
+                    totalMonths: Math.max(monthlyDeposits.length, monthlyWithdrawals.length),
+                    averageMonthlyDeposit: monthlyDeposits.length > 0 ? 
+                        totalDeposits / monthlyDeposits.length : 0,
+                    averageMonthlyWithdrawal: monthlyWithdrawals.length > 0 ? 
+                        totalWithdrawals / monthlyWithdrawals.length : 0
+                }
             }
         };
 
@@ -666,6 +752,100 @@ data.forEach(item => {
     }
   }
 
+  static async getUserReferralNetworkAllLevels(options: IRepositoryOptions, targetUserId: string, maxLevels: number = 25) {
+    const tenantId = MongooseRepository.getCurrentTenant(options);
+
+    try {
+        // Get target user's refcode
+        const targetUser = await User(options.database)
+            .findOne({
+                _id: targetUserId,
+            })
+            .select('refcode username email')
+            .lean();
+
+        if (!targetUser) {
+            throw new Error('User not found');
+        }
+
+        const levels: Record<number, any[]> = {};
+        let totalMembers = 0;
+
+        // Start with level 1 - direct referrals
+        let currentLevelRefCodes = [targetUser.refcode];
+        
+        // Dynamic level building - goes as deep as needed up to maxLevels
+        for (let level = 1; level <= maxLevels; level++) {
+            if (currentLevelRefCodes.length === 0) {
+                break; // No more referrals in this level
+            }
+
+            levels[level] = await User(options.database)
+                .find({
+                    invitationcode: { $in: currentLevelRefCodes },
+                    tenants: {
+                        $elemMatch: {
+                            tenant: tenantId,
+                            status: 'active'
+                        }
+                    }
+                })
+                .select('username email refcode invitationcode createdAt balance tasksDone vip')
+                .populate('vip', 'title')
+                .lean();
+
+            totalMembers += levels[level].length;
+            
+            // Prepare refcodes for next level
+            currentLevelRefCodes = levels[level].map(user => user.refcode);
+            
+            // Stop if no more referrals found
+            if (levels[level].length === 0) {
+                break;
+            }
+        }
+
+        // Format the response
+        const formattedLevels = {};
+        const levelCounts = {};
+        const actualLevels = Object.keys(levels).length;
+
+        for (let level = 1; level <= actualLevels; level++) {
+            formattedLevels[level] = levels[level].map(user => ({
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                refcode: user.refcode,
+                invitationcode: user.invitationcode,
+                joinDate: user.createdAt,
+                balance: user.balance,
+                tasksDone: user.tasksDone,
+                vipLevel: user.vip?.title || 'No VIP'
+            }));
+            
+            levelCounts[`level${level}Count`] = levels[level].length;
+        }
+
+        return {
+            targetUser: {
+                id: targetUserId,
+                username: targetUser.username,
+                email: targetUser.email,
+                refcode: targetUser.refcode
+            },
+            teamSummary: {
+                totalMembers,
+                totalLevels: actualLevels,
+                ...levelCounts,
+                levels: formattedLevels
+            }
+        };
+
+    } catch (error) {
+        console.error('Error in getUserReferralNetworkAllLevels:', error);
+        throw error;
+    }
+}
 
   static async createUniqueRefCode(options: IRepositoryOptions) {
     let code;

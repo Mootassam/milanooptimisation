@@ -162,7 +162,7 @@ const screenRoutes = [
 
   {
     path: "/deposit",
-    loader: () => import("src/view/pages/deposit/Crypto"),
+    loader: () => import("src/view/pages/deposit/Deposit"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },

@@ -1,6 +1,6 @@
 // src/modules/deposit/depositEnumerators.js
 
-const status = ['pending', 'canceled', 'sucess', 'failed'];
+const status = ['pending', 'canceled', 'success', 'failed'];
 const paymentMethod = ['crypto', 'mobile_money'];
 const cryptoCurrency = ['USDT', 'BTC', 'ETH'];
 const network = ['TRC20', 'ERC20', 'BEP20'];

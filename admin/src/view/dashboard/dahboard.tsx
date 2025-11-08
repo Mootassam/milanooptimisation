@@ -17,6 +17,7 @@ function Dashboard() {
   const userMetrics = dashboardData?.userMetrics || {};
   const transactionMetrics = dashboardData?.transactionMetrics || {};
   const dailyMetrics = dashboardData?.dailyMetrics || {};
+  const monthlyMetrics = dashboardData?.monthlyMetrics || {};
 
   // User metrics
   const totalUsers = userMetrics.totalUsers || 0;
@@ -34,7 +35,7 @@ function Dashboard() {
   const depositStats = transactionMetrics.depositStats || { completedCount: 0, totalAmount: 0 };
   const withdrawalStats = transactionMetrics.withdrawalStats || { pendingCount: 0, totalAmount: 0 };
 
-  // Daily metrics - UPDATED to match new backend structure
+  // Daily metrics
   const totalDeposits = dailyMetrics.totalDeposits || { amount: 0, count: 0, dailyBreakdown: [] };
   const totalWithdrawals = dailyMetrics.totalWithdrawals || { amount: 0, count: 0, dailyBreakdown: [] };
   const totalNewUsers = dailyMetrics.totalNewUsers || { count: 0, dailyBreakdown: [] };
@@ -42,11 +43,26 @@ function Dashboard() {
   const todayWithdrawals = dailyMetrics.todayWithdrawals || { amount: 0, count: 0 };
   const pendingWithdrawals = dailyMetrics.pendingWithdrawals || 0;
 
+  // Monthly metrics - NEW
+  const currentMonthData = monthlyMetrics?.currentMonth || {};
+  const monthlyDeposits = monthlyMetrics?.deposits || { totalAmount: 0, totalCount: 0, monthlyBreakdown: [] };
+  const monthlyWithdrawals = monthlyMetrics?.withdrawals || { totalAmount: 0, totalCount: 0, monthlyBreakdown: [] };
+  const monthlySummary = monthlyMetrics?.summary || {};
+  
+  const currentMonthDeposit = currentMonthData?.deposit || { amount: 0, count: 0 };
+  const currentMonthWithdrawal = currentMonthData?.withdrawal || { amount: 0, count: 0 };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const formatMonthYear = (dateString) => {
+    const [year, month] = dateString.split('-');
+    const date = new Date(year, month - 1);
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
   const getStatusInfo = (status) => {
@@ -167,7 +183,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Key Metrics Grid - UPDATED with new data structure */}
+      {/* Key Metrics Grid */}
       <div className="metrics-grid">
         {/* Total Volume - Using totalVolume from new structure */}
         <div className="metric-card revenue">
@@ -218,7 +234,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Daily Overview - UPDATED with new data structure */}
+      {/* Daily Overview */}
       <div className="today-overview">
         <h2 className="section-title">Daily Overview</h2>
         <div className="today-grid">
@@ -268,9 +284,137 @@ function Dashboard() {
         </div>
       </div>
 
-   
+      {/* NEW: Monthly Overview Section */}
+      <div className="monthly-overview">
+        <h2 className="section-title">Monthly Overview</h2>
+        <div className="monthly-grid">
+          {/* Current Month Performance */}
+          <div className="monthly-card current-month">
+            <div className="monthly-header">
+              <h3 className="monthly-title">
+                <i className="fas fa-calendar-alt"></i>
+                Current Month Performance
+              </h3>
+              <span className="current-month-label">
+                {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </span>
+            </div>
+            <div className="monthly-stats">
+              <div className="monthly-stat">
+                <div className="stat-icon deposit">
+                  <i className="fas fa-download"></i>
+                </div>
+                <div className="stat-content">
+                  <h4>{formatCurrency(currentMonthDeposit.amount)}</h4>
+                  <p>Monthly Deposits</p>
+                  <span className="stat-count">{currentMonthDeposit.count} deposits</span>
+                </div>
+              </div>
+              <div className="monthly-stat">
+                <div className="stat-icon withdrawal">
+                  <i className="fas fa-upload"></i>
+                </div>
+                <div className="stat-content">
+                  <h4>{formatCurrency(currentMonthWithdrawal.amount)}</h4>
+                  <p>Monthly Withdrawals</p>
+                  <span className="stat-count">{currentMonthWithdrawal.count} withdrawals</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
+          {/* Monthly Summary */}
+          <div className="monthly-card summary">
+            <div className="monthly-header">
+              <h3 className="monthly-title">
+                <i className="fas fa-chart-bar"></i>
+                Monthly Summary
+              </h3>
+            </div>
+            <div className="summary-stats">
+              <div className="summary-stat">
+                <span className="stat-label">Total Months Tracked</span>
+                <span className="stat-value">{monthlySummary.totalMonths || 0}</span>
+              </div>
+              <div className="summary-stat">
+                <span className="stat-label">Avg Monthly Deposits</span>
+                <span className="stat-value">{formatCurrency(monthlySummary.averageMonthlyDeposit || 0)}</span>
+              </div>
+              <div className="summary-stat">
+                <span className="stat-label">Avg Monthly Withdrawals</span>
+                <span className="stat-value">{formatCurrency(monthlySummary.averageMonthlyWithdrawal || 0)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Monthly Breakdown */}
+        <div className="monthly-breakdown">
+          <div className="breakdown-grid">
+            {/* Monthly Deposits Breakdown */}
+            <div className="breakdown-card">
+              <div className="breakdown-header">
+                <h3 className="breakdown-title">
+                  <i className="fas fa-download breakdown-icon deposit"></i>
+                  Monthly Deposits
+                </h3>
+                <span className="breakdown-total">
+                  {formatCurrency(monthlyDeposits.totalAmount)}
+                </span>
+              </div>
+              <div className="breakdown-list">
+                {monthlyDeposits.monthlyBreakdown?.slice(0, 6).map((month, index) => (
+                  <div key={month._id} className="breakdown-item">
+                    <span className="breakdown-date">{formatMonthYear(month._id)}</span>
+                    <div className="breakdown-amounts">
+                      <span className="breakdown-amount">
+                        {formatCurrency(month.monthlyAmount)}
+                        <span className="breakdown-count">({month.monthlyCount})</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {(!monthlyDeposits.monthlyBreakdown || monthlyDeposits.monthlyBreakdown.length === 0) && (
+                  <div className="no-data">
+                    <p>No monthly deposit data available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Monthly Withdrawals Breakdown */}
+            <div className="breakdown-card">
+              <div className="breakdown-header">
+                <h3 className="breakdown-title">
+                  <i className="fas fa-upload breakdown-icon withdraw"></i>
+                  Monthly Withdrawals
+                </h3>
+                <span className="breakdown-total">
+                  {formatCurrency(monthlyWithdrawals.totalAmount)}
+                </span>
+              </div>
+              <div className="breakdown-list">
+                {monthlyWithdrawals.monthlyBreakdown?.slice(0, 6).map((month, index) => (
+                  <div key={month._id} className="breakdown-item">
+                    <span className="breakdown-date">{formatMonthYear(month._id)}</span>
+                    <div className="breakdown-amounts">
+                      <span className="breakdown-amount">
+                        {formatCurrency(month.monthlyAmount)}
+                        <span className="breakdown-count">({month.monthlyCount})</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {(!monthlyWithdrawals.monthlyBreakdown || monthlyWithdrawals.monthlyBreakdown.length === 0) && (
+                  <div className="no-data">
+                    <p>No monthly withdrawal data available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content Grid */}
       <div className="content-grid">
@@ -365,7 +509,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Updated CSS Styles */}
+      {/* Updated CSS Styles with Monthly Section */}
       <style>{`
         .dashboard-container {
           padding: 20px;
@@ -396,7 +540,7 @@ function Dashboard() {
           font-size: 14px;
         }
 
-        /* Metrics Grid Updates */
+        /* Metrics Grid */
         .metrics-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -481,7 +625,7 @@ function Dashboard() {
           margin: 0;
         }
 
-        /* Today Overview Updates */
+        /* Today Overview */
         .today-overview {
           margin-bottom: 30px;
         }
@@ -556,9 +700,140 @@ function Dashboard() {
           margin: 0;
         }
 
-        /* Daily Breakdown Styles */
-        .daily-breakdown {
+        /* NEW: Monthly Overview Styles */
+        .monthly-overview {
           margin-bottom: 30px;
+        }
+
+        .monthly-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+
+        .monthly-card {
+          background: white;
+          padding: 24px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .monthly-card.current-month {
+          border-left: 4px solid #3B82F6;
+        }
+
+        .monthly-card.summary {
+          border-left: 4px solid #8B5CF6;
+        }
+
+        .monthly-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .monthly-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .current-month-label {
+          font-size: 12px;
+          color: #64748b;
+          background: #f1f5f9;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+
+        .monthly-stats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        .monthly-stat {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .stat-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+        }
+
+        .stat-icon.deposit {
+          background: #ECFDF5;
+          color: #10B981;
+        }
+
+        .stat-icon.withdrawal {
+          background: #FFFBEB;
+          color: #F59E0B;
+        }
+
+        .stat-content h4 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        .stat-content p {
+          margin: 2px 0;
+          font-size: 14px;
+          color: #64748b;
+        }
+
+        .stat-count {
+          font-size: 12px;
+          color: #94a3b8;
+        }
+
+        .summary-stats {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .summary-stat {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .summary-stat:last-child {
+          border-bottom: none;
+        }
+
+        .stat-label {
+          font-size: 14px;
+          color: #64748b;
+        }
+
+        .stat-value {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        /* Monthly Breakdown */
+        .monthly-breakdown {
+          margin-top: 20px;
         }
 
         .breakdown-grid {
@@ -632,6 +907,12 @@ function Dashboard() {
         .breakdown-date {
           font-size: 13px;
           color: #64748b;
+        }
+
+        .breakdown-amounts {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
         }
 
         .breakdown-amount {
@@ -859,7 +1140,8 @@ function Dashboard() {
         /* Responsive Design */
         @media (max-width: 1024px) {
           .content-grid,
-          .breakdown-grid {
+          .breakdown-grid,
+          .monthly-grid {
             grid-template-columns: 1fr;
           }
           
@@ -879,6 +1161,10 @@ function Dashboard() {
           }
 
           .today-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .monthly-stats {
             grid-template-columns: 1fr;
           }
         }

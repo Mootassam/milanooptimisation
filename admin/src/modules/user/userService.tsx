@@ -193,7 +193,7 @@ export default class UserService {
     const tenantId = AuthCurrentTenant.get();
 
     const response = await authAxios.post(
-      `/tenant/${tenantId}/userRef`,
+      `/tenant/${tenantId}/allRef`,
       body,
     );
 

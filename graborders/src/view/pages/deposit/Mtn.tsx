@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "src/view/layout/Header";
-import SubHeader from "src/view/shared/Header/SubHeader";
 import Message from "src/view/shared/message";
 
 function MobileMoneyDeposit() {
-    const [amount, setAmount] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
     const [selectedProvider, setSelectedProvider] = useState("mtn");
+    const [showSupportModal, setShowSupportModal] = useState(false);
 
     // Mobile Money Providers
     const providers = [
@@ -51,51 +49,23 @@ function MobileMoneyDeposit() {
 
     const currentProvider = providers.find(provider => provider.id === selectedProvider);
 
-    const handleDeposit = () => {
-        if (!amount || !phoneNumber) {
-            Message.error("Please fill in all required fields");
-            return;
-        }
-
-        const minAmount = currentProvider.minDeposit;
-        const maxAmount = currentProvider.maxDeposit;
-        const depositAmount = parseFloat(amount);
-
-        if (depositAmount < minAmount) {
-            Message.error(`Minimum deposit is $${minAmount}`);
-            return;
-        }
-
-        if (depositAmount > maxAmount) {
-            Message.error(`Maximum deposit is $${maxAmount}`);
-            return;
-        }
-
-        // Phone number validation (basic)
-        if (phoneNumber.length < 10) {
-            Message.error("Please enter a valid phone number");
-            return;
-        }
-
-        // Here you would typically dispatch an action to process the deposit
-        Message.success(`Deposit request submitted for $${amount}! You will receive a prompt on your ${currentProvider.name}.`);
-
-        // Reset form
-        setAmount("");
-        setPhoneNumber("");
+    const handleProviderSelect = (providerId) => {
+        setSelectedProvider(providerId);
+        setShowSupportModal(true);
     };
 
+    const closeModal = () => {
+        setShowSupportModal(false);
+    };
 
     return (
         <>
-
- <Header
-        title="Mobile Money Deposit"
-        showBackButton={true}
-        showLogo={false}
-        showNotification={true}
-      />
-        
+            <Header
+                title="Mobile Money Deposit"
+                showBackButton={true}
+                showLogo={false}
+                showNotification={true}
+            />
 
             {/* Provider Selection */}
             <div className="provider-section">
@@ -108,7 +78,7 @@ function MobileMoneyDeposit() {
                         <div
                             key={provider.id}
                             className={`provider-option ${selectedProvider === provider.id ? 'active' : ''}`}
-                            onClick={() => setSelectedProvider(provider.id)}
+                            onClick={() => handleProviderSelect(provider.id)}
                         >
                             <div
                                 className="provider-icon"
@@ -130,98 +100,25 @@ function MobileMoneyDeposit() {
                 </div>
             </div>
 
-            {/* Deposit Form Section */}
-            <div className="form-section">
-                <div className="section-title">
-                    <i className="fas fa-edit" />
-                    Deposit Details - {currentProvider.name}
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">
-                        Phone Number *
-                    </label>
-                    <div className="input-container">
-                        <input
-                            type="tel"
-                            className="form-input"
-                            placeholder="Enter your mobile money number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                        />
-                    </div>
-                    <div className="input-hint">
-                        Enter the phone number linked to your {currentProvider.name} account
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">
-                        Amount (USD) *
-                    </label>
-                    <div className="input-container">
-                        <input
-                            type="number"
-                            className="form-input"
-                            placeholder={`Enter amount ($${currentProvider.minDeposit} - $${currentProvider.maxDeposit})`}
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            step="any"
-                        />
-                    </div>
-                    <div className="input-hint">
-                        Minimum: ${currentProvider.minDeposit} | Maximum: ${currentProvider.maxDeposit}
-                    </div>
-                </div>
-
-                <button
-                    className="deposit-submit-btn"
-                    onClick={handleDeposit}
-                >
-                    <i className="fas fa-paper-plane" />
-                    Deposit with {currentProvider.name}
-                </button>
-            </div>
-
-            {/* Instructions Section */}
-            <div className="instructions-section">
-                <div className="section-title">
-                    <i className="fas fa-info-circle" />
-                    How to Deposit
-                </div>
-                <div className="instructions-list">
-                    <div className="instruction-step">
-                        <div className="step-number">1</div>
-                        <div className="step-content">
-                            Enter your phone number and deposit amount
+            {/* Contact Support Modal */}
+            {showSupportModal && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Contact Customer Support</h3>
+                            <button className="close-btn" onClick={closeModal}>×</button>
                         </div>
-                    </div>
-                    <div className="instruction-step">
-                        <div className="step-number">2</div>
-                        <div className="step-content">
-                            Click "Deposit" to initiate the transaction
+                        <div className="modal-body">
+                            <p>To deposit with <strong>{currentProvider?.name}</strong>, please contact our customer support team for assistance.</p>
                         </div>
-                    </div>
-                    <div className="instruction-step">
-                        <div className="step-number">3</div>
-                        <div className="step-content">
-                            You will receive a prompt on your phone
-                        </div>
-                    </div>
-                    <div className="instruction-step">
-                        <div className="step-number">4</div>
-                        <div className="step-content">
-                            Enter your Mobile Money PIN to confirm
-                        </div>
-                    </div>
-                    <div className="instruction-step">
-                        <div className="step-number">5</div>
-                        <div className="step-content">
-                            Funds will be added to your account instantly
+                        <div className="modal-footer">
+                            <Link to="/Online" className="btn-primary" onClick={closeModal}>
+                                Contact Customer Support
+                            </Link>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Important Notices */}
             <div className="notices-section">
@@ -245,312 +142,224 @@ function MobileMoneyDeposit() {
                 </div>
             </div>
 
-            {/* Bottom Navigation */}
             <style>{`
-        /* Header Styles */
-        .deposit-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 15px 10px;
-          background: white;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .back-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: #f8f9fa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #0f2161;
-          text-decoration: none;
-          font-size: 18px;
-        }
-        
-        .deposit-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #0f2161;
-          margin: 0;
-        }
-        
-        .header-placeholder {
-          width: 40px;
-        }
-        
-        /* Section Common Styles */
-        .provider-section,
-        .form-section,
-        .instructions-section,
-        .notices-section {
-          background: white;
-          border-radius: 20px;
-          margin: 15px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-          overflow: hidden;
-        }
-        
-        .section-title {
-          padding: 20px 20px 15px;
-          font-size: 18px;
-          font-weight: 700;
-          color: #0f2161;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          border-bottom: 1px solid #f5f6f7;
-        }
-        
-        .section-title i {
-          color: #7b8796;
-          font-size: 16px;
-        }
-        
-        /* Provider Selection */
-        .provider-options {
-          padding: 15px 0;
-        }
-        
-        .provider-option {
-          display: flex;
-          align-items: center;
-          padding: 15px 20px;
-          border-bottom: 1px solid #f5f6f7;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        
-        .provider-option:active {
-          background: #f9f9f9;
-        }
-        
-        .provider-option:last-child {
-          border-bottom: none;
-        }
-        
-        .provider-option.active {
-          background: #f0f4ff;
-        }
-        
-        .provider-icon {
-          width: 50px;
-          height: 50px;
-          border-radius: 15px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 22px;
-          margin-right: 15px;
-        }
-        
-        .provider-info {
-          flex: 1;
-        }
-        
-        .provider-name {
-          font-weight: 700;
-          color: #0f2161;
-          margin-bottom: 4px;
-          font-size: 16px;
-        }
-        
-        .provider-desc {
-          font-size: 13px;
-          color: #7b8796;
-        }
-        
-        .provider-check {
-          color: #26a17b;
-          font-size: 20px;
-        }
-        
-        /* Form Section */
-        .form-group {
-          padding: 15px 20px;
-          border-bottom: 1px solid #f5f6f7;
-        }
-        
-        .form-group:last-child {
-          border-bottom: none;
-        }
-        
-        .form-label {
-          display: block;
-          font-weight: 600;
-          color: #0f2161;
-          margin-bottom: 8px;
-          font-size: 14px;
-        }
-        
-        .input-container {
-          margin-bottom: 8px;
-        }
-        
-        .form-input {
-          width: 100%;
-          padding: 15px;
-          border: 2px solid #f0f4ff;
-          border-radius: 12px;
-          font-size: 16px;
-          background: white;
-          transition: all 0.2s ease;
-        }
-        
-        .form-input:focus {
-          outline: none;
-          border-color: #0f2161;
-        }
-        
-        .input-hint {
-          font-size: 12px;
-          color: #7b8796;
-        }
-        
-        .deposit-submit-btn {
-          width: calc(100% - 40px);
-          margin: 20px;
-          padding: 18px;
-          background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
-          color: white;
-          border: none;
-          border-radius: 16px;
-          font-size: 16px;
-          font-weight: 700;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(15, 33, 97, 0.2);
-        }
-        
-        .deposit-submit-btn:active {
-          transform: scale(0.98);
-        }
-        
-        /* Instructions Section */
-        .instructions-list {
-          padding: 20px;
-        }
-        
-        .instruction-step {
-          display: flex;
-          align-items: flex-start;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .instruction-step:last-child {
-          margin-bottom: 0;
-        }
-        
-        .step-number {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: #0f2161;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          font-weight: 700;
-          flex-shrink: 0;
-        }
-        
-        .step-content {
-          flex: 1;
-          font-size: 14px;
-          color: #7b8796;
-          line-height: 1.4;
-          padding-top: 5px;
-        }
-        
-        /* Notices Section */
-        .notices-section {
-          padding: 20px;
-        }
-        
-        .notice-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          margin-bottom: 15px;
-          padding: 15px;
-          background: #f8f9fa;
-          border-radius: 12px;
-        }
-        
-        .notice-item:last-child {
-          margin-bottom: 0;
-        }
-        
-        .notice-item i {
-          color: #0f2161;
-          margin-top: 2px;
-          font-size: 16px;
-        }
-        
-        .notice-text {
-          flex: 1;
-          font-size: 13px;
-          color: #7b8796;
-          line-height: 1.4;
-        }
-        
-        /* Bottom Navigation */
-        .bottom-nav {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          display: flex;
-          justify-content: space-around;
-          padding: 12px 0;
-          box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
-          z-index: 1000;
-          max-width: 400px;
-          margin: 0 auto;
-          border-radius: 20px 20px 0 0;
-        }
-        
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-decoration: none;
-          color: #7b8796;
-          font-size: 12px;
-          width: 20%;
-        }
-        
-        .nav-item i {
-          font-size: 20px;
-          margin-bottom: 4px;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 340px) {
-          .provider-icon {
-            width: 45px;
-            height: 45px;
-            font-size: 20px;
-          }
-          
-          .provider-name {
-            font-size: 15px;
-          }
-          
-          .step-content {
-            font-size: 13px;
-          }
-        }
-      `}</style>
+                /* Provider Selection */
+                .provider-section {
+                    background: white;
+                    border-radius: 20px;
+                    margin: 15px;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                    overflow: hidden;
+                }
+                
+                .section-title {
+                    padding: 20px 20px 15px;
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #0f2161;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-bottom: 1px solid #f5f6f7;
+                }
+                
+                .section-title i {
+                    color: #7b8796;
+                    font-size: 16px;
+                }
+                
+                .provider-options {
+                    padding: 15px 0;
+                }
+                
+                .provider-option {
+                    display: flex;
+                    align-items: center;
+                    padding: 15px 20px;
+                    border-bottom: 1px solid #f5f6f7;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                
+                .provider-option:active {
+                    background: #f9f9f9;
+                }
+                
+                .provider-option:last-child {
+                    border-bottom: none;
+                }
+                
+                .provider-option.active {
+                    background: #f0f4ff;
+                }
+                
+                .provider-icon {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 22px;
+                    margin-right: 15px;
+                }
+                
+                .provider-info {
+                    flex: 1;
+                }
+                
+                .provider-name {
+                    font-weight: 700;
+                    color: #0f2161;
+                    margin-bottom: 4px;
+                    font-size: 16px;
+                }
+                
+                .provider-desc {
+                    font-size: 13px;
+                    color: #7b8796;
+                }
+                
+                .provider-check {
+                    color: #26a17b;
+                    font-size: 20px;
+                }
+
+                /* Notices Section */
+                .notices-section {
+                    background: white;
+                    border-radius: 20px;
+                    margin: 15px;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                    padding: 20px;
+                }
+                
+                .notice-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    margin-bottom: 15px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 12px;
+                }
+                
+                .notice-item:last-child {
+                    margin-bottom: 0;
+                }
+                
+                .notice-item i {
+                    color: #0f2161;
+                    margin-top: 2px;
+                    font-size: 16px;
+                }
+                
+                .notice-text {
+                    flex: 1;
+                    font-size: 13px;
+                    color: #7b8796;
+                    line-height: 1.4;
+                }
+
+                /* Modal Styles */
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                }
+                
+                .modal-content {
+                    background: white;
+                    border-radius: 12px;
+                    width: 90%;
+                    max-width: 400px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    overflow: hidden;
+                }
+                
+                .modal-header {
+                    background: #007bff;
+                    color: white;
+                    padding: 20px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .modal-header h3 {
+                    margin: 0;
+                    font-size: 20px;
+                }
+                
+                .close-btn {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 30px;
+                    height: 30px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .modal-body {
+                    padding: 24px;
+                    text-align: center;
+                }
+                
+                .modal-body p {
+                    margin-bottom: 0;
+                    line-height: 1.5;
+                    font-size: 16px;
+                }
+                
+                .modal-footer {
+                    padding: 0 24px 24px;
+                    text-align: center;
+                }
+                
+                .btn-primary {
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 600;
+                    text-decoration: none;
+                    display: inline-block;
+                    width: 100%;
+                    text-align: center;
+                }
+                
+                .btn-primary:hover {
+                    background: #0056b3;
+                }
+
+                /* Responsive Design */
+                @media (max-width: 340px) {
+                    .provider-icon {
+                        width: 45px;
+                        height: 45px;
+                        font-size: 20px;
+                    }
+                    
+                    .provider-name {
+                        font-size: 15px;
+                    }
+                }
+            `}</style>
         </>
     );
 }

@@ -2177,7 +2177,7 @@ const en = {
       enumerators: {
         status: {
           pending: 'Pending',
-          completed: 'Completed',
+          success: 'Success',
           canceled: 'Canceled',
           failed: 'Failed',
         },
@@ -2292,7 +2292,7 @@ const en = {
       enumerators: {
         status: {
           pending: 'Pending',
-          completed: 'Completed',
+          success: 'Completed',
           canceled: 'Canceled',
           failed: 'Failed',
         },
