@@ -235,6 +235,7 @@ const en = {
         createdAtRange: 'Created at',
         passportphoto: 'Passport Copy',
         type: 'type',
+        message: "Message",
       },
       enumerators: {
         status: {

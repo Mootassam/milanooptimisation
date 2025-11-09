@@ -10,16 +10,23 @@ import actions from "src/modules/auth/authActions";
 import listactions from "src/modules/company/list/companyListActions";
 import selectors from "src/modules/company/list/companyListSelectors";
 import { log } from "node:console";
+import CompanyListActions from "src/modules/company/list/companyListActions";
+import companySelector from "src/modules/company/list/companyListSelectors";
 
 function Home() {
   const dispatch = useDispatch();
   const record = useSelector(selector.selectRows);
+
+  const message = useSelector(companySelector.selectRows)
+  console.log("🚀 ~ Home ~ message:", message[0]?.companydetails)
 
   const logorecord = useSelector(selectors.selectRows);
   const loadingImage = useSelector(selectors?.selectLoading);
   const [timemodal, setBigModal] = useState(true);
   const loading = useSelector(selector.selectLoading);
   const [Modal, setShowModal] = useState(false);
+  const [adsModal, setAdsModal] = useState(false); // New state for ads modal
+  
   interface VipItem {
     id: string;
     title: string;
@@ -60,11 +67,24 @@ function Home() {
     }
     return "Upgrade";
   }
+
+  // Function to hide ads modal
+  const hideAdsModal = () => {
+    setAdsModal(false);
+  };
+
   useEffect(() => {
     dolistCompany();
     searchAllCoins();
     dispatch(Vipactions.doFetch());
     currentDate();
+    
+    // Show ads modal automatically when component mounts (user logs in)
+    const timer = setTimeout(() => {
+      setAdsModal(true);
+    }, 2000); // Show after 2 seconds
+    
+    return () => clearTimeout(timer);
     // eslint-disable-next-line
   }, [dispatch]);
 
@@ -123,15 +143,53 @@ function Home() {
     );
   };
 
-  const [currentImage, setCurrentImage] = useState(0);
   const images = [
     "https://cdn.manomano.com/media/campaign-manager/mobile_948b5dd6-7dc5-11f0-b77c-9afd618f43bc_2240024a-6e0d-4499-a120-e8f13f9f5b61_c15e080d3cd1851ad53d9f3f472c3ec671c16e71.jpg?w=656&h=200&fit=cover&format=webp",
     "https://cdn.manomano.com/media/campaign-manager/desktop_8ff5f021-c68e-11ee-9740-6eb461f55887_4c7e935c-c03a-41d4-8cf0-40a522210e37_623a2496bbf44209838b49b177e33c4bd34df0a1.jpg?format=webp",
     "https://images.unsplash.com/photo-1553877522-43269d4ea984?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
   ];
 
+  useEffect(() => {
+    dispatch(CompanyListActions.doFetch())
+  }, [dispatch])
+
   return (
     <div className="home-container">
+
+      {/* Ads Modal - Appears automatically */}
+      {adsModal && (
+        <div className="modal-overlay" onClick={hideAdsModal}>
+          <div className="modal-content ads-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Announcement 📢</h2>
+              <button className="modal-close" onClick={hideAdsModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="ads-content">
+                <div className="ads-icon">
+                  <i className="fas fa-bullhorn"></i>
+                </div>
+                <div className="ads-text">
+                  {message[0]?.companydetails ? (
+                    <p>{message[0]?.companydetails}</p>
+                  ) : (
+                    <p>No announcements at the moment.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button className="close-ads-btn" onClick={hideAdsModal}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Slider */}
       <section className="slider-section">
@@ -217,9 +275,6 @@ function Home() {
         </div>
       </section>
 
-      {/* Additional News Section */}
-
-
       {/* VIP Upgrade Modal */}
       {selectedVip && (
         <div className="modal-overlay" onClick={hideModal}>
@@ -286,6 +341,63 @@ function Home() {
           min-height: 100vh;
           padding-bottom: 80px;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Ads Modal Specific Styles */
+        .ads-modal {
+          max-width: 400px;
+          background: white;
+        }
+        
+        .ads-content {
+          text-align: center;
+          padding: 10px 0;
+        }
+        
+        .ads-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #f0f4ff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          color: #0f2161;
+          font-size: 24px;
+        }
+        
+        .ads-text p {
+          color: #000000;
+          font-size: 16px;
+          line-height: 1.6;
+          text-align: center;
+          margin: 0;
+          padding: 0 10px;
+        }
+        
+        .ads-modal .modal-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+        }
+        
+        .close-ads-btn {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          background: linear-gradient(135deg, #0f2161 0%, #1a3a8f 100%);
+          color: white;
+          border-radius: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
+        }
+        
+        .close-ads-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(15, 33, 97, 0.4);
         }
         
         /* Header */
@@ -558,52 +670,6 @@ function Home() {
           color: #0f2161;
         }
         
-        /* News Section */
-        .news-section {
-          padding: 0 20px;
-          margin-bottom: 30px;
-        }
-        
-        .news-container {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        
-        .news-item {
-          background: white;
-          border-radius: 16px;
-          padding: 16px;
-          display: flex;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-        
-        .news-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
-          background: #f0f4ff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 16px;
-          color: #0f2161;
-          font-size: 20px;
-          flex-shrink: 0;
-        }
-        
-        .news-content h3 {
-          color: #0f2161;
-          font-size: 16px;
-          margin: 0 0 8px;
-        }
-        
-        .news-content p {
-          color: #7b8796;
-          font-size: 14px;
-          margin: 0;
-        }
-        
         /* VIP Modal Styles */
         .modal-overlay {
           position: fixed;
@@ -815,38 +881,6 @@ function Home() {
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(15, 33, 97, 0.4);
           color: white;
-        }
-        
-        /* Bottom Navigation */
-        .bottom-navigation {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          display: flex;
-          justify-content: space-around;
-          padding: 12px 0;
-          box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-          z-index: 100;
-        }
-        
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-decoration: none;
-          color: #7b8796;
-          font-size: 12px;
-        }
-        
-        .nav-item.active {
-          color: #0f2161;
-        }
-        
-        .nav-item i {
-          font-size: 20px;
-          margin-bottom: 4px;
         }
         
         /* Responsive adjustments */

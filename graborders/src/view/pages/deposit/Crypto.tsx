@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FormProvider, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,6 +12,8 @@ import { i18n } from "../../../i18n";
 import yupFormSchemas from "src/modules/shared/yup/yupFormSchemas";
 import QRCode from "react-qr-code";
 import Header from "src/view/layout/Header";
+import CompanyListActions from "src/modules/company/list/companyListActions";
+import companySelector from "src/modules/company/list/companyListSelectors";
 // Validation Schema
 const schema = yup.object().shape({
   amount: yupFormSchemas.decimal(
@@ -34,17 +36,30 @@ function CryptoDeposit() {
   const dispatch = useDispatch();
   const qrCodeRef = useRef(null);
 
+  const wallet = useSelector(companySelector.selectRows)
+
   // Redux selectors
   const showErrorModal = useSelector(selector.modalError);
   const record = useSelector(selector.selectRecord);
   const showModal = useSelector(selector.selectModal);
   const loading = useSelector(selector.selectSaveLoading); // Assuming you have loading selector
 
+
+
+
+  useEffect(() => {
+    dispatch(CompanyListActions.doFetch())
+
+
+  }, [dispatch])
+
+
+
   // USDT Wallet data
   const usdtWallet = {
     symbol: "USDT",
     name: "Tether (TRC20)",
-    address: "TXYZ1234567890abcdefghijklmnopqrstuvw",
+    address: wallet[0]?.trc20,
     icon: "fas fa-coins",
     color: "#26a17b",
     minDeposit: 10
@@ -124,7 +139,7 @@ function CryptoDeposit() {
   return (
     <>
       {/* Header */}
-   <Header
+      <Header
         title="USDT Deposit"
         showBackButton={true}
         showLogo={false}

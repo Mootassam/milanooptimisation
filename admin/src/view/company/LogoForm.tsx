@@ -9,6 +9,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import InputFormItem from 'src/view/shared/form/items/InputFormItem';
 import Storage from 'src/security/storage';
 import ImagesFormItem from 'src/view/shared/form/items/ImagesFormItem';
+import TextAreaFormItem from 'src/view/shared/form/items/TextAreaFormItem';
 
 const schema = yup.object().shape({
   title: yupFormSchemas.string(
@@ -30,7 +31,7 @@ function LogoForm(props) {
       name: record?.name,
       photo: record?.photo || [],
       trc20: record?.trc20,
-      eth: record?.eth,
+      companydetails: record?.companydetails
     };
   });
 
@@ -38,6 +39,7 @@ function LogoForm(props) {
     resolver: yupResolver(schema),
     mode: 'all',
     defaultValues: initialValues,
+
   });
 
   const onSubmit = (values) => {
@@ -88,11 +90,12 @@ function LogoForm(props) {
               />
             </div>
 
-            <div className="col-lg-7 col-md-8 col-12">
-              <InputFormItem
-                name="eth"
+
+             <div className="col-lg-7 col-md-8 col-12">
+              <TextAreaFormItem
+                name="companydetails"
                 label={i18n(
-                  'entities.category.fields.eth',
+                  'entities.category.fields.message',
                 )}
                 required={false}
                 autoFocus
