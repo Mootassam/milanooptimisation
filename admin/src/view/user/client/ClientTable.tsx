@@ -50,11 +50,11 @@ function UserTable() {
 
   const doChangeSort = (field) => {
     const order = sorter.field === field && sorter.order === 'ascend' ? 'descend' : 'ascend';
-    dispatch(actions.doChangeSort({ field, order }));
+    dispatch(actions.doChangeSortClient({ field, order }));
   };
 
   const doChangePagination = (pagination) => {
-    dispatch(actions.doChangePagination(pagination));
+    dispatch(actions.doChangePaginationClient(pagination));
   };
 
   const doToggleAllSelected = () => {
