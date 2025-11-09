@@ -303,7 +303,7 @@ function UserEditForm(props) {
           </div>
 
 
-          <div className="section-card">
+          {/* <div className="section-card">
             <h5 className="section-title">
               {i18n('user.sections.prizeInfo')}
             </h5>
@@ -326,7 +326,7 @@ function UserEditForm(props) {
 
 
             </Row>
-          </div>
+          </div> */}
 
           {/* Form Actions */}
           <div className="form-actions">

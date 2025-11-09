@@ -28,7 +28,6 @@ function UserTable() {
   
   const selectRefLoading = useSelector(userFormSelectors.selectRefLoading);
   const selectRefUsers = useSelector(userFormSelectors.selectRefUsers);
-  console.log("🚀 ~ UserTable ~ selectRefUsers:", selectRefUsers)
   
   const tasksdone = useSelector(selectorTaskdone.selectCountRecord);
   const LoadingTasksDone = useSelector(selectorTaskdone.selectLoading);

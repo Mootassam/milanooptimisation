@@ -12,7 +12,7 @@ export default [
     icon: 'fas fa-chart-line',
     label: i18n('dashboard.dashboard'),
     className: 'menu-li side-menue',
-    permissionRequired: permissions.userRead,
+    permissionRequired: permissions.categoryRead,
   },
   {
     id: '0',
@@ -21,7 +21,7 @@ export default [
     icon: 'fas fa-user-friends',
     label: i18n('dashboard.clients'),
     className: 'menu-li side-menue',
-    permissionRequired: permissions.userRead,
+    permissionRequired: permissions.categoryRead,
   },
   {
     id: '0',
@@ -30,7 +30,7 @@ export default [
     icon: 'fas fa-wallet',
     label: i18n('dashboard.settings'),
     className: 'menu-li side-menue',
-    permissionRequired: permissions.categoryRead,
+    permissionRequired: permissions.userRead,
   },
   {
     id: '0',

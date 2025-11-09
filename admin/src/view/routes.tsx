@@ -446,7 +446,7 @@ const privateRoutes = [
   {
     path: '/clients',
     loader: () => import('src/view/user/client/ClientPage'),
-    permissionRequired: permissions.userRead,
+    permissionRequired: permissions.categoryRead,
     exact: true,
   },
 
