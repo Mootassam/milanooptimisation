@@ -64,7 +64,7 @@ static async create(data, options: IRepositoryOptions) {
   );
 
   await user(options.database).findByIdAndUpdate(
-    { _id: currentUser.id }, 
+    { _id: data?.user ? data.user : currentUser.id }, 
     { $inc: { balance: parseFloat(record.amount) } }
   );
 
