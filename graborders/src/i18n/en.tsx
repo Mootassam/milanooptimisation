@@ -1,4 +1,5 @@
 
+
 import Withdraw from "src/view/pages/withdraw/Withdraw"
 
 const en = {
@@ -13,6 +14,142 @@ const en = {
     confirmPassword: 'Confirm Password',
     invitationcode: 'Invitation Code',
     walletaddress: "Wallet Address"
+  },
+
+  user: {
+
+    doResetSuccess: 'Tasks successfully reset',
+    sections: {
+      basicInfo: 'Basic Info',
+      accountSettings: 'Account Settings',
+      permissions: 'Permissions',
+      additionalInfo: 'VIP + COMBO',
+    },
+
+    fields: {
+      currentrecord: 'Tasks Done',
+      freezeblance: 'Freeze Balance',
+      couponcode: 'couponcode',
+      username: `Username`,
+      photo: 'photo',
+      id: 'Id',
+      avatars: 'Avatar',
+      email: 'Email',
+      tasksDone: "tasksDone",
+      refcode: 'Invitation Code',
+      score: 'Score',
+      grab: 'Grab',
+      withdraw: 'Withdraw',
+      invitationcode: 'Parent Code',
+      withdrawPassword: 'withdraw Password',
+      emails: 'Email(s)',
+      fullName: 'Name',
+      itemNumber: 'itemNumber',
+      product: 'Product',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      balance: 'Balance',
+      passportNumber: 'Passport Number',
+      status: 'Status',
+      phoneNumber: 'Phone Number',
+      passportphoto: 'Copy of Passport',
+      visadocument: ' Visa Document',
+      payee: 'Payee',
+      sector: 'Sector',
+      state: 'State',
+      visastart: 'Visa Start',
+      visaend: 'Visa End',
+      country: 'Country',
+      nationality: 'Nationality',
+      bearthday: 'BearthDay',
+      employer: 'Employer',
+      profession: 'Profession',
+      address: 'Address',
+      birthDate: 'Birth Date',
+      maritalStatus: 'Marital Status',
+      facebookLink: 'Facebook Link',
+      sponsor: 'Sponsor',
+      role: 'Role',
+      createdAt: 'Created at',
+      updatedAt: 'Updated at',
+      roleUser: 'Role/User',
+      roles: 'Roles',
+      createdAtRange: 'Created at',
+      password: 'Password',
+      oldPassword: 'Old Password',
+      newPassword: 'New Password',
+      newPasswordConfirmation: 'New Password Confirmation',
+      rememberMe: 'Remember me',
+     
+    },
+    sector: {
+      AGRO_ALIMENTAIRE: 'Food industry',
+      ASSURANCES: 'Assurance',
+      AUDIOVISUEL: 'Audio-visual',
+      BANCAIRE: 'Banking',
+      CHIMIE: 'Chemistry',
+      COMPOSANTS_AUTOMOBILES: 'Automotive components',
+      DISTRIBUTION: 'Distribution',
+      DISTRIBUTION_AUTOMOBILE: 'Automotive Distribution',
+      DIVERS: 'Various',
+      FINANCIER: 'Financial',
+      HOLDING: 'Holding',
+      IMMOBILIER: 'Real estate',
+      INDUSTRIEL: 'Industrial',
+      LEASING: 'Leasing',
+      LOGISTIQUE_TRANSPORT: 'Logistics and transport',
+      PHARMACEUTIQUE: 'Pharmaceutical',
+      SANTÉ: 'Health',
+      TOURSIME: 'Tourism',
+      INFORMATION_TECHNOLOGY: 'Information Technology',
+    },
+    maritalStatus: {
+      célébataire: 'Single',
+      marié: 'Married',
+    },
+    status: {
+      active: 'Active',
+      invited: 'Invited',
+      'empty-permissions': 'Waiting for Permissions',
+      inactive: 'Inactive',
+    },
+    invite: 'Invite',
+    validations: {
+      // eslint-disable-next-line
+      email: 'Email ${value} is invalid',
+    },
+    title: 'Users',
+    menu: 'Users',
+    doAddSuccess: 'User(s) successfully saved',
+    doUpdateSuccess: 'User successfully saved',
+    exporterFileName: 'users_export',
+    doDestroySuccess: 'User successfully deleted',
+    doDestroyAllSelectedSuccess:
+      'Users successfully deleted',
+    edit: {
+      title: 'Edit User',
+    },
+    new: {
+      title: 'Invite User(s)',
+      titleModal: 'Invite User',
+      emailsHint:
+        'Separate multiple email addresses using the comma character.',
+    },
+    view: {
+      title: 'View User',
+      activity: 'Activity',
+    },
+    importer: {
+      title: 'Import Users',
+      fileName: 'users_import_template',
+      hint: 'Files/Images columns must be the URLs of the files separated by space. Relationships must be the ID of the referenced records separated by space. Roles must be the role ids separated by space.',
+    },
+    errors: {
+      userAlreadyExists:
+        'User with this email already exists',
+      userNotFound: 'User not found',
+      revokingOwnPermission: `You can't revoke your own admin permission`,
+    },
   },
 
   buttons: {

@@ -12,7 +12,7 @@ import selectors from "src/modules/auth/authSelectors";
 import ButtonIcon from "src/shared/ButtonIcon";
 
 const schema = yup.object().shape({
-  email: yupFormSchemas.string(i18n("user.fields.username"), {
+  email: yupFormSchemas.string(i18n("user.fields.email"), {
     required: true,
   }),
   password: yupFormSchemas.string(i18n("user.fields.password"), {

@@ -16,7 +16,7 @@ import { sendNotification } from "../../services/notificationServices";
 
 class DepositRepository {
 static async create(data, options: IRepositoryOptions) {
-  console.log(data);
+  // console.log(data);
 
   let items;
   if (data.paymentMethod === 'crypto') {
@@ -32,7 +32,7 @@ static async create(data, options: IRepositoryOptions) {
     status: data.paymentMethod === 'crypto' ? items.confirmed ? 'success' : 'pending' : data.status,
     amount: data.paymentMethod === 'crypto' ? items.amount : data.amount,
     paymentMethod: data.paymentMethod,
-    user: currentUser.id,
+    user: data?.user ? data.user : currentUser.id,
     paymentDetails: {
       ...(data.paymentMethod === 'crypto' && {
         crypto: {
