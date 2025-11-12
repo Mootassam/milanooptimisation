@@ -9,7 +9,7 @@ export default async (req, res) => {
       Permissions.values.userRead,
     );
 
-    const payload = await UserRepository.resetCompletedTasksUsers
+    const payload = await UserRepository.resetsuccessTasksUsers
       (
         req
       );
