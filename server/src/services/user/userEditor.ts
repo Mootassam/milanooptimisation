@@ -18,6 +18,7 @@ export default class UserEditor {
   }
 
   async update(data) {
+    console.log("🚀 ~ UserEditor ~ update ~ data:", data)
     this.data = data;
     await this._validate();
     try {
@@ -78,8 +79,6 @@ export default class UserEditor {
       this.data.status,
       this.data.product,
       this.data.itemNumber,
-      this.data.prizes.id,
-      this.data.prizesNumber,
       this.data.withdrawPassword,
       this.data.score,
       this.data.grab,
