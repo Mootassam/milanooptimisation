@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # Set environment variable
-ENV BACKEND_URL="http://66.29.133.66:8085/api/"
+ENV BACKEND_URL="http://159.198.40.24:8085/api/"
 
 # Expose port
 EXPOSE 8085

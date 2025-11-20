@@ -52,7 +52,7 @@ function Signin() {
       <div className="container">
         <div className="headers">
           <div className="logo">
-            Mano<span>Mano</span>
+            Log<span>in</span>
           </div>
           <div className="tagline">DIY • Home • Garden</div>
         </div>
