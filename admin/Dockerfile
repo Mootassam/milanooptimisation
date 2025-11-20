@@ -1,14 +1,12 @@
 FROM node:18 AS builder
 WORKDIR /app
+
 COPY package*.json ./
-COPY package-lock.json ./
 RUN npm install --silent
+
 COPY . .
 RUN npm run build:production
 
-FROM nginx
+FROM nginx:stable
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder  /app/build /usr/share/nginx/html
-
-
-
+COPY --from=builder /app/build /usr/share/nginx/html
