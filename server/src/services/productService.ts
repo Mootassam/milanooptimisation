@@ -77,7 +77,7 @@ export default class ProductServices {
           session,
         });
 
-        await RecordRepository.destroyAll(id, {
+        await RecordRepository.destroy(id, {
           ...this.options,
           session
         })

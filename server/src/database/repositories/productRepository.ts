@@ -391,63 +391,59 @@ class ProductRepository {
     return output;
   }
 
-  static async grapOrders(options: IRepositoryOptions) {
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const currentVip = MongooseRepository.getCurrentUser(options).vip.id;
-    const mergeDataPosition = currentUser.itemNumber;
-    const giftPosition = currentUser.prizesNumber;
+static async grapOrders(options: IRepositoryOptions) {
+  const currentUser = MongooseRepository.getCurrentUser(options);
+  const currentVip = MongooseRepository.getCurrentUser(options).vip.id;
+  const mergeDataPosition = currentUser.itemNumber;
+  const giftPosition = currentUser.prizesNumber;
 
-
-
-    if (!currentUser?.vip) {
-      throw new Error400(
-        options.language,
-        "validation.requiredSubscription"
-      );
-    }
-
-    const dailyOrder = currentUser.vip.dailyorder;
-
-    if (currentUser.tasksDone >= dailyOrder) {
-
-      throw new Error400(
-        options.language,
-        "validation.moretasks"
-      );
-    }
-
-    if (currentUser.balance <= 0) {
-      throw new Error400(
-        options.language,
-        "validation.deposit"
-      );
-    }
-    if (currentUser.balance < 0) {
-      throw new Error400(
-        options.language,
-        "validation.InsufficientBalance"
-      );
-    }
-
-    if (currentUser && currentUser.product && currentUser.product.id && currentUser.tasksDone === (mergeDataPosition - 1)) {
-      let prodcut = currentUser.product;
-      prodcut.photo = await FileRepository.fillDownloadUrl(prodcut?.photo);
-      return prodcut;
-    } else if (currentUser && currentUser.prizes && currentUser.prizes.id && currentUser.tasksDone === (giftPosition - 1)) {
-
-      let prodcut = currentUser.prizes;
-      prodcut.photo = await FileRepository.fillDownloadUrl(prodcut?.photo);
-      return prodcut;
-
-    } else {
-      let record = await Product(options.database)
-        .find({ vip: currentVip, type: 'normal' })
-        .populate("vip");
-      const random = Math.floor(Math.random() * record.length);
-      record = await Promise.all(record.map(this._fillFileDownloadUrls));
-      return record[random];
-    }
+  if (!currentUser?.vip) {
+    throw new Error400(
+      options.language,
+      "validation.requiredSubscription"
+    );
   }
+
+  const dailyOrder = currentUser.vip.dailyorder;
+
+  if (currentUser.tasksDone >= dailyOrder) {
+    throw new Error400(
+      options.language,
+      "validation.moretasks"
+    );
+  }
+
+  if (currentUser.balance <= 0) {
+    throw new Error400(
+      options.language,
+      "validation.deposit"
+    );
+  }
+
+  if (currentUser.balance < 28) {
+    throw new Error400(
+      options.language,
+      "validation.insufficientBalanceMinimum"
+    );
+  }
+
+  if (currentUser && currentUser.product && currentUser.product.id && currentUser.tasksDone === (mergeDataPosition - 1)) {
+    let prodcut = currentUser.product;
+    prodcut.photo = await FileRepository.fillDownloadUrl(prodcut?.photo);
+    return prodcut;
+  } else if (currentUser && currentUser.prizes && currentUser.prizes.id && currentUser.tasksDone === (giftPosition - 1)) {
+    let prodcut = currentUser.prizes;
+    prodcut.photo = await FileRepository.fillDownloadUrl(prodcut?.photo);
+    return prodcut;
+  } else {
+    let record = await Product(options.database)
+      .find({ vip: currentVip, type: 'normal' })
+      .populate("vip");
+    const random = Math.floor(Math.random() * record.length);
+    record = await Promise.all(record.map(this._fillFileDownloadUrls));
+    return record[random];
+  }
+}
 
 
 

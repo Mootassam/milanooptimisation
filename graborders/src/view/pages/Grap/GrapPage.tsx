@@ -19,7 +19,6 @@ import GrapModal from "./GrapModal";
 import selectors from "src/modules/record/list/recordListSelectors";
 
 const Grappage = () => {
-
   const [showPrizeModal, setShowPrizeModal] = useState(false);
   const [lodingRoll, setLoadingRoll] = useState(false);
   const totalperday = useSelector(selectors.selectTotalPerday);
@@ -40,7 +39,8 @@ const Grappage = () => {
   // Check if button should be disabled
   const disableButton = currentUser?.balance <= 0 ||
     !currentUser?.grab ||
-    currentUser?.tasksDone >= currentUser?.vip?.dailyorder;
+    currentUser?.tasksDone >= currentUser?.vip?.dailyorder ||
+    currentUser?.balance < 28; // New condition: balance less than 28
 
   const handleStartClick = async () => {
     if (disableButton || lodingRoll) return;
@@ -67,11 +67,7 @@ const Grappage = () => {
 
   const rollAll = async () => {
     try {
-
       const result = await dispatch(actions.doFetch());
-
-
-
       return result;
     } catch (error) {
       console.log("Roll all error:", error);
@@ -86,12 +82,11 @@ const Grappage = () => {
   };
 
   useEffect(() => {
-
     dispatch(recordListAction.doCountDay());
   }, []);
 
   useEffect(() => {
-
+    // Additional effect logic can go here
   }, [dispatch, showModals, checkLoading]);
 
   const calcule__total = (price, comission) => {
@@ -111,7 +106,6 @@ const Grappage = () => {
 
     try {
       await dispatch(recordActions.doCreate(values));
-
     } catch (error) {
       console.log("Submit error:", error);
     }
@@ -125,8 +119,6 @@ const Grappage = () => {
     <>
       {/* Loading Modal */}
       {(loading || lodingRoll) && <LoadingModal />}
-
-
 
       {/* Grap Modal */}
       {showModals && !loading && (
@@ -165,6 +157,9 @@ const Grappage = () => {
           {disableButton && (
             <div className="disabled-reasons">
               {currentUser?.balance <= 0 && <p>Insufficient balance</p>}
+              {currentUser?.balance < 28 && currentUser?.balance > 0 && (
+                <p>Minimum balance of 28 required to start</p>
+              )}
               {!currentUser?.grab && <p>Grab feature not available</p>}
               {currentUser?.tasksDone >= currentUser?.vip?.dailyorder && (
                 <p>Daily order limit reached</p>
@@ -242,6 +237,7 @@ const Grappage = () => {
           </ul>
         </div>
       </div>
+
 
       <style>{`
         /* Page Content */
