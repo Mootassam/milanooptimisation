@@ -9,6 +9,8 @@ export default async (req, res, next) => {
     //   Permissions.values.categoryRead,
     // );
 
+
+
     const payload = await new TransactionService(
       req,
     ).findAndCountAll(req.query);

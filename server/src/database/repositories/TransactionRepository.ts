@@ -133,11 +133,14 @@ class TransactionRepository {
     options: IRepositoryOptions
   ) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
-
+    const currentUser = MongooseRepository.getCurrentUser(options);
     let criteriaAnd: any = [];
 
     criteriaAnd.push({
       tenant: currentTenant.id,
+    });
+    criteriaAnd.push({
+      user: currentUser.id,
     });
 
     if (filter) {
@@ -318,7 +321,6 @@ class TransactionRepository {
 
   static async findAllAutocomplete(search, limit, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
-
     let criteriaAnd: Array<any> = [
       {
         tenant: currentTenant.id,

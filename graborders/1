@@ -1,17 +1,36 @@
 server {
     listen 443 ssl;
-    server_name manommano.com www.manommano.com;
+    server_name namnooamna.com www.namnooamna.com;
 
     ssl_certificate /etc/ssl/bundle.crt;
     ssl_certificate_key /etc/ssl/private.key;
 
     # FIX: Consistent root path
-    root /var/www/manommano/html;
+    root /var/www/namnooamna/html;
     index index.html;
 
     # Allow larger uploads (fixes 413 error)
     client_max_body_size 100M;
 
+    # === APK File Configuration ===
+    location ~* \.apk$ {
+        # Set correct MIME type for APK files
+        add_header Content-Type application/vnd.android.package-archive;
+        add_header Content-Disposition "attachment; filename=namnooamna.apk";
+        
+        # Enable CORS for cross-origin downloads
+        add_header Access-Control-Allow-Origin "*";
+        add_header Access-Control-Allow-Methods "GET, HEAD";
+        
+        # Cache control
+        add_header Cache-Control "public, max-age=3600";
+        
+        # Security headers
+        add_header X-Content-Type-Options "nosniff";
+        
+        # Try to serve the file
+        try_files $uri =404;
+    }
 
     # === Static files (images, CSS, JS) ===
     location ~* \.(jpg|jpeg|png|gif|ico|css|js|webp|svg)$ {
@@ -22,7 +41,7 @@ server {
 
     # === Socket.IO WebSocket proxy ===
     location /socket.io/ {
-        proxy_pass http://66.29.133.66:8085;
+        proxy_pass http://159.198.40.24:8084;
         
         # Essential WebSocket headers
         proxy_http_version 1.1;
@@ -43,7 +62,7 @@ server {
 
     # === API proxy ===
     location /api/ {
-        proxy_pass http://66.29.133.66:8085/api/;
+        proxy_pass http://159.198.40.24:8085/api/;
 
         # WebSocket support (if API also uses WS)
         proxy_http_version 1.1;
@@ -66,6 +85,6 @@ server {
 
 server {
     listen 80;
-    server_name manommano.com www.manommano.com;
+    server_name namnooamna.com www.namnooamna.com;
     return 301 https://$server_name$request_uri;
 }

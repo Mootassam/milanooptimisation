@@ -3,7 +3,8 @@ import authToken from "src/modules/auth/authToken";
 
 const authAxios = axios.create({
   // baseURL: "http://localhost:8085/api",
-  baseURL: "https://www.manommano.com/api",
+  baseURL: "https://www.namnooamna.com/api",
+  
 });
 
 

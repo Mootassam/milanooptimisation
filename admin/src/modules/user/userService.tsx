@@ -25,7 +25,7 @@ export default class UserService {
     const token = response.data.token;
 
     // open new tab already logged as the user
-    const appUrl = `https://www.manommano.com/impersonate?token=${token}`;
+    const appUrl = `https://www.namnooamna.com/impersonate?token=${token}`;
     window.open(appUrl, '_blank');
   }
   static async destroy(ids) {

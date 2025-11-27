@@ -19,7 +19,7 @@ export default function useNotifications(
     if (!userId) return;
 
     if (!socket) {
-      socket = io("https://www.manommano.com", {
+      socket = io("https://www.namnooamna.com", {
         transports: ["websocket"],
         // Optional: Add reconnection options
         reconnection: true,
