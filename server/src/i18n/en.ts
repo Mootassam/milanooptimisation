@@ -18,7 +18,9 @@ const en = {
     InsufficientBalance: 'Insufficient balance',
     requiredSubscription: 'Please select a subscription plan',
     moretasks: 'This is your limit. Please contact customer support for more tasks',
-    deposit:"Insufficient balance please upgrade."
+    deposit:"Insufficient balance please upgrade.",
+    missingTrc20Address: 'Please go to the "Wallet" section to bind your TRC20 address before submitting a withdrawal request.',
+    tasksNotCompleted: 'You have not completed the daily tasks required for this withdrawal.',
   },
 
 

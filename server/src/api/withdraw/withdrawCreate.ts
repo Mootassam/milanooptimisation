@@ -9,6 +9,9 @@ export default async (req, res, next) => {
     //   Permissions.values.categoryRead,
     // );
 
+
+
+    console.log('req.body.data', req.body.data);
     const payload = await new WithdrawService(req).create(
       req.body.data,
     );

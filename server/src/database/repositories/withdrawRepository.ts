@@ -1,3 +1,4 @@
+
 import MongooseRepository from "./mongooseRepository";
 import MongooseQueryUtils from "../utils/mongooseQueryUtils";
 import AuditLogRepository from "./auditLogRepository";
@@ -21,9 +22,29 @@ class WithdrawRepository {
     try {
       // Start transaction
       const User = options.database.model('user');
+      const Vip = options.database.model('vip');
 
-      // Check if user has sufficient balance
+      // Check if user has TRC20 address
       const user = await User.findById(currentUser.id).session(session);
+
+      if (!user.trc20) {
+        throw new Error400(
+          options.language,
+          "validation.missingTrc20Address"
+        );
+      }
+
+      // Check if dailyOrder equals tasksDone
+      if (user.vip) {
+        const vip = await Vip.findById(user.vip).session(session);
+        if (vip && vip.dailyorder !== user.tasksDone.toString()) {
+          throw new Error400(
+            options.language,
+            "validation.tasksNotCompleted"
+          );
+        }
+      }
+
       const withdrawalAmount = parseFloat(data.amount);
 
       if (user.balance < withdrawalAmount) {
@@ -34,8 +55,8 @@ class WithdrawRepository {
       }
 
       data = {
-        referenceNumber: new Date().getTime() + data.walletAddress, // Fixed: better reference number
-        status: data.status || 'pending', // Default to pending if not provided
+        referenceNumber: new Date().getTime() + data.walletAddress,
+        status: data.status || 'pending',
         amount: data.amount,
         paymentMethod: data.paymentMethod,
         user: currentUser.id,
@@ -57,8 +78,6 @@ class WithdrawRepository {
         },
       };
 
-      // Deduct amount from user balance immediately
-
       // Create withdrawal record
       const [record] = await Withdraw(options.database).create(
         [
@@ -76,19 +95,20 @@ class WithdrawRepository {
         user: record.user.id,
         transaction: record.id,
         type: 'withdraw_success',
-        forAdmin : true,
+        forAdmin: true,
         amount: record.amount,
         options: { ...options, session }
       });
+
       await User.findByIdAndUpdate(
         currentUser.id,
         { $inc: { balance: -withdrawalAmount } },
         { session }
       );
 
-
-      await TransactionRepository.create
-        (data, record.id, 'withdraw', options)
+      await TransactionRepository.create(
+        data, record.id, 'withdraw', options
+      )
 
       // Create audit log
       await this._createAuditLog(
@@ -115,7 +135,7 @@ class WithdrawRepository {
     const count = await withdraw(options.database).countDocuments({
       status: "pending"
     });
-    return {count : count};
+    return { count: count };
   }
 
   static async update(id, data, options: IRepositoryOptions) {
