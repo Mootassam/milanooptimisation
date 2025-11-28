@@ -114,8 +114,20 @@ const screenRoutes = [
     exact: true,
   },
   {
-    path: "/withdraw",
+    path: "/withdraw/crypto",
     loader: () => import("src/view/pages/withdraw/Withdraw"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+    {
+    path: "/withdraw/mobile-money",
+    loader: () => import("src/view/pages/withdraw/WithdrawMtn"),
+    permissionRequired: permissions.categoryRead,
+    exact: true,
+  },
+    {
+    path: "/withdraw",
+    loader: () => import("src/view/pages/withdraw/withdrawPage"),
     permissionRequired: permissions.categoryRead,
     exact: true,
   },

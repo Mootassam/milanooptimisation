@@ -5,13 +5,7 @@ import WithdrawService from '../../services/withdrawService';
 
 export default async (req, res, next) => {
   try {
-    // new PermissionChecker(req).validateHas(
-    //   Permissions.values.categoryRead,
-    // );/
 
-
-
-    console.log('req.body.data', req.body.data);
     const payload = await new WithdrawService(req).create(
       req.body.data,
     );

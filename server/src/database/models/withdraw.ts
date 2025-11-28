@@ -69,9 +69,6 @@ export default (database) => {
           phoneNumber: {
             type: String,
           },
-          withdrawId: {
-            type: String,
-          }
         }
       },
 

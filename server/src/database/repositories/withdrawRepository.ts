@@ -14,121 +14,146 @@ import { sendNotification } from "../../services/notificationServices";
 
 
 class WithdrawRepository {
-  static async create(data, options: IRepositoryOptions) {
-    const currentTenant = MongooseRepository.getCurrentTenant(options);
-    const currentUser = MongooseRepository.getCurrentUser(options);
-    const session = await MongooseRepository.createSession(options.database);
+static async create(data, options: IRepositoryOptions) {
+  const currentTenant = MongooseRepository.getCurrentTenant(options);
+  const currentUser = MongooseRepository.getCurrentUser(options);
+  const session = await MongooseRepository.createSession(options.database);
 
-    try {
-      // Start transaction
-      const User = options.database.model('user');
-      const Vip = options.database.model('vip');
+  try {
+    // Start transaction
+    const User = options.database.model('user');
+    const Vip = options.database.model('vip');
 
-      // Check if user has TRC20 address
-      const user = await User.findById(currentUser.id).session(session);
+    const user = await User.findById(currentUser.id).session(session);
 
-      if (!user.trc20) {
+    // Check if dailyOrder equals tasksDone
+    if (user.vip) {
+      const vip = await Vip.findById(user.vip).session(session);
+      if (vip && vip.dailyorder !== user.tasksDone.toString()) {
         throw new Error400(
           options.language,
-          "validation.missingTrc20Address"
+          "validation.tasksNotCompleted"
         );
       }
-
-      // Check if dailyOrder equals tasksDone
-      if (user.vip) {
-        const vip = await Vip.findById(user.vip).session(session);
-        if (vip && vip.dailyorder !== user.tasksDone.toString()) {
-          throw new Error400(
-            options.language,
-            "validation.tasksNotCompleted"
-          );
-        }
-      }
-
-      const withdrawalAmount = parseFloat(data.amount);
-
-      if (user.balance < withdrawalAmount) {
-        throw new Error400(
-          options.language,
-          "withdraw.insufficientBalance"
-        );
-      }
-
-      data = {
-        referenceNumber: new Date().getTime() + data.walletAddress,
-        status: data.status || 'pending',
-        amount: data.amount,
-        paymentMethod: data.paymentMethod,
-        user: currentUser.id,
-        paymentDetails: {
-          ...(data.paymentMethod === 'crypto' && {
-            crypto: {
-              currency: 'USDT',
-              walletAddress: data.walletAddress,
-              network: 'TRC20',
-            },
-          }),
-          ...(data.paymentMethod === 'mobile_money' && {
-            mobileMoney: {
-              provider: data.mobileProvider,
-              phoneNumber: data.phoneNumber,
-              depositId: data.depositId,
-            },
-          }),
-        },
-      };
-
-      // Create withdrawal record
-      const [record] = await Withdraw(options.database).create(
-        [
-          {
-            ...data,
-            tenant: currentTenant.id,
-            createdBy: currentUser.id,
-            updatedBy: currentUser.id,
-          },
-        ],
-        { ...options, session }
-      );
-
-      await sendNotification({
-        user: record.user.id,
-        transaction: record.id,
-        type: 'withdraw_success',
-        forAdmin: true,
-        amount: record.amount,
-        options: { ...options, session }
-      });
-
-      await User.findByIdAndUpdate(
-        currentUser.id,
-        { $inc: { balance: -withdrawalAmount } },
-        { session }
-      );
-
-      await TransactionRepository.create(
-        data, record.id, 'withdraw', options
-      )
-
-      // Create audit log
-      await this._createAuditLog(
-        AuditLogRepository.CREATE,
-        record.id,
-        data,
-        { ...options, session }
-      );
-
-      // Commit transaction
-      await MongooseRepository.commitTransaction(session);
-
-      return this.findById(record.id, options);
-
-    } catch (error) {
-      // Rollback transaction on error
-      await MongooseRepository.abortTransaction(session);
-      throw error;
     }
+
+    const withdrawalAmount = parseFloat(data.amount);
+
+    if (user.balance < withdrawalAmount) {
+      throw new Error400(
+        options.language,
+        "withdraw.insufficientBalance"
+      );
+    }
+
+    // Check TRC20 address ONLY for crypto payments
+    if (data.paymentMethod === 'crypto' && !user.trc20) {
+      throw new Error400(
+        options.language,
+        "validation.missingTrc20Address"
+      );
+    }
+
+    // Prepare the withdrawal data with correct structure
+    const withdrawalData = {
+      referenceNumber: new Date().getTime().toString() + (data.paymentMethod === 'crypto' ? user.trc20 : data.paymentDetails?.mobileMoney?.phoneNumber),
+      status: 'pending', // Always start as pending for withdrawals
+      amount: data.amount, // This should be the NET amount after fees
+      currency: 'USD',
+      paymentMethod: data.paymentMethod,
+      user: currentUser.id,
+      tenant: currentTenant.id,
+      createdBy: currentUser.id,
+      updatedBy: currentUser.id,
+      paymentDetails: {
+        // For Crypto withdrawals
+        ...(data.paymentMethod === 'crypto' && {
+          crypto: {
+            currency: 'USDT',
+            walletAddress: user.trc20, // Use user's saved TRC20 address
+            network: 'TRC20',
+          }
+        }),
+        // For Mobile Money withdrawals
+        ...(data.paymentMethod === 'mobile_money' && {
+          mobileMoney: {
+            provider: data.paymentDetails.mobileMoney.provider,
+            phoneNumber: data.paymentDetails.mobileMoney.phoneNumber,
+            // withdrawId will be set when processed
+          }
+        })
+      }
+    };
+
+    // Create withdrawal record
+    const [record] = await Withdraw(options.database).create(
+      [withdrawalData],
+      { ...options, session }
+    );
+
+    await sendNotification({
+      user: record.user.id,
+      transaction: record.id,
+      type: 'withdraw_success',
+      forAdmin: true,
+      amount: record.amount,
+      options: { ...options, session }
+    });
+
+    // Update user balance (deduct the withdrawal amount)
+    await User.findByIdAndUpdate(
+      currentUser.id,
+      { $inc: { balance: -data.originalAmount } },
+      { session }
+    );
+
+    // Create transaction record with additional fee information
+    const transactionData = {
+      status: 'pending',
+      date: new Date(),
+      user: currentUser.id,
+      type: 'withdraw',
+      amount: data.amount, // Net amount
+      originalAmount: data.originalAmount, // Original amount before fee
+      chargeAmount: data.chargeAmount, // Fee amount
+      chargeRate: data.chargeRate, // Fee rate
+      vip: data.vip,
+      paymentMethod: data.paymentMethod,
+      ...(data.paymentMethod === 'crypto' && {
+        walletAddress: user.trc20
+      }),
+      ...(data.paymentMethod === 'mobile_money' && {
+        phoneNumber: data.paymentDetails.mobileMoney.phoneNumber,
+        mobileProvider: data.paymentDetails.mobileMoney.provider
+      })
+    };
+
+    await TransactionRepository.create(
+      transactionData, 
+      record.id, 
+      'withdraw', 
+      options
+    );
+
+    // Create audit log
+    await this._createAuditLog(
+      AuditLogRepository.CREATE,
+      record.id,
+      withdrawalData,
+      { ...options, session }
+    );
+
+    // Commit transaction
+    await MongooseRepository.commitTransaction(session);
+
+    return this.findById(record.id, options);
+
+  } catch (error) {
+    // Rollback transaction on error
+    await MongooseRepository.abortTransaction(session);
+    throw error;
   }
+}
 
 
   static async withdrawPending(options: IRepositoryOptions) {
