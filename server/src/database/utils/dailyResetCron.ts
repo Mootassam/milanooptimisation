@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 export const startDailyResetCron = (database?: any) => {
     // Schedule to run every day at 00:00 (midnight) in server's timezone
     const dailyResetJob = cron.schedule('0 0 * * *', async () => {
+            console.log("the task reset it ");
+
         try {
             // Use the provided database or default mongoose connection
             const db = database || mongoose;
@@ -29,6 +31,7 @@ export const startDailyResetCron = (database?: any) => {
             );
             
             const now = new Date();
+            
        
         } catch (error) {
         }

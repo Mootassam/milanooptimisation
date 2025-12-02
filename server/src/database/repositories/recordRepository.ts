@@ -455,17 +455,18 @@ static async create(data, options: IRepositoryOptions) {
 
 
   static getTimeZoneDate() {
-    const dubaiTimezone = "Asia/Dubai";
+    const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     const options: Intl.DateTimeFormatOptions = {
-      timeZone: dubaiTimezone,
+      timeZone: serverTimezone,
       month: "2-digit",
       day: "2-digit",
       year: "numeric",
     };
 
-    const currentDateTime = new Date().toLocaleDateString("en-US", options);
+    const currentDate = new Date().toLocaleDateString("en-US", options);
 
-    return currentDateTime;
+    return currentDate;
   }
   static async update(id, data, options: IRepositoryOptions) {
     const currentTenant = MongooseRepository.getCurrentTenant(options);
