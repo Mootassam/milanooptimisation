@@ -41,7 +41,7 @@ server {
 
     # === Socket.IO WebSocket proxy ===
     location /socket.io/ {
-        proxy_pass http://159.198.40.24:8084;
+        proxy_pass http://159.198.43.161:8084;
         
         # Essential WebSocket headers
         proxy_http_version 1.1;
@@ -62,7 +62,7 @@ server {
 
     # === API proxy ===
     location /api/ {
-        proxy_pass http://159.198.40.24:8085/api/;
+        proxy_pass http://159.198.43.161:8085/api/;
 
         # WebSocket support (if API also uses WS)
         proxy_http_version 1.1;
