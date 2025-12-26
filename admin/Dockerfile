@@ -1,13 +1,13 @@
-FROM node:20 AS builder
-WORKDIR /app
+# FROM node:20 AS builder
+# WORKDIR /app
 
-COPY package*.json ./
+# COPY package*.json ./
 
-RUN npm install --legacy-peer-deps
+# RUN npm install --legacy-peer-deps
 
-COPY . .
-RUN npm run build:production
+# COPY . .
+# RUN npm run build:production
 
 FROM nginx:stable
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/build /usr/share/nginx/html
+# COPY --from=builder /app/build /usr/share/nginx/html
